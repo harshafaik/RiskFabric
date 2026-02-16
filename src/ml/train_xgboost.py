@@ -20,8 +20,17 @@ def train_model():
     drop_cols = ['transaction_id', 'timestamp', 'feature_calculated_at', 'is_fraud']
     
     # Identify target and features
-    target_col = 'fraud_target'
-    feature_cols = [str(c) for c in df.columns if str(c) not in drop_cols and str(c) != target_col]
+    # REALISTIC TARGET: Training on the noisy 'is_fraud' label instead of perfect 'fraud_target'
+    target_col = 'is_fraud'
+    
+    # LEAKAGE PREVENTION: Exclude ground-truth metadata from the model features.
+    # The model must LEARN these patterns from raw amount, location, and behavior instead.
+    leakage_cols = [
+        'geo_anomaly', 'device_anomaly', 'ip_anomaly', 
+        'label_noise', 'fraud_type', 'fraud_target',
+        'burst_session', 'burst_seq'
+    ]
+    feature_cols = [str(c) for c in df.columns if str(c) not in drop_cols and str(c) not in leakage_cols and str(c) != target_col]
 
     # Convert categorical strings to pl.Categorical for XGBoost
     cat_cols = ['merchant_category', 'transaction_channel']

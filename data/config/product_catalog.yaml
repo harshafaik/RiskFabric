@@ -1,0 +1,30 @@
+# Account and Card Product Definitions
+accounts:
+  types:
+    - "Savings"
+    - "Current"
+    - "Credit"
+    - "Salary"
+  creation_window_years: 3
+  bank_id_range: [1000, 9999]
+  balance_range: [1000.0, 500000.0]
+
+cards:
+  networks:
+    - "VISA"
+    - "Mastercard"
+    - "RuPay"
+    - "Amex"
+  types:
+    - "Debit"
+    - "Credit"
+    - "Prepaid"
+  issue_window_years: 4
+  expiry_duration_years: 3
+  activation_delay_days: [2, 5]
+  active_probability: 0.92
+  limits:
+    contactless_default: "5000"
+    daily_atm_default: "25000"
+    online_default: "50000"
+    international_enabled_prob: 0.15

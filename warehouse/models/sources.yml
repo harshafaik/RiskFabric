@@ -1,0 +1,22 @@
+version: 2
+
+sources:
+  - name: raw_osm
+    database: riskfabric
+    schema: public
+    tables:
+      - name: raw_residential
+        description: "Raw OSM points landed by the Rust engine"
+        columns:
+          - name: osm_id
+          - name: h3_index
+          - name: state
+
+  - name: public
+    database: riskfabric
+    schema: public
+    tables:
+      - name: ref_india_states
+        description: "India state boundaries for spatial joins"
+      - name: raw_merchants
+        description: "Raw OSM merchant data"

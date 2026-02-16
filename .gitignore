@@ -1,1 +1,8 @@
 /target
+/env
+/logs
+/data/*
+!/data/config
+!/data/config/*.yaml
+*.parquet
+*.log

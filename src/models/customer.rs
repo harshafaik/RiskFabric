@@ -1,11 +1,9 @@
-use chrono::{Datelike, NaiveDate};
-use fake::Fake;
-use fake::faker::address::en::{CityName, CitySuffix, Latitude, Longitude, ZipCode};
-use fake::faker::internet::en::SafeEmail;
-use fake::faker::name::en::Name;
 use h3o::{LatLng, Resolution};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use chrono::Datelike;
+use fake::Fake;
+use fake::faker::address::en::{BuildingNumber, StreetName};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Customer {
@@ -37,33 +35,33 @@ pub struct Customer {
     pub registration_day: u32,
 }
 
-const STATE: [&str; 8] = [
-    "Karnataka",
-    "Maharashtra",
-    "Tamil Nadu",
-    "Delhi",
-    "Telangana",
-    "Uttar Pradesh",
-    "West Bengal",
-    "Gujarat",
-];
-
-const LOCATION: &[&str] = &["Urban", "Semi-Urban", "Rural", "Metro"];
-
 impl Customer {
-    pub fn random() -> Self {
-        let name: String = Name().fake();
-        let customer_id = uuid::Uuid::new_v4().to_string();
-        let lat: f64 = (8.0..37.0).fake();
-        let long: f64 = (68.0..97.0).fake();
+    pub fn new(
+        customer_id: String,
+        name: String,
+        age: u8,
+        email: String,
+        state: String,
+        city: Option<String>,
+        lat: f64,
+        long: f64,
+        h3_r7: String,
+        credit_score: u16,
+        monthly_spend: f64,
+        customer_risk_score: f32,
+        is_fraud: bool,
+    ) -> Self {
+        let mut rng = rand::rng();
+        
+        // Generate a realistic "First Line" of address
+        let house_no: String = BuildingNumber().fake();
+        let street: String = StreetName().fake();
+        let city_str = city.unwrap_or_else(|| format!("{} Region", state));
+        
+        let location = format!("No. {}, {}, {}", house_no, street, city_str);
 
         let coord = LatLng::new(lat, long).expect("Invalid coordinates");
         let h3r5 = coord.to_cell(Resolution::Five).to_string();
-        let h3r7 = coord.to_cell(Resolution::Seven).to_string();
-
-        let mut rng = rand::rng();
-        let state = STATE[rng.random_range(0..STATE.len())].to_string();
-        let location = LOCATION[rng.random_range(0..LOCATION.len())].to_string();
 
         let end_date = chrono::Utc::now().date_naive();
         let start_date = end_date - chrono::Duration::days(365 * 5);
@@ -73,27 +71,20 @@ impl Customer {
 
         Customer {
             customer_id,
-            name: name.clone(),
-            age: (18..90).fake(),
-            email: SafeEmail().fake::<String>(),
-
-            state: state,
-            location: format!(
-                "{}, {}",
-                CityName().fake::<String>(),
-                CitySuffix().fake::<String>()
-            ),
-            location_type: location,
+            name,
+            age,
+            email,
+            state,
+            location,
+            location_type: "Urban".to_string(), // Usually overridden
             home_latitude: lat,
             home_longitude: long,
             home_h3r5: h3r5,
-            home_h3r7: h3r7,
-
-            credit_score: (300..850).fake(),
-            monthly_spend: (1000.0..50000.0).fake(),
-            customer_risk_score: (0.01..0.99).fake(),
-            is_fraud: rng.random_bool(0.02),
-
+            home_h3r7: h3_r7,
+            credit_score,
+            monthly_spend,
+            customer_risk_score,
+            is_fraud,
             registration_date: reg_date.to_string(),
             registration_year: reg_date.year(),
             registration_month: reg_date.month(),

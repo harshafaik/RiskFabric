@@ -1,0 +1,29 @@
+# General Transaction Generation Settings
+transactions:
+  merchant_categories:
+    - "GROCERY"
+    - "FOOD_AND_BEVERAGE"
+    - "GENERAL_RETAIL"
+    - "SERVICES"
+    - "ENTERTAINMENT"
+    - "ELECTRONICS"
+    - "TRAVEL"
+    - "HEALTHCARE"
+    - "UTILITIES"
+    - "APPAREL"
+  
+  amount_range: [10.0, 50000.0]
+  success_rate: 0.96
+  card_present_probability: 0.35
+  
+  # Geographic bounding box for India
+  geo_bounds:
+    lat_range: [8.0, 37.0]
+    long_range: [68.0, 97.0]
+  
+  lookback_days: 365
+  
+  # Status mappings
+  status_codes:
+    success: ["Success", "approved"]
+    failure: ["Failed", "declined"]

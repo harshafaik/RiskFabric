@@ -1,0 +1,108 @@
+# Customer Generation Settings
+names:
+  first_names:
+    - "Aarav"
+    - "Arjun"
+    - "Aditya"
+    - "Vihaan"
+    - "Mohammed"
+    - "Sai"
+    - "Aryan"
+    - "Ishaan"
+    - "Ananya"
+    - "Diya"
+    - "Priya"
+    - "Saanvi"
+    - "Rohan"
+    - "Rahul"
+    - "Amit"
+    - "Sanjay"
+    - "Vikram"
+    - "Anjali"
+    - "Sneha"
+    - "Kavita"
+    - "Deepak"
+    - "Rajesh"
+    - "Sunil"
+    - "Anita"
+    - "Pooja"
+    - "Neha"
+    - "Abhishek"
+    - "Manoj"
+    - "Kiran"
+    - "Shweta"
+  last_names:
+    - "Sharma"
+    - "Khan"
+    - "Patel"
+    - "Singh"
+    - "Kumar"
+    - "Das"
+    - "Gupta"
+    - "Reddy"
+    - "Nair"
+    - "Iyer"
+    - "Joshi"
+    - "Chopra"
+    - "Malhotra"
+    - "Verma"
+    - "Yadav"
+    - "Trivedi"
+    - "Kulkarni"
+    - "Bose"
+    - "Chatterjee"
+    - "Dutta"
+    - "Mehta"
+    - "Shah"
+    - "Gill"
+    - "Rao"
+    - "Mishra"
+    - "Pandey"
+    - "Deshmukh"
+    - "Patil"
+    - "Desai"
+
+email:
+  domains:
+    - "gmail.com"
+    - "yahoo.co.in"
+    - "outlook.com"
+    - "hotmail.com"
+    - "icloud.com"
+    - "rediffmail.com"
+
+locations:
+  types:
+    - "Urban"
+    - "Semi-Urban"
+    - "Rural"
+    - "Metro"
+  metro_cities:
+    - "Mumbai"
+    - "Delhi"
+    - "Bangalore"
+    - "Hyderabad"
+    - "Ahmedabad"
+    - "Chennai"
+    - "Kolkata"
+    - "Surat"
+    - "Pune"
+    - "Jaipur"
+
+# Financial Heuristics
+financials:
+  base_spend:
+    Metro: 35000
+    Urban: 22000
+    Semi-Urban: 15000
+    Rural: 9000
+  credit_score:
+    base: 650
+    age_weight: 1.5
+    min: 300
+    max: 900
+
+# Registration and Metadata
+registration:
+  lookback_years: 5
+  default_location_type: "Urban"

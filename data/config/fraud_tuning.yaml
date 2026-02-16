@@ -1,0 +1,24 @@
+# Fraud Injection and Mutation Tunings
+probabilities:
+  geo_anomaly: 0.15
+  device_anomaly: 0.10
+  ip_anomaly: 0.15
+  failure: 0.15
+  chargeback: 0.08
+
+# Specific Anomaly and Fallback Values
+defaults:
+  geo_anomaly_country: "PK"
+  fallback_failure_reason: "Security check triggered"
+  chargeback_days: 30
+
+# Campaign-Specific Parameters
+campaigns:
+  ato_escalation_rate: 0.25
+  coordinated_scam_ip: "103.21.244.12"
+
+# RNG Stability Salts
+salts:
+  injector: 7
+  mutator: 99
+  campaign: 555

@@ -69,3 +69,25 @@ Initial confusion regarding the accuracy of the fraud injection logic.
 ### Resolution
 Investigation of `src/generators/fraud.rs` revealed that the `is_fraud` label includes deliberate noise. While the `fraud_target` (ground truth) aligns with the 12% `target_share`, the `is_fraud` label incorporates a 3% False Positive rate and a 10% False Negative rate, resulting in the ~13.6% observed label frequency. This is a desired feature to simulate "noisy" real-world labels.
 
+## 8. Out Of Memory (OOM) in Large-Scale Transaction Generation
+### Issue
+Attempting to generate a high-volume dataset (100k customers, ~17M transactions) in a single multi-threaded pass resulted in the process being terminated by the OS (Exit Code 137). 
+
+### Impact
+Blocked the generation of datasets required for large-scale ML training and performance benchmarking.
+
+### Resolution
+Refactored the generation pipeline into a **Chunked One-Pass Architecture**. The generator now processes cards in batches of 5,000, materializing and flushing transactions to Parquet in increments. This reduced memory usage from a variable $O(N)$ based on volume to a fixed $O(ChunkSize)$ overhead.
+
+## 9. Label Leakage in Fraud Detection Model Training
+### Issue
+Initial training of the high-fidelity XGBoost model yielded a near-perfect ROC AUC of 0.9993, indicating that the model was "cheating" by using synthetic signals that wouldn't exist in a real-world scenario.
+
+### Impact
+Created an unrealistic model that failed to learn actual behavioral patterns (amounts, locations, reputations).
+
+### Resolution
+1. **Feature Sanitization**: Explicitly excluded ground-truth metadata flags (`geo_anomaly`, `device_anomaly`, `ip_anomaly`, `label_noise`, `fraud_type`) from the training feature vector.
+2. **Target Shift**: Switched the training target from the perfect `fraud_target` to the noisy `is_fraud` label. 
+These measures resulted in a more realistic 0.97 AUC, with behavioral features like `amount` and `merchant_reputation` correctly becoming the dominant predictors.
+

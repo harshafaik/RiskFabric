@@ -17,6 +17,7 @@ The primary technical objective is to generate, store, and process **1,000,000,0
 ### Strategic Goals
 *   **Scale Demonstration**: Show that Rust and Polars can outperform traditional distributed Spark clusters for billion-row workloads on vertical hardware.
 *   **ML Readiness**: Provide a 10M-row balanced training subset sampled from the 1B-row population.
+*   **XGBoost Baseline (v2)**: Successfully trained the first XGBoost model on a 4.3M row high-fidelity dataset, achieving a 0.97 AUC while using noisy labels and sanitized features.
 *   **Inference Testing**: Use the remaining 990M rows to benchmark the latency and accuracy of the fraud detection model.
 
 ## 2. Medallion Architecture Implementation

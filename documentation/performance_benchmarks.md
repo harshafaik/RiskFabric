@@ -44,6 +44,12 @@ This document tracks the evolution of `riskfabric` generation performance, focus
 | Parquet Write (Txn) | 3.696 | 2.640 | 1.4x |
 | **Total Pipeline** | **48.763** | **4.402** | **11x** |
 
+### 4. High-Fidelity One-Pass (Tuned)
+*Date: February 2026*
+*   **Architecture**: Added profile-specific geo-anomalies, campaign-coordinated spatial signals, and dynamic failure reasons.
+*   **Performance**: Maintained throughput at **~180,000 TPS** despite increased logic complexity.
+*   **Result**: High-quality training data with sharp spatial/temporal signals generated in < 4 seconds for 150k+ transactions.
+
 ## Next Goals
 *   **Scale Testing**: Achieve similar linear scaling for 1,000,000 customers (targeting ~150M transactions in under 15 minutes).
 *   **I/O Optimization**: Investigate partitioned Parquet writes to further reduce the 2.6s write bottleneck.

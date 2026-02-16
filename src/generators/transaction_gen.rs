@@ -12,34 +12,15 @@ use h3o::{CellIndex, Resolution};
 use std::str::FromStr;
 use chrono::{Utc, Duration};
 
-pub fn generate_transactions(cards: &Vec<Card>, customers: &Vec<Customer>) -> (Vec<Transaction>, Vec<FraudMetadata>) {
-    let config = AppConfig::load();
-    
-    // 1. Load Merchants
-    let file = File::open("data/references/ref_merchants.parquet").expect("Merchant data missing");
-    let df = ParquetReader::new(file).finish().expect("Failed to read Parquet");
-
-    let h3_indices: Vec<String> = df.column("h3_index").unwrap().str().unwrap().into_no_null_iter().map(|s| s.to_string()).collect();
-    let names: Vec<String> = df.column("merchant_name").unwrap().str().unwrap().into_no_null_iter().map(|s| s.to_string()).collect();
-    let lats: Vec<f64> = df.column("lat").unwrap().f64().unwrap().into_no_null_iter().collect();
-    let lons: Vec<f64> = df.column("lon").unwrap().f64().unwrap().into_no_null_iter().collect();
-    let categories: Vec<String> = df.column("merchant_category").unwrap().str().unwrap().into_no_null_iter().map(|s| s.to_string()).collect();
-    let osm_ids: Vec<i64> = df.column("osm_id").unwrap().i64().unwrap().into_no_null_iter().collect();
+pub fn generate_transactions_chunk(
+    cards: &[Card], 
+    customer_map: &HashMap<String, &Customer>,
+    spatial_index_res5: &HashMap<String, Vec<usize>>,
+    merchants: &(Vec<String>, Vec<String>, Vec<f64>, Vec<f64>, Vec<String>, Vec<i64>),
+    config: &AppConfig
+) -> (Vec<Transaction>, Vec<FraudMetadata>) {
+    let (h3_indices, names, lats, lons, categories, osm_ids) = merchants;
     let ref_count = h3_indices.len();
-
-    // 2. Spatial Index
-    let mut spatial_index_res5: HashMap<String, Vec<usize>> = HashMap::new();
-    for (idx, h3_str) in h3_indices.iter().enumerate() {
-        if let Ok(cell) = CellIndex::from_str(h3_str) {
-            let p5 = cell.parent(Resolution::Five).unwrap().to_string();
-            spatial_index_res5.entry(p5).or_default().push(idx);
-        }
-    }
-
-    // 3. Customer Map
-    let customer_map: HashMap<String, &Customer> = customers.iter().map(|c| (c.customer_id.clone(), c)).collect();
-
-    println!("   ... generating transactions, fraud, and campaigns in a single pass (Tuned)");
 
     // Pre-calculate base timestamp
     let base_end_date = Utc::now();
@@ -52,27 +33,29 @@ pub fn generate_transactions(cards: &Vec<Card>, customers: &Vec<Customer>) -> (V
             let mut local_txs = Vec::new();
             let mut local_meta = Vec::new();
             
-            // Seed RNG per card for stability using Configured Salt
             let mut card_rng = StdRng::seed_from_u64(config.rules.global.seed as u64 + config.tuning.salts.injector as u64 + card.card_id.as_bytes().iter().map(|&b| b as u64).sum::<u64>());
             
             let customer = customer_map.get(&card.customer_id).expect("Customer missing");
             let cust_cell = CellIndex::from_str(&customer.home_h3r7).expect("H3 invalid");
             let p5_key = cust_cell.parent(Resolution::Five).unwrap().to_string();
 
-            // Determine if this CARD is targeted by a campaign
             let mut camp_id = None;
             let mut camp_type = None;
+            let mut attacker_lat = None;
+            let mut attacker_lon = None;
+
             let share = config.rules.fraud_campaigns.values().filter_map(|c| c.target_campaign_share).next().unwrap_or(0.15);
             if card_rng.random_bool(share) {
                 let campaigns: Vec<&String> = config.rules.fraud_campaigns.keys().collect();
                 let c_type = campaigns[card_rng.random_range(0..campaigns.len())].clone();
                 camp_id = Some(format!("camp_{}_{}", c_type, &card.card_id[..8]));
                 camp_type = Some(c_type);
+                attacker_lat = Some(card_rng.random_range(8.0..37.0));
+                attacker_lon = Some(card_rng.random_range(68.0..97.0));
             }
 
-            let num_txns = card_rng.random_range(5..20);
+            let num_txns = card_rng.random_range(config.control.transactions_per_customer.min..config.control.transactions_per_customer.max);
             for i in 0..num_txns {
-                // 1. SELECT MERCHANT
                 let idx = if card_rng.random_bool(0.98) {
                     if let Some(indices) = spatial_index_res5.get(&p5_key) {
                         indices[card_rng.random_range(0..indices.len())]
@@ -83,12 +66,10 @@ pub fn generate_transactions(cards: &Vec<Card>, customers: &Vec<Customer>) -> (V
                     card_rng.random_range(0..ref_count)
                 };
 
-                // 2. GENERATE BASE FIELDS
                 let tx_id = format!("tx_{}_{}_{}", &card.card_id[..8], i, card_rng.random_range(1000..9999));
                 let amount = card_rng.random_range(10.0..50000.0);
                 let tx_date = base_start_date + Duration::seconds(card_rng.random_range(0..total_seconds));
                 
-                // 3. FRAUD LOGIC (Embedded)
                 let r_target: f64 = card_rng.random();
                 let fraud_target = r_target < config.rules.fraud_injector.target_share;
 
@@ -105,11 +86,10 @@ pub fn generate_transactions(cards: &Vec<Card>, customers: &Vec<Customer>) -> (V
                     label_noise = "fp".to_string();
                 }
 
-                // Mutations
                 let mut final_amount = amount;
-                let mut final_channel = "online".to_string();
+                let final_channel = "online".to_string();
                 let mut final_ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 15_4 like Mac OS X) [PhonePe/4.2]".to_string();
-                let mut final_country = config.rules.global.default_country.clone();
+                let final_country = config.rules.global.default_country.clone();
                 let mut final_lat = lats[idx];
                 let mut final_lon = lons[idx];
                 let mut final_ip = format!("103.21.{}.{}", card_rng.random_range(1..255), card_rng.random_range(1..255));
@@ -129,9 +109,8 @@ pub fn generate_transactions(cards: &Vec<Card>, customers: &Vec<Customer>) -> (V
                         final_amount = amounts[card_rng.random_range(0..amounts.len())];
                     }
                     
-                    if card_rng.random_bool(config.tuning.probabilities.geo_anomaly) {
+                    if card_rng.random_bool(profile.geo_anomaly_prob) {
                         geo_anomaly = true;
-                        // Domestic Geo-Anomaly: Keep country as IN but jump to a random location in India
                         final_lat = card_rng.random_range(8.0..37.0);
                         final_lon = card_rng.random_range(68.0..97.0);
                     }
@@ -144,7 +123,6 @@ pub fn generate_transactions(cards: &Vec<Card>, customers: &Vec<Customer>) -> (V
                     if card_rng.random_bool(config.tuning.probabilities.failure) {
                         final_status = "Failed".to_string();
                         auth_status = "declined".to_string();
-                        
                         if let Some(reasons) = config.rules.failure_reasons_by_type.get(f_type) {
                             failure_reason = Some(reasons[card_rng.random_range(0..reasons.len())].clone());
                         } else {
@@ -152,16 +130,24 @@ pub fn generate_transactions(cards: &Vec<Card>, customers: &Vec<Customer>) -> (V
                         }
                     }
 
-                    // Campaign Mutations
                     if let (Some(_c_id), Some(c_type)) = (&camp_id, &camp_type) {
-                        if c_type == "coordinated_upi_scam" {
+                        if c_type == "coordinated_attack" {
                             final_ip = config.tuning.campaigns.coordinated_scam_ip.clone();
                             final_ua = config.rules.device_patterns.bot_user_agent_prefix.clone();
-                            final_channel = "upi".to_string();
                             ip_anomaly = true;
-                        } else if c_type == "sequential_ato" {
+                            if let (Some(alat), Some(alon)) = (attacker_lat, attacker_lon) {
+                                final_lat = alat;
+                                final_lon = alon;
+                                geo_anomaly = true;
+                            }
+                        } else if c_type == "sequential_takeover" {
                             let escalation = config.tuning.campaigns.ato_escalation_rate;
                             final_amount *= 1.0 + (escalation * i as f64);
+                            if let (Some(alat), Some(alon)) = (attacker_lat, attacker_lon) {
+                                final_lat = alat;
+                                final_lon = alon;
+                                geo_anomaly = true;
+                            }
                         }
                     }
 
@@ -170,11 +156,11 @@ pub fn generate_transactions(cards: &Vec<Card>, customers: &Vec<Customer>) -> (V
                         fraud_target,
                         fraud_type: f_type.clone(),
                         label_noise: label_noise.clone(),
-                        injector_version: "v2_one_pass_tuned".to_string(),
+                        injector_version: "v2_chunked".to_string(),
                         geo_anomaly,
                         device_anomaly,
                         ip_anomaly,
-                        burst_session: camp_type == Some("sequential_ato".to_string()),
+                        burst_session: camp_type == Some("sequential_takeover".to_string()),
                         burst_seq: Some(i as i32 + 1),
                         campaign_id: camp_id.clone(),
                         campaign_type: camp_type.clone(),
@@ -182,13 +168,12 @@ pub fn generate_transactions(cards: &Vec<Card>, customers: &Vec<Customer>) -> (V
                         campaign_day_number: Some((i / 5) as i32 + 1),
                     });
                 } else if is_fraud_label {
-                    // FP metadata
                     local_meta.push(FraudMetadata {
                         transaction_id: tx_id.clone(),
                         fraud_target: false,
                         fraud_type: "none".to_string(),
                         label_noise: "fp".to_string(),
-                        injector_version: "v2_one_pass_tuned".to_string(),
+                        injector_version: "v2_chunked".to_string(),
                         geo_anomaly: false,
                         device_anomaly: false,
                         ip_anomaly: false,
@@ -233,12 +218,11 @@ pub fn generate_transactions(cards: &Vec<Card>, customers: &Vec<Customer>) -> (V
         })
         .collect();
 
-    let mut all_transactions = Vec::new();
-    let mut all_metadata = Vec::new();
+    let mut all_txs = Vec::new();
+    let mut all_meta = Vec::new();
     for (mut txs, mut meta) in results {
-        all_transactions.append(&mut txs);
-        all_metadata.append(&mut meta);
+        all_txs.append(&mut txs);
+        all_meta.append(&mut meta);
     }
-
-    (all_transactions, all_metadata)
+    (all_txs, all_meta)
 }

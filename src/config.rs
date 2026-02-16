@@ -6,6 +6,7 @@ use std::fs;
 pub struct AppConfig {
     pub rules: FraudRules,
     pub tuning: FraudTuning,
+    pub control: GenerationControl,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -54,6 +55,7 @@ pub struct FraudProfileConfig {
     pub frequency: f64,
     pub amount_pattern: String,
     pub channel_bias: HashMap<String, f64>,
+    pub geo_anomaly_prob: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -105,18 +107,41 @@ pub struct SaltsConfig {
     pub campaign: i32,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GenerationControl {
+    pub customer_count: usize,
+    pub transactions_per_customer: RangeControl,
+    pub parallelism: ParallelismControl,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RangeControl {
+    pub min: usize,
+    pub max: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ParallelismControl {
+    pub customer_gen_threads: usize,
+    pub transaction_gen_threads: usize,
+}
+
 impl AppConfig {
     pub fn load() -> Self {
         let rules_yaml = fs::read_to_string("data/config/fraud_rules.yaml")
             .expect("Failed to read data/config/fraud_rules.yaml");
         let tuning_yaml = fs::read_to_string("data/config/fraud_tuning.yaml")
             .expect("Failed to read data/config/fraud_tuning.yaml");
+        let control_yaml = fs::read_to_string("data/config/generation_control.yaml")
+            .expect("Failed to read data/config/generation_control.yaml");
 
         let rules: FraudRules = serde_yaml::from_str(&rules_yaml)
             .expect("Failed to parse fraud_rules.yaml");
         let tuning: FraudTuning = serde_yaml::from_str(&tuning_yaml)
             .expect("Failed to parse fraud_tuning.yaml");
+        let control: GenerationControl = serde_yaml::from_str(&control_yaml)
+            .expect("Failed to parse generation_control.yaml");
 
-        AppConfig { rules, tuning }
+        AppConfig { rules, tuning, control }
     }
 }

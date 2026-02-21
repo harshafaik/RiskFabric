@@ -1,0 +1,8 @@
+[book]
+authors = ["harshafaik"]
+language = "en"
+src = "documentation"
+title = "RiskFabric Documentation"
+
+[output.html]
+git-repository-url = "https://github.com/harshafaik/riskfabric"

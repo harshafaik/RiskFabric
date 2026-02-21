@@ -25,7 +25,6 @@
 - [x] **Document Label Noise Impact:** Verified that the observed ~13.6% fraud rate is a result of the configured 12% target plus 3% False Positive and 10% False Negative noise.
 - [ ] **Polars Streaming Implementation:** Refactor runners to use `.scan_parquet()` and `.sink_parquet()` (Streaming) to support the 100M+ row benchmark without OOM errors.
 - [ ] **Scale Customer Features:** Optimize `etl_silver_customer` to handle joins across 100M transactions without exhausting memory.
-- [ ] **Scale Customer Features:** Optimize `etl_silver_customer` to handle joins across 100M transactions without exhausting memory.
 - [x] **Optimize Transaction Generation:** Achieved ~180k TPS (150k transactions in 823ms) using "One-Pass" parallel generation. 
 - [ ] **Scalability Testing:** Validate that the "One-Pass" approach holds up for 1M+ customers (approx 15M transactions) and monitor memory usage.
 

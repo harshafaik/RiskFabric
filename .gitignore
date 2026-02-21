@@ -6,3 +6,7 @@
 !/data/config/*.yaml
 *.parquet
 *.log
+book/
+vale
+*.tar.gz
+index.html

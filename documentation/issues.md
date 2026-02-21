@@ -1,93 +1,63 @@
-# Technical Issues & Resolutions
+# Knowledge Base: Issues & Resolutions
 
-This document tracks significant technical hurdles encountered during the development of `riskfabric`, specifically regarding the Rust/Polars/ClickHouse stack.
+This document tracks technical hurdles encountered during the development of RiskFabric. It serves as a troubleshooting guide for engineers working with the Rust/Polars/ClickHouse stack.
 
-## 1. Polars 0.51.0 `UInt8` Series Creation Error
-### Issue
-During the `lf.collect()` phase, Polars threw a `ComputeError(ErrString("cannot create series from UInt8"))`. This occurred when trying to materialize a DataFrame containing 8-bit unsigned integer columns, either imported from ClickHouse or cast within Rust.
+## Quick Reference
 
-### Impact
-Blocked the Silver ETL pipeline from materializing features like `is_weekend`, `rapid_fire_flag`, and other boolean-style indicators.
+| Component | Symptom | Resolution |
+| :--- | :--- | :--- |
+| **Polars** | `cannot create series from UInt8` | Migrate flags to `UInt32` |
+| **Polars** | Kernel panic on `.is_in()` | Cast weekday to `Int32` |
+| **ClickHouse**| Timestamp parsing failed | Store as String, parse in Silver ETL |
+| **System** | Exit Code 137 (OOM) | Use Chunked Generation |
+| **ML Model** | Perfect AUC (0.999) | Sanitize features (Leakage prevention) |
 
-### Resolution
-Migrated all flag and counter columns to `DataType::UInt32`. 32-bit integers are natively supported by the Polars `Series` factory and offer better compatibility with downstream Machine Learning libraries (XGBoost, CatBoost).
+---
 
-## 2. Polars `is_in` Panic on `Int8` Types
-### Issue
-The `.dt().weekday()` function in Polars 0.51.0 returns an `Int8` series. Executing `.is_in()` on this series caused a kernel-level panic: `not implemented for dtype Int8`.
+## ⚙️ Data Engine & Type Safety
 
-### Impact
-Caused the ETL runner to crash when calculating temporal features.
+### Polars `UInt8` Series Creation Error
+- **Issue**: Polars threw a `ComputeError` when materializing a DataFrame containing 8-bit unsigned integers.
+- **Impact**: Blocked Silver ETL features like `is_weekend` and boolean flags.
+- **Resolution**: Migrated all flag and counter columns to `DataType::UInt32` for native Polars support and better ML compatibility.
 
-### Resolution
-Explicitly cast the output of `.weekday()` to `Int32` before calling `.is_in()`. Additionally, ensure the literal comparison set (e.g., `&[6i32, 7i32]`) matches the target type exactly.
+### Polars `is_in` Panic on `Int8`
+- **Issue**: `.dt().weekday()` returns `Int8`, which caused a kernel-level panic during `.is_in()` checks.
+- **Impact**: ETL runner crashes during temporal feature calculation.
+- **Resolution**: Explicitly cast the output of `.weekday()` to `Int32` and ensure the comparison set matches exactly (e.g., `&[6i32, 7i32]`).
 
-## 3. ClickHouse Best-Effort Timestamp Parsing
-### Issue
-Standard `DateTime64` ingestion in ClickHouse failed for ISO 8601 strings with high precision (nanoseconds) and timezone offsets (e.g., `2025-03-13T09:46:20.960868686+00:00`).
+### ClickHouse Timestamp Precision
+- **Issue**: Standard `DateTime64` ingestion failed for ISO 8601 strings with nanosecond precision.
+- **Resolution**: Land raw timestamps as `String` in the Bronze layer. Use Polars' `.str().to_datetime()` during Silver ETL for flexible, high-precision parsing.
 
-### Resolution
-Stored raw timestamps as `String` in the Bronze layer (`fact_transactions_bronze`). Utilized Polars' robust `.str().to_datetime()` during the Silver ETL phase to handle high-precision parsing, which proved more flexible than native ClickHouse casting for this specific synthetic format.
+---
 
-## 4. High Fraud Prevalence in Synthetic Population
-### Issue
-During dry runs, ~86% of the customer population experienced at least one fraud event. This was caused by high default values for `target_share` (0.12) and `target_campaign_share` (0.15) in `fraud_rules.yaml`.
+## 🚀 Performance & Scaling
 
-### Impact
-The dataset became unrealistic for ML training, as the "clean" customer baseline was too small (sparsity of fraud was lost).
+### Out Of Memory (OOM) in Network Linkage
+- **Issue**: Multi-million row many-to-many joins on IP/UA caused combinatorial explosion.
+- **Impact**: OS terminated the process (Exit Code 137).
+- **Resolution**: Shifted from an **Edge-List Graph approach** to an **Entity Reputation approach**. Calculate risk at the entity level and join back to transactions. Complexity reduced from $O(N^2)$ to $O(N)$.
 
-### Resolution
-Tuned the configuration to industry-standard benchmarks: `target_share` reduced to 0.005 (0.5% txn rate) and `target_campaign_share` reduced to 0.01 (1% customer attack rate).
+### OOM in Large-Scale Generation
+- **Issue**: Single-pass generation of 17M+ transactions exhausted RAM.
+- **Resolution**: Refactored to a **Chunked One-Pass Architecture**. The generator processes the population in batches of 5,000 entities and flushes transactions to Parquet incrementally.
 
-## 5. Out Of Memory (OOM) in Network Linkage
-### Issue
-The initial implementation of `etl_silver_network` attempted a full many-to-many join on `ip_address` and `user_agent` to identify all pairs of customers sharing entities. High-cardinality entities (e.g., common Public IPs or User Agents) caused a combinatorial explosion, attempting to materialize millions of rows in RAM.
+---
 
-### Impact
-The process was terminated by the OS (Exit Code 137) during the `.collect()` phase, even with a relatively small 180k row dataset.
+## 🧠 Machine Learning & Data Science
 
-### Resolution
-    Shifted from an **Edge-List Graph approach** to an **Entity Reputation approach**. Instead of joining customers to customers, the logic now calculates fraud rates and customer counts for each IP/Device and joins these "Reputations" back to the transactions. This achieved the same risk signal with $O(N)$ memory complexity instead of $O(N^2)$.
+### Label Leakage (Near-Perfect AUC)
+- **Issue**: Initial training yielded a near-perfect 0.9993 AUC.
+- **Impact**: The model used hidden synthetic signals rather than behavioral patterns.
+- **Resolution**: 
+    1. **Feature sanitization**: Excluded `geo_anomaly`, `device_anomaly`, etc.
+    2. **Target Shift**: Switched from `fraud_target` (Ground Truth) to `is_fraud` (Noisy Label).
 
-## 6. Duplicate Records in Silver Layer
-### Issue
-The `fact_transactions_silver` table contained double the expected number of records (358,830 vs 179,415). This was caused by the `etl_silver_sequence` process appending data to a `MergeTree` table without truncating it first, leading to duplicates on subsequent runs.
+### Observed vs. Configured Fraud Rate Discrepancy
+- **Issue**: Observed fraud (~13.6%) appeared higher than the 12% configuration.
+- **Resolution**: Verified that `is_fraud` deliberately incorporates simulated label noise (3% FP, 10% FN), resulting in the higher observed ratio.
 
-### Impact
-Skewed downstream analytics and ML training data, potentially doubling the weight of certain transactions and misrepresenting fraud ratios.
-
-### Resolution
-Added an explicit `TRUNCATE TABLE fact_transactions_silver` command to the `src/bin/etl_silver_sequence.rs` binary before the data insertion phase.
-
-## 7. Observed vs. Configured Fraud Rate Discrepancy
-### Issue
-The observed fraud rate in the Bronze layer (~13.6%) appeared higher than the `target_share` configured in `fraud_rules.yaml` (0.12).
-
-### Impact
-Initial confusion regarding the accuracy of the fraud injection logic.
-
-### Resolution
-Investigation of `src/generators/fraud.rs` revealed that the `is_fraud` label includes deliberate noise. While the `fraud_target` (ground truth) aligns with the 12% `target_share`, the `is_fraud` label incorporates a 3% False Positive rate and a 10% False Negative rate, resulting in the ~13.6% observed label frequency. This is a desired feature to simulate "noisy" real-world labels.
-
-## 8. Out Of Memory (OOM) in Large-Scale Transaction Generation
-### Issue
-Attempting to generate a high-volume dataset (100k customers, ~17M transactions) in a single multi-threaded pass resulted in the process being terminated by the OS (Exit Code 137). 
-
-### Impact
-Blocked the generation of datasets required for large-scale ML training and performance benchmarking.
-
-### Resolution
-Refactored the generation pipeline into a **Chunked One-Pass Architecture**. The generator now processes cards in batches of 5,000, materializing and flushing transactions to Parquet in increments. This reduced memory usage from a variable $O(N)$ based on volume to a fixed $O(ChunkSize)$ overhead.
-
-## 9. Label Leakage in Fraud Detection Model Training
-### Issue
-Initial training of the high-fidelity XGBoost model yielded a near-perfect ROC AUC of 0.9993, indicating that the model was "cheating" by using synthetic signals that wouldn't exist in a real-world scenario.
-
-### Impact
-Created an unrealistic model that failed to learn actual behavioral patterns (amounts, locations, reputations).
-
-### Resolution
-1. **Feature Sanitization**: Explicitly excluded ground-truth metadata flags (`geo_anomaly`, `device_anomaly`, `ip_anomaly`, `label_noise`, `fraud_type`) from the training feature vector.
-2. **Target Shift**: Switched the training target from the perfect `fraud_target` to the noisy `is_fraud` label. 
-These measures resulted in a more realistic 0.97 AUC, with behavioral features like `amount` and `merchant_reputation` correctly becoming the dominant predictors.
-
+### High Fraud Prevalence in Initial Runs
+- **Issue**: ~86% of customers experienced fraud due to high default config values.
+- **Resolution**: Tuned `target_share` to 0.005 (0.5% txn rate) to align with industry sparse-data benchmarks.

@@ -2,11 +2,46 @@
 
 Welcome to RiskFabric! This tutorial guides you through the "Golden Path" to generate your first synthetic dataset of 150,000 transactions in under 5 minutes.
 
-## 1. Prerequisites
-Before starting, ensure you have the following running:
-- **PostgreSQL**: A local instance running on port `5432` with a database named `riskfabric`.
-- **Rust**: Latest stable version installed.
-- **Python**: A virtual environment set up in `env/`.
+## 1. Prerequisites & Environment Setup
+
+Before starting, ensure you have the following components installed and running on your system.
+
+### A. PostgreSQL with PostGIS
+RiskFabric uses PostGIS for spatial joins and geographic reference storage.
+1.  **Install**: `sudo apt install postgresql postgresql-contrib postgis`
+2.  **Database**: Create a database named `riskfabric`.
+    ```bash
+    sudo -u postgres psql -c "CREATE DATABASE riskfabric;"
+    ```
+3.  **Enable Extensions**: Enable PostGIS in your new database.
+    ```bash
+    sudo -u postgres psql -d riskfabric -c "CREATE EXTENSION postgis;"
+    ```
+
+### B. ClickHouse (Optional for Bronze Sink)
+For high-speed analytical storage, we recommend ClickHouse.
+1.  **Install**: Follow the [official guide](https://clickhouse.com/docs/en/install).
+2.  **Start Server**: Ensure the ClickHouse server runs on default port `8123` (HTTP) or `9000` (Native).
+
+### C. Python Environment (for dbt & ML)
+We use `dbt` for geographic modeling and `XGBoost` for fraud detection.
+1.  **Create virtual environment**:
+    ```bash
+    python -m venv env
+    source env/bin/activate
+    ```
+2.  **Install Dependencies**:
+    ```bash
+    pip install dbt-postgres polars xgboost pandas pyarrow
+    ```
+
+### D. Rust Environment
+Ensure you have the latest stable Rust compiler.
+```bash
+rustup update stable
+```
+
+---
 
 ## 2. Preparing Geographic Reference Data
 RiskFabric uses real-world data from OpenStreetMap (OSM) to place customers in realistic locations.
@@ -43,7 +78,7 @@ With the "Ground Truth" ready in `data/references/`, we can start the simulation
 ```bash
 cargo run --release --bin generate
 ```
-The engine processes 10,000 cards in parallel and flushes them to disk. You should see a throughput of ~180,000 TPS.
+The engine processes population segments in parallel and flushes them to disk. You should see a throughput of ~182,000 TPS.
 
 ---
 

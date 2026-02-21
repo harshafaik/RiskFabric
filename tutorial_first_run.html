@@ -1,0 +1,287 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Your First Generation - RiskFabric Documentation</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">🎓 Tutorials</li><li class="chapter-item expanded "><a href="tutorial_first_run.html" class="active"><strong aria-hidden="true">2.</strong> Your First Generation</a></li><li class="chapter-item expanded affix "><li class="part-title">🛠️ How-to Guides</li><li class="chapter-item expanded "><a href="to-do.html"><strong aria-hidden="true">3.</strong> Project Roadmap</a></li><li class="chapter-item expanded "><a href="how_to_add_fraud.html"><strong aria-hidden="true">4.</strong> Add a New Fraud Signature</a></li><li class="chapter-item expanded affix "><li class="part-title">📋 Technical Reference</li><li class="chapter-item expanded "><a href="data_schema.html"><strong aria-hidden="true">5.</strong> Synthetic Data Schema</a></li><li class="chapter-item expanded "><a href="etl_schema.html"><strong aria-hidden="true">6.</strong> ETL & Feature Schema</a></li><li class="chapter-item expanded "><a href="config_reference.html"><strong aria-hidden="true">7.</strong> Configuration Reference</a></li><li class="chapter-item expanded "><a href="developer_utilities.html"><strong aria-hidden="true">8.</strong> Developer Utilities CLI</a></li><li class="chapter-item expanded "><a href="machine_learning.html"><strong aria-hidden="true">9.</strong> Machine Learning Pipeline</a></li><li class="chapter-item expanded affix "><li class="part-title">🧠 Conceptual Explanations</li><li class="chapter-item expanded "><a href="theory_of_operation.html"><strong aria-hidden="true">10.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="fraud_signatures.html"><strong aria-hidden="true">11.</strong> Fraud Signatures & Attack Patterns</a></li><li class="chapter-item expanded "><a href="data_warehouse.html"><strong aria-hidden="true">12.</strong> Data Warehouse & dbt Strategy</a></li><li class="chapter-item expanded "><a href="objectives.html"><strong aria-hidden="true">13.</strong> Project Goals</a></li><li class="chapter-item expanded affix "><li class="part-title">📈 Results & Monitoring</li><li class="chapter-item expanded "><a href="ml_metrics.html"><strong aria-hidden="true">14.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="performance_benchmarks.html"><strong aria-hidden="true">15.</strong> Generation Performance</a></li><li class="chapter-item expanded affix "><li class="part-title">📚 Knowledge Base</li><li class="chapter-item expanded "><a href="issues.html"><strong aria-hidden="true">16.</strong> Technical Issues & Resolutions</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">RiskFabric Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/harshafaik/riskfabric" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="tutorial-your-first-generation"><a class="header" href="#tutorial-your-first-generation">Tutorial: Your First Generation</a></h1>
+<p>Welcome to RiskFabric! This tutorial guides you through the "Golden Path" to generate your first synthetic dataset of 150,000 transactions in under 5 minutes.</p>
+<h2 id="1-prerequisites"><a class="header" href="#1-prerequisites">1. Prerequisites</a></h2>
+<p>Before starting, ensure you have the following running:</p>
+<ul>
+<li><strong>PostgreSQL</strong>: A local instance running on port <code>5432</code> with a database named <code>riskfabric</code>.</li>
+<li><strong>Rust</strong>: Latest stable version installed.</li>
+<li><strong>Python</strong>: A virtual environment set up in <code>env/</code>.</li>
+</ul>
+<h2 id="2-preparing-geographic-reference-data"><a class="header" href="#2-preparing-geographic-reference-data">2. Preparing Geographic Reference Data</a></h2>
+<p>RiskFabric uses real-world data from OpenStreetMap (OSM) to place customers in realistic locations.</p>
+<h3 id="step-1-extract-osm-nodes"><a class="header" href="#step-1-extract-osm-nodes">Step 1: Extract OSM Nodes</a></h3>
+<p>Run the extractor to pull residential and merchant points from the India PBF file into your PostgreSQL database.</p>
+<pre><code class="language-bash">cargo run --release --bin extract_references
+</code></pre>
+<p><em>Wait for "All done! Data loaded into PostgreSQL" to appear.</em></p>
+<h3 id="step-2-enrich-with-dbt"><a class="header" href="#step-2-enrich-with-dbt">Step 2: Enrich with dbt</a></h3>
+<p>Now, we use SQL to perform spatial joins and assign H3 indices to these points.</p>
+<pre><code class="language-bash"># Move to warehouse and run dbt
+cd warehouse
+source ../env/bin/activate
+dbt run
+cd ..
+</code></pre>
+<h3 id="step-3-export-to-parquet"><a class="header" href="#step-3-export-to-parquet">Step 3: Export to Parquet</a></h3>
+<p>The generator requires these references in high-performance Parquet format. Run the extractor one more time to export the clean marts.</p>
+<pre><code class="language-bash">cargo run --release --bin extract_references
+</code></pre>
+<hr />
+<h2 id="3-running-the-generator"><a class="header" href="#3-running-the-generator">3. Running the Generator</a></h2>
+<p>With the "Ground Truth" ready in <code>data/references/</code>, we can start the simulation.</p>
+<h3 id="step-4-execute-the-generation"><a class="header" href="#step-4-execute-the-generation">Step 4: Execute the Generation</a></h3>
+<pre><code class="language-bash">cargo run --release --bin generate
+</code></pre>
+<p>The engine processes 10,000 cards in parallel and flushes them to disk. You should see a throughput of ~180,000 TPS.</p>
+<hr />
+<h2 id="4-verifying-the-results"><a class="header" href="#4-verifying-the-results">4. Verifying the Results</a></h2>
+<p>Your synthetic data awaits in <code>data/output/</code>.</p>
+<h3 id="check-output-files"><a class="header" href="#check-output-files">Check Output Files</a></h3>
+<p>List the directory to ensure the generator created all tables:</p>
+<pre><code class="language-bash">ls -lh data/output/
+</code></pre>
+<p>You should see:</p>
+<ul>
+<li><code>customers.parquet</code></li>
+<li><code>accounts.parquet</code></li>
+<li><code>cards.parquet</code></li>
+<li><code>transactions.parquet</code></li>
+<li><code>fraud_metadata.parquet</code></li>
+</ul>
+<h3 id="quick-inspection"><a class="header" href="#quick-inspection">Quick Inspection</a></h3>
+<p>Use a tool like <code>parquet-cli</code> or a simple Python script to check the fraud distribution:</p>
+<pre><code class="language-python">import polars as pl
+df = pl.read_parquet("data/output/transactions.parquet")
+print(df["is_fraud"].value_counts())
+</code></pre>
+<p><strong>Congratulations!</strong> You have successfully completed your first generation. Next, you can learn <a href="how_to_add_fraud.html">How to add a new Fraud Signature</a> or dive into the <a href="etl_schema.html">ETL &amp; Feature Schema</a>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="to-do.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="to-do.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

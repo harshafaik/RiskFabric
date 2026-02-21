@@ -1,0 +1,1213 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>RiskFabric Documentation</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">🎓 Tutorials</li><li class="chapter-item expanded "><a href="tutorial_first_run.html"><strong aria-hidden="true">2.</strong> Your First Generation</a></li><li class="chapter-item expanded affix "><li class="part-title">🛠️ How-to Guides</li><li class="chapter-item expanded "><a href="to-do.html"><strong aria-hidden="true">3.</strong> Project Roadmap</a></li><li class="chapter-item expanded "><a href="how_to_add_fraud.html"><strong aria-hidden="true">4.</strong> Add a New Fraud Signature</a></li><li class="chapter-item expanded affix "><li class="part-title">📋 Technical Reference</li><li class="chapter-item expanded "><a href="data_schema.html"><strong aria-hidden="true">5.</strong> Synthetic Data Schema</a></li><li class="chapter-item expanded "><a href="etl_schema.html"><strong aria-hidden="true">6.</strong> ETL & Feature Schema</a></li><li class="chapter-item expanded "><a href="config_reference.html"><strong aria-hidden="true">7.</strong> Configuration Reference</a></li><li class="chapter-item expanded "><a href="developer_utilities.html"><strong aria-hidden="true">8.</strong> Developer Utilities CLI</a></li><li class="chapter-item expanded "><a href="machine_learning.html"><strong aria-hidden="true">9.</strong> Machine Learning Pipeline</a></li><li class="chapter-item expanded affix "><li class="part-title">🧠 Conceptual Explanations</li><li class="chapter-item expanded "><a href="theory_of_operation.html"><strong aria-hidden="true">10.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="fraud_signatures.html"><strong aria-hidden="true">11.</strong> Fraud Signatures & Attack Patterns</a></li><li class="chapter-item expanded "><a href="data_warehouse.html"><strong aria-hidden="true">12.</strong> Data Warehouse & dbt Strategy</a></li><li class="chapter-item expanded "><a href="objectives.html"><strong aria-hidden="true">13.</strong> Project Goals</a></li><li class="chapter-item expanded affix "><li class="part-title">📈 Results & Monitoring</li><li class="chapter-item expanded "><a href="ml_metrics.html"><strong aria-hidden="true">14.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="performance_benchmarks.html"><strong aria-hidden="true">15.</strong> Generation Performance</a></li><li class="chapter-item expanded affix "><li class="part-title">📚 Knowledge Base</li><li class="chapter-item expanded "><a href="issues.html"><strong aria-hidden="true">16.</strong> Technical Issues & Resolutions</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">RiskFabric Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/harshafaik/riskfabric" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="riskfabric"><a class="header" href="#riskfabric">RiskFabric</a></h1>
+<p><a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/language-Rust-orange.svg" alt="Rust" /></a>
+<a href="https://pola.rs/"><img src="https://img.shields.io/badge/engine-Polars%200.51.0-blue.svg" alt="Polars" /></a>
+<a href="../LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a></p>
+<p><strong>RiskFabric</strong> is a high-performance, agent-based synthetic fraud generator and Medallion ETL pipeline. Built in Rust and powered by Polars, it is designed to simulate realistic financial ecosystems at massive scale.</p>
+<h2 id="-the-north-star-objective"><a class="header" href="#-the-north-star-objective">🚀 The "North Star" Objective</a></h2>
+<p>RiskFabric demonstrates that a modern, vertically-scaled Rust stack can generate, store, and process <strong>100 Million high-fidelity transactions</strong> on a single workstation, outperforming traditional distributed clusters for large-scale financial simulation and ML training.</p>
+<h2 id="-key-features"><a class="header" href="#-key-features">✨ Key Features</a></h2>
+<ul>
+<li><strong>Extreme Throughput</strong>: Achieves <strong>~182,000 Transactions Per Second (TPS)</strong> using a parallelized "One-Pass" architecture.</li>
+<li><strong>Agent-Based Realism</strong>: Simulates the full lifecycle of <code>Customers</code>, <code>Accounts</code>, and <code>Cards</code>, with behavioral spend profiles driven by real-world heuristics.</li>
+<li><strong>Geographic Fidelity</strong>: Integrates <strong>OpenStreetMap (OSM)</strong> India data and <strong>Uber H3</strong> hexagonal indexing for hyper-realistic spatial spend patterns and location anomalies.</li>
+<li><strong>Sophisticated Fraud Injection</strong>: Includes signatures for UPI Scams, Account Takeover (ATO), Card Not Present (CNP) fraud, and coordinated campaigns.</li>
+<li><strong>Medallion Data Architecture</strong>: A full pipeline taking data from <strong>Bronze</strong> (Raw) to <strong>Silver</strong> (Feature Engineered) to <strong>Gold</strong> (ML-Ready).</li>
+<li><strong>ML Mastery</strong>: Built-in leakage prevention and simulated label noise (False Positives/Negatives) to ensure models are robust and production-ready.</li>
+</ul>
+<h2 id="-tech-stack"><a class="header" href="#-tech-stack">🛠️ Tech Stack</a></h2>
+<ul>
+<li><strong>Core Engine</strong>: Rust (Rayon for parallelization, Rand for deterministic seeding).</li>
+<li><strong>Data Processing</strong>: Polars 0.51.0 (Lazy API &amp; Streaming).</li>
+<li><strong>Data Warehouse</strong>: PostgreSQL (Spatial Reference) &amp; dbt (Geographic Enrichment).</li>
+<li><strong>Storage</strong>: Snappy-compressed Parquet &amp; ClickHouse.</li>
+<li><strong>Machine Learning</strong>: Python (XGBoost) with sanitized feature vectors.</li>
+</ul>
+<h2 id="-project-structure"><a class="header" href="#-project-structure">📁 Project Structure</a></h2>
+<ul>
+<li><code>src/generators/</code>: Core ABM logic and fraud mutation engine.</li>
+<li><code>src/etl/</code>: Polars-based feature engineering (Velocities, Reputations, Sequences).</li>
+<li><code>src/bin/</code>: CLI utilities for OSM extraction, data landing, and pipeline orchestration.</li>
+<li><code>warehouse/</code>: dbt project for geographic reference modeling.</li>
+<li><code>documentation/</code>: Detailed technical documentation (mdBook).</li>
+</ul>
+<h2 id="-quick-start"><a class="header" href="#-quick-start">🚀 Quick Start</a></h2>
+<h3 id="1-prerequisites"><a class="header" href="#1-prerequisites">1. Prerequisites</a></h3>
+<ul>
+<li>Rust (Latest Stable)</li>
+<li>PostgreSQL (Local instance for geographic references)</li>
+<li>Python 3.10+ (For ML and dbt)</li>
+</ul>
+<h3 id="2-generate-data"><a class="header" href="#2-generate-data">2. Generate Data</a></h3>
+<pre><code class="language-bash"># Generate the population and transaction stream
+cargo run --release --bin generate
+</code></pre>
+<h3 id="3-run-etl"><a class="header" href="#3-run-etl">3. Run ETL</a></h3>
+<pre><code class="language-bash"># Process raw data into Silver and Gold layers
+cargo run --release --bin etl_gold_master
+</code></pre>
+<h3 id="4-view-documentation"><a class="header" href="#4-view-documentation">4. View Documentation</a></h3>
+<p>Technical details, schemas, and theory of operation are available in the local mdBook:</p>
+<pre><code class="language-bash">mdbook serve --open
+</code></pre>
+<h2 id="-benchmarks-150k-txns"><a class="header" href="#-benchmarks-150k-txns">📈 Benchmarks (150k Txns)</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Architecture</th><th style="text-align: left">Throughput</th><th style="text-align: left">Total Time</th><th style="text-align: left">Speedup</th></tr></thead><tbody>
+<tr><td style="text-align: left">Sequential Port</td><td style="text-align: left">3,400 TPS</td><td style="text-align: left">48.7s</td><td style="text-align: left">1x</td></tr>
+<tr><td style="text-align: left"><strong>Optimized One-Pass</strong></td><td style="text-align: left"><strong>182,000 TPS</strong></td><td style="text-align: left"><strong>4.4s</strong></td><td style="text-align: left"><strong>53x</strong></td></tr>
+</tbody></table>
+</div>
+<hr />
+<p><em>Developed by harshafaik</em></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="tutorial-your-first-generation"><a class="header" href="#tutorial-your-first-generation">Tutorial: Your First Generation</a></h1>
+<p>Welcome to RiskFabric! This tutorial guides you through the "Golden Path" to generate your first synthetic dataset of 150,000 transactions in under 5 minutes.</p>
+<h2 id="1-prerequisites-1"><a class="header" href="#1-prerequisites-1">1. Prerequisites</a></h2>
+<p>Before starting, ensure you have the following running:</p>
+<ul>
+<li><strong>PostgreSQL</strong>: A local instance running on port <code>5432</code> with a database named <code>riskfabric</code>.</li>
+<li><strong>Rust</strong>: Latest stable version installed.</li>
+<li><strong>Python</strong>: A virtual environment set up in <code>env/</code>.</li>
+</ul>
+<h2 id="2-preparing-geographic-reference-data"><a class="header" href="#2-preparing-geographic-reference-data">2. Preparing Geographic Reference Data</a></h2>
+<p>RiskFabric uses real-world data from OpenStreetMap (OSM) to place customers in realistic locations.</p>
+<h3 id="step-1-extract-osm-nodes"><a class="header" href="#step-1-extract-osm-nodes">Step 1: Extract OSM Nodes</a></h3>
+<p>Run the extractor to pull residential and merchant points from the India PBF file into your PostgreSQL database.</p>
+<pre><code class="language-bash">cargo run --release --bin extract_references
+</code></pre>
+<p><em>Wait for "All done! Data loaded into PostgreSQL" to appear.</em></p>
+<h3 id="step-2-enrich-with-dbt"><a class="header" href="#step-2-enrich-with-dbt">Step 2: Enrich with dbt</a></h3>
+<p>Now, we use SQL to perform spatial joins and assign H3 indices to these points.</p>
+<pre><code class="language-bash"># Move to warehouse and run dbt
+cd warehouse
+source ../env/bin/activate
+dbt run
+cd ..
+</code></pre>
+<h3 id="step-3-export-to-parquet"><a class="header" href="#step-3-export-to-parquet">Step 3: Export to Parquet</a></h3>
+<p>The generator requires these references in high-performance Parquet format. Run the extractor one more time to export the clean marts.</p>
+<pre><code class="language-bash">cargo run --release --bin extract_references
+</code></pre>
+<hr />
+<h2 id="3-running-the-generator"><a class="header" href="#3-running-the-generator">3. Running the Generator</a></h2>
+<p>With the "Ground Truth" ready in <code>data/references/</code>, we can start the simulation.</p>
+<h3 id="step-4-execute-the-generation"><a class="header" href="#step-4-execute-the-generation">Step 4: Execute the Generation</a></h3>
+<pre><code class="language-bash">cargo run --release --bin generate
+</code></pre>
+<p>The engine processes 10,000 cards in parallel and flushes them to disk. You should see a throughput of ~180,000 TPS.</p>
+<hr />
+<h2 id="4-verifying-the-results"><a class="header" href="#4-verifying-the-results">4. Verifying the Results</a></h2>
+<p>Your synthetic data awaits in <code>data/output/</code>.</p>
+<h3 id="check-output-files"><a class="header" href="#check-output-files">Check Output Files</a></h3>
+<p>List the directory to ensure the generator created all tables:</p>
+<pre><code class="language-bash">ls -lh data/output/
+</code></pre>
+<p>You should see:</p>
+<ul>
+<li><code>customers.parquet</code></li>
+<li><code>accounts.parquet</code></li>
+<li><code>cards.parquet</code></li>
+<li><code>transactions.parquet</code></li>
+<li><code>fraud_metadata.parquet</code></li>
+</ul>
+<h3 id="quick-inspection"><a class="header" href="#quick-inspection">Quick Inspection</a></h3>
+<p>Use a tool like <code>parquet-cli</code> or a simple Python script to check the fraud distribution:</p>
+<pre><code class="language-python">import polars as pl
+df = pl.read_parquet("data/output/transactions.parquet")
+print(df["is_fraud"].value_counts())
+</code></pre>
+<p><strong>Congratulations!</strong> You have successfully completed your first generation. Next, you can learn <a href="how_to_add_fraud.html">How to add a new Fraud Signature</a> or dive into the <a href="etl_schema.html">ETL &amp; Feature Schema</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="riskfabric-project-to-do-list"><a class="header" href="#riskfabric-project-to-do-list">RiskFabric Project To-Do List</a></h1>
+<h2 id="customer-generation"><a class="header" href="#customer-generation">Customer Generation</a></h2>
+<ul>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Fix Location Heuristics:</strong> Currently, <code>location_type</code> (Urban/Rural) is assigned based on city name or fallback from config.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Spatial Jittering (Clustering):</strong> Instead of pointing all customers to exact OSM node coordinates, introduce a small random "drift" (jitter) to simulate neighbors and improve spatial clustering.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Improve City Name Fallbacks:</strong> Using "{State} Region" for missing city names to maintain geographic consistency.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Validate Demographics:</strong> Indian-centric names and email domains implemented via <code>customer_config.yaml</code>.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Fix Customer Schema Mismatch:</strong> Resolved issue where <code>customer_risk_score</code> and H3 indices (<code>home_h3r5</code>, <code>home_h3r7</code>) were zero/empty due to naming mismatches and missing columns in the Parquet export.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Streamline Customer Tables:</strong> Removed redundant date part columns (<code>registration_year/month/day</code>) from ClickHouse, favoring dynamic derivation from the base <code>registration_date</code>.</li>
+</ul>
+<h2 id="transaction--merchant-logic"><a class="header" href="#transaction--merchant-logic">Transaction &amp; Merchant Logic</a></h2>
+<ul>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>"One-Pass" Chunked Generation:</strong> Refactored generator to process cards in chunks of 5,000 to prevent OOM errors, enabling the generation of 4.3M+ transactions on standard hardware.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Accurate MCC Mapping:</strong> Map <code>merchant_category</code> from OSM to standard Merchant Category Codes (MCC) for realistic financial analysis.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Budget-Aware Generation:</strong> Link transaction amounts to the customer's <code>monthly_spend</code>. Ensure the sum of monthly transactions respects the customer's financial profile.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Temporal Refinement:</strong> Implement hourly/daily weights for transactions (e.g., more restaurant spend in the evening, less banking at 3 AM).</li>
+<li><input disabled="" type="checkbox"/>
+<strong>User Agent Variance:</strong> Reduce <code>user_agent</code> string length and increase variance/realism for different payment channels.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Spatial Refinement:</strong> Review how transaction locations are selected. Ensure "near home" transactions aren't just at one point, but spread across a local radius.</li>
+</ul>
+<h2 id="etl--infrastructure"><a class="header" href="#etl--infrastructure">ETL &amp; Infrastructure</a></h2>
+<ul>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Fix Polars API Breakage:</strong> Migrated ETL logic to Polars 0.51.0. Implemented UInt32 casting for flags and Int32 casting for weekday comparisons to resolve engine panics.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Data Quality Audit:</strong> Resolved schema mismatch between Polars output and ClickHouse Silver layer. Fixed timestamp precision (nanoseconds to seconds) and ensured all 22 feature columns are correctly populated.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Silver &amp; Gold ETL Suite:</strong> Ported all 6 Silver logic modules and the Gold Master Join logic from Python/Spark to Rust/Polars. Verified with a 180k transaction dry run.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Multi-Table Feature Joins:</strong> Successfully implemented Master Joins between raw transactions and feature tables (Customer, Merchant, Device, Campaign, Network) to produce the final denormalized ML table.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Idempotent Silver ETL:</strong> Added <code>TRUNCATE TABLE</code> to the Silver ETL pipeline to prevent record doubling on subsequent runs.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Document Label Noise Impact:</strong> Verified that the observed ~13.6% fraud rate is a result of the configured 12% target plus 3% False Positive and 10% False Negative noise.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Polars Streaming Implementation:</strong> Refactor runners to use <code>.scan_parquet()</code> and <code>.sink_parquet()</code> (Streaming) to support the 100M+ row benchmark without OOM errors.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Scale Customer Features:</strong> Optimize <code>etl_silver_customer</code> to handle joins across 100M transactions without exhausting memory.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Optimize Transaction Generation:</strong> Achieved ~180k TPS (150k transactions in 823ms) using "One-Pass" parallel generation.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Scalability Testing:</strong> Validate that the "One-Pass" approach holds up for 1M+ customers (approx 15M transactions) and monitor memory usage.</li>
+</ul>
+<h2 id="machine-learning--model-training"><a class="header" href="#machine-learning--model-training">Machine Learning &amp; Model Training</a></h2>
+<ul>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Ingest Ground Truth Metadata</strong>: Load <code>fraud_metadata.parquet</code> into ClickHouse (Bronze) to provide clean labels and anomaly flags for training.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Enrich Silver Layer</strong>: Update <code>etl_silver_sequence</code> to join the fraud metadata, replacing placeholders with actual ground-truth flags.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Expand Gold ML Table</strong>: Update Gold ETL to include all categorical features (merchant_category, channel) and behavioral signals for the model.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>XGBoost Training Pipeline</strong>: Implement a Polars-based training script to train and evaluate the fraud detection model.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Model Persistence</strong>: Save trained models with versioning and feature metadata for consistent inference.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Performance Tracking</strong>: Log training and test metrics in <code>documentation/ml_metrics.md</code> for each model iteration.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Inference Service</strong>: Create a fast inference script or service to score new transactions in real-time.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Feature Importance Analysis</strong>: Analyze which synthetic patterns (UPI, ATO) are most identifiable by the model.</li>
+</ul>
+<h2 id="configuration--tuning"><a class="header" href="#configuration--tuning">Configuration &amp; Tuning</a></h2>
+<ul>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Externalize Hardcoded Parameters:</strong> Moved magic numbers and tuning constants from Rust source code into YAML files.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Product Catalog:</strong> Centralized account/card types, networks, and default limits in <code>product_catalog.yaml</code>.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Transaction &amp; Geo Tuning:</strong> Externalized merchant categories, success rates, and India-specific geo-bounding boxes in <code>transaction_config.yaml</code>.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Fraud Operational Tuning:</strong> Created <code>fraud_tuning.yaml</code> to separate attack probabilities and anomaly settings from the core fraud pattern definitions.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Decouple Rules from Tuning:</strong> Implemented two distinct loaders in <code>src/config.rs</code> to separate "Fraud Patterns" (Rules) from "Operational Knobs" (Tuning) for better architectural modularity.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Profile-Driven Geo-Anomalies:</strong> Tied anomaly probabilities directly to fraud types (e.g., UPI=High, Friendly=Zero).</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Coordinated Campaign Signals:</strong> Implemented exact IP and coordinate sharing across participants in coordinated campaigns.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="how-to-add-a-new-fraud-signature"><a class="header" href="#how-to-add-a-new-fraud-signature">How-to: Add a New Fraud Signature</a></h1>
+<p>This guide provides a task-oriented path for developers to inject new fraud behaviors into the RiskFabric engine.</p>
+<h2 id="1-define-the-profile"><a class="header" href="#1-define-the-profile">1. Define the Profile</a></h2>
+<p>New fraud patterns are defined in <code>src/generators/fraud.rs</code>. Every profile needs:</p>
+<ul>
+<li>A unique name.</li>
+<li>A weighted probability in the configuration.</li>
+<li>A Behavioral and Spatial signature.</li>
+</ul>
+<h2 id="2-implement-the-mutator"><a class="header" href="#2-implement-the-mutator">2. Implement the Mutator</a></h2>
+<p>Add a new branch to the <code>FraudMutator</code> logic.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Example skeleton
+fn mutate_upi_scam(txn: &amp;mut Transaction) {
+    // Modify amount, location, or device
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="3-register-in-config"><a class="header" href="#3-register-in-config">3. Register in Config</a></h2>
+<p>Update <code>data/config/fraud_rules.yaml</code> to include your new profile and its target weight.</p>
+<hr />
+<p><em>Detailed guide coming soon.</em></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="synthetic-data-schema"><a class="header" href="#synthetic-data-schema">Synthetic Data Schema</a></h1>
+<p>RiskFabric generates a multi-table synthetic dataset mirroring professional financial environments. The entities link logically for scale and realism.</p>
+<h2 id="entity-relationship-overview"><a class="header" href="#entity-relationship-overview">Entity Relationship Overview</a></h2>
+<ul>
+<li><strong>Customer</strong>: The primary entity. Owns several Accounts.</li>
+<li><strong>Account</strong>: A financial container (Savings, Current, Credit). Contains several Cards.</li>
+<li><strong>Card</strong>: The instrument used for transactions.</li>
+<li><strong>Transaction</strong>: A financial event linked to a Card, Account, and Customer.</li>
+<li><strong>FraudMetadata</strong>: Ground-truth data linked 1:1 with Transactions to explain the generation context.</li>
+</ul>
+<hr />
+<h2 id="-customer-customersparquet"><a class="header" href="#-customer-customersparquet">👥 Customer (<code>customers.parquet</code>)</a></h2>
+<p>Defines the synthetic population's demographics and geographic baseline.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Field</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>customer_id</code></td><td style="text-align: left">String</td><td style="text-align: left">Unique UUID for the customer.</td></tr>
+<tr><td style="text-align: left"><code>name</code></td><td style="text-align: left">String</td><td style="text-align: left">Full name (Indian-centric).</td></tr>
+<tr><td style="text-align: left"><code>age</code></td><td style="text-align: left">UInt8</td><td style="text-align: left">Age of the customer (18-90).</td></tr>
+<tr><td style="text-align: left"><code>email</code></td><td style="text-align: left">String</td><td style="text-align: left">Synthetic email address.</td></tr>
+<tr><td style="text-align: left"><code>location</code></td><td style="text-align: left">String</td><td style="text-align: left">Full residential address (OSM-based).</td></tr>
+<tr><td style="text-align: left"><code>state</code></td><td style="text-align: left">String</td><td style="text-align: left">Standardized Indian state name.</td></tr>
+<tr><td style="text-align: left"><code>location_type</code></td><td style="text-align: left">String</td><td style="text-align: left">Urban vs. Rural classification.</td></tr>
+<tr><td style="text-align: left"><code>home_latitude</code></td><td style="text-align: left">Float64</td><td style="text-align: left">WGS84 Latitude of home.</td></tr>
+<tr><td style="text-align: left"><code>home_longitude</code></td><td style="text-align: left">Float64</td><td style="text-align: left">WGS84 Longitude of home.</td></tr>
+<tr><td style="text-align: left"><code>home_h3r5</code></td><td style="text-align: left">String</td><td style="text-align: left">H3 Resolution 5 index (Neighborhood level).</td></tr>
+<tr><td style="text-align: left"><code>home_h3r7</code></td><td style="text-align: left">String</td><td style="text-align: left">H3 Resolution 7 index (Block level).</td></tr>
+<tr><td style="text-align: left"><code>credit_score</code></td><td style="text-align: left">UInt16</td><td style="text-align: left">Synthetic credit score (300-850).</td></tr>
+<tr><td style="text-align: left"><code>monthly_spend</code></td><td style="text-align: left">Float64</td><td style="text-align: left">Average expected monthly expenditure.</td></tr>
+<tr><td style="text-align: left"><code>customer_risk_score</code></td><td style="text-align: left">Float32</td><td style="text-align: left">Baseline risk probability (0.0 to 1.0).</td></tr>
+<tr><td style="text-align: left"><code>is_fraud</code></td><td style="text-align: left">Bool</td><td style="text-align: left">Flag indicating if this customer represents a fraud target.</td></tr>
+<tr><td style="text-align: left"><code>registration_date</code></td><td style="text-align: left">String</td><td style="text-align: left">ISO 8601 date of account registration.</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="-account-accountsparquet"><a class="header" href="#-account-accountsparquet">🏦 Account (<code>accounts.parquet</code>)</a></h2>
+<p>The logical banking container for funds.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Field</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>account_id</code></td><td style="text-align: left">String</td><td style="text-align: left">Unique UUID for the account.</td></tr>
+<tr><td style="text-align: left"><code>customer_id</code></td><td style="text-align: left">String</td><td style="text-align: left">FK to Customer.</td></tr>
+<tr><td style="text-align: left"><code>bank_id</code></td><td style="text-align: left">String</td><td style="text-align: left">Identifier for the issuing bank.</td></tr>
+<tr><td style="text-align: left"><code>account_no</code></td><td style="text-align: left">String</td><td style="text-align: left">12-digit synthetic account number.</td></tr>
+<tr><td style="text-align: left"><code>account_type</code></td><td style="text-align: left">String</td><td style="text-align: left">Savings, Current, or Credit.</td></tr>
+<tr><td style="text-align: left"><code>balance</code></td><td style="text-align: left">Float64</td><td style="text-align: left">Current funds in the account.</td></tr>
+<tr><td style="text-align: left"><code>status</code></td><td style="text-align: left">String</td><td style="text-align: left">Active, Closed, or Suspended.</td></tr>
+<tr><td style="text-align: left"><code>creation_date</code></td><td style="text-align: left">String</td><td style="text-align: left">The account opening date.</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="-card-cardsparquet"><a class="header" href="#-card-cardsparquet">💳 Card (<code>cards.parquet</code>)</a></h2>
+<p>The payment instrument associated with an account.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Field</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>card_id</code></td><td style="text-align: left">String</td><td style="text-align: left">Unique UUID for the card.</td></tr>
+<tr><td style="text-align: left"><code>account_id</code></td><td style="text-align: left">String</td><td style="text-align: left">FK to Account.</td></tr>
+<tr><td style="text-align: left"><code>customer_id</code></td><td style="text-align: left">String</td><td style="text-align: left">FK to Customer.</td></tr>
+<tr><td style="text-align: left"><code>card_number</code></td><td style="text-align: left">String</td><td style="text-align: left">16-digit synthetic PAN.</td></tr>
+<tr><td style="text-align: left"><code>card_network</code></td><td style="text-align: left">String</td><td style="text-align: left">VISA, Mastercard, or RuPay.</td></tr>
+<tr><td style="text-align: left"><code>card_type</code></td><td style="text-align: left">String</td><td style="text-align: left">Debit or Credit.</td></tr>
+<tr><td style="text-align: left"><code>status</code></td><td style="text-align: left">String</td><td style="text-align: left">Active, Blocked, or Expired.</td></tr>
+<tr><td style="text-align: left"><code>status_reason</code></td><td style="text-align: left">String</td><td style="text-align: left">Reason for status changes (e.g., SIM Swap Suspect).</td></tr>
+<tr><td style="text-align: left"><code>issue_date</code></td><td style="text-align: left">String</td><td style="text-align: left">Card issuance date.</td></tr>
+<tr><td style="text-align: left"><code>activation_date</code></td><td style="text-align: left">String</td><td style="text-align: left">Initial card usage date.</td></tr>
+<tr><td style="text-align: left"><code>expiry_date</code></td><td style="text-align: left">String</td><td style="text-align: left">Card expiry date.</td></tr>
+<tr><td style="text-align: left"><code>issuing_bank</code></td><td style="text-align: left">String</td><td style="text-align: left">Full name of the bank.</td></tr>
+<tr><td style="text-align: left"><code>bank_code</code></td><td style="text-align: left">String</td><td style="text-align: left">Standardized 4-digit bank identifier.</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="-transaction-transactionsparquet"><a class="header" href="#-transaction-transactionsparquet">💸 Transaction (<code>transactions.parquet</code>)</a></h2>
+<p>The high-volume stream of financial events.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Field</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>transaction_id</code></td><td style="text-align: left">String</td><td style="text-align: left">Unique UUID for the transaction.</td></tr>
+<tr><td style="text-align: left"><code>card_id</code></td><td style="text-align: left">String</td><td style="text-align: left">FK to Card.</td></tr>
+<tr><td style="text-align: left"><code>account_id</code></td><td style="text-align: left">String</td><td style="text-align: left">FK to Account.</td></tr>
+<tr><td style="text-align: left"><code>customer_id</code></td><td style="text-align: left">String</td><td style="text-align: left">FK to Customer.</td></tr>
+<tr><td style="text-align: left"><code>merchant_id</code></td><td style="text-align: left">String</td><td style="text-align: left">Unique identifier for the merchant.</td></tr>
+<tr><td style="text-align: left"><code>merchant_name</code></td><td style="text-align: left">String</td><td style="text-align: left">Name of the business.</td></tr>
+<tr><td style="text-align: left"><code>merchant_category</code></td><td style="text-align: left">String</td><td style="text-align: left">Category (e.g., GROCERY, TRAVEL).</td></tr>
+<tr><td style="text-align: left"><code>merchant_country</code></td><td style="text-align: left">String</td><td style="text-align: left">Country code of the merchant (defaults to IN).</td></tr>
+<tr><td style="text-align: left"><code>amount</code></td><td style="text-align: left">Float64</td><td style="text-align: left">Transaction value in base currency.</td></tr>
+<tr><td style="text-align: left"><code>timestamp</code></td><td style="text-align: left">String</td><td style="text-align: left">ISO 8601 high-precision timestamp.</td></tr>
+<tr><td style="text-align: left"><code>transaction_channel</code></td><td style="text-align: left">String</td><td style="text-align: left">online, in-store, UPI, etc.</td></tr>
+<tr><td style="text-align: left"><code>card_present</code></td><td style="text-align: left">Bool</td><td style="text-align: left">Physical card usage flag.</td></tr>
+<tr><td style="text-align: left"><code>user_agent</code></td><td style="text-align: left">String</td><td style="text-align: left">Browser or POS device identifier.</td></tr>
+<tr><td style="text-align: left"><code>ip_address</code></td><td style="text-align: left">String</td><td style="text-align: left">IPv4 address of the requester.</td></tr>
+<tr><td style="text-align: left"><code>status</code></td><td style="text-align: left">String</td><td style="text-align: left">High-level status (Success or Failed).</td></tr>
+<tr><td style="text-align: left"><code>auth_status</code></td><td style="text-align: left">String</td><td style="text-align: left">Banking authorization code (approved/declined).</td></tr>
+<tr><td style="text-align: left"><code>failure_reason</code></td><td style="text-align: left">String</td><td style="text-align: left">Detailed reason for declined transactions.</td></tr>
+<tr><td style="text-align: left"><code>is_fraud</code></td><td style="text-align: left">Bool</td><td style="text-align: left"><strong>Noisy Label</strong> (includes FN/FP).</td></tr>
+<tr><td style="text-align: left"><code>chargeback</code></td><td style="text-align: left">Bool</td><td style="text-align: left">Flag indicating a later customer dispute.</td></tr>
+<tr><td style="text-align: left"><code>location_lat</code></td><td style="text-align: left">Float64</td><td style="text-align: left">Latitude of the transaction event.</td></tr>
+<tr><td style="text-align: left"><code>location_long</code></td><td style="text-align: left">Float64</td><td style="text-align: left">Longitude of the transaction event.</td></tr>
+<tr><td style="text-align: left"><code>h3_r7</code></td><td style="text-align: left">String</td><td style="text-align: left">H3 Resolution 7 index of the transaction location.</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="-fraud-metadata-fraud_metadataparquet"><a class="header" href="#-fraud-metadata-fraud_metadataparquet">🕵️ Fraud Metadata (<code>fraud_metadata.parquet</code>)</a></h2>
+<p>Internal ground-truth for debugging and advanced ML training. This table is <strong>not</strong> used in standard inference but is vital for "white-box" evaluation.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Field</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>transaction_id</code></td><td style="text-align: left">String</td><td style="text-align: left">FK to Transaction.</td></tr>
+<tr><td style="text-align: left"><code>fraud_target</code></td><td style="text-align: left">Bool</td><td style="text-align: left"><strong>Ground Truth</strong> (True Fraud flag).</td></tr>
+<tr><td style="text-align: left"><code>fraud_type</code></td><td style="text-align: left">String</td><td style="text-align: left">Profile used (e.g., <code>upi_scam</code>, <code>ato</code>).</td></tr>
+<tr><td style="text-align: left"><code>label_noise</code></td><td style="text-align: left">String</td><td style="text-align: left">Reason for label mismatch (if any).</td></tr>
+<tr><td style="text-align: left"><code>injector_version</code></td><td style="text-align: left">String</td><td style="text-align: left">Engine version.</td></tr>
+<tr><td style="text-align: left"><code>geo_anomaly</code></td><td style="text-align: left">Bool</td><td style="text-align: left">True if location represents an outlier.</td></tr>
+<tr><td style="text-align: left"><code>device_anomaly</code></td><td style="text-align: left">Bool</td><td style="text-align: left">True if device/UA represents an outlier.</td></tr>
+<tr><td style="text-align: left"><code>ip_anomaly</code></td><td style="text-align: left">Bool</td><td style="text-align: left">True if IP represents a known malicious prefix.</td></tr>
+<tr><td style="text-align: left"><code>burst_session</code></td><td style="text-align: left">Bool</td><td style="text-align: left">Part of a rapid-fire sequence.</td></tr>
+<tr><td style="text-align: left"><code>burst_seq</code></td><td style="text-align: left">Int32</td><td style="text-align: left">Sequence number within a burst session.</td></tr>
+<tr><td style="text-align: left"><code>campaign_id</code></td><td style="text-align: left">String</td><td style="text-align: left">Link to a coordinated attack campaign.</td></tr>
+<tr><td style="text-align: left"><code>campaign_type</code></td><td style="text-align: left">String</td><td style="text-align: left">Coordination type (e.g., <code>coordinated_attack</code>).</td></tr>
+<tr><td style="text-align: left"><code>campaign_phase</code></td><td style="text-align: left">String</td><td style="text-align: left">Phase within the campaign (early, active, late).</td></tr>
+<tr><td style="text-align: left"><code>campaign_day_number</code></td><td style="text-align: left">Int32</td><td style="text-align: left">Days since campaign start.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="etl--feature-engineering-schema"><a class="header" href="#etl--feature-engineering-schema">ETL &amp; Feature Engineering Schema</a></h1>
+<p>RiskFabric follows a <strong>Medallion Architecture</strong> to transform raw synthetic data into ML-ready features. This document outlines the schema changes and features engineered at each layer.</p>
+<hr />
+<h2 id="-silver-layer-feature-engineering"><a class="header" href="#-silver-layer-feature-engineering">🥈 Silver Layer (Feature Engineering)</a></h2>
+<p>The Silver layer consists of modular transformations that calculate behavioral, temporal, and entity-based risk signals.</p>
+<h3 id="1-sequence-features-sequencers"><a class="header" href="#1-sequence-features-sequencers">1. Sequence Features (<code>sequence.rs</code>)</a></h3>
+<p>Calculates the relationship between a transaction and the customer's immediate history.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Feature</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>time_since_last_transaction</code></td><td style="text-align: left">Float64</td><td style="text-align: left">Seconds elapsed since previous txn (Windowed).</td></tr>
+<tr><td style="text-align: left"><code>transaction_sequence_number</code></td><td style="text-align: left">UInt64</td><td style="text-align: left">Monotonic counter of txns per customer.</td></tr>
+<tr><td style="text-align: left"><code>hours_since_midnight</code></td><td style="text-align: left">Float64</td><td style="text-align: left">Time of day decimal (0.0 to 23.99).</td></tr>
+<tr><td style="text-align: left"><code>is_weekend</code></td><td style="text-align: left">UInt32</td><td style="text-align: left">Boolean flag (1 = Sat/Sun).</td></tr>
+<tr><td style="text-align: left"><code>amount_round_number_flag</code></td><td style="text-align: left">UInt32</td><td style="text-align: left">Flag for amounts divisible by 1, 5, or 10.</td></tr>
+<tr><td style="text-align: left"><code>amount_deviation_z_score</code></td><td style="text-align: left">Float64</td><td style="text-align: left">Distance from user's mean amount in Std Devs.</td></tr>
+<tr><td style="text-align: left"><code>rapid_fire_transaction_flag</code></td><td style="text-align: left">UInt32</td><td style="text-align: left">Flag for txns occurring within 300s of each other.</td></tr>
+<tr><td style="text-align: left"><code>escalating_amounts_flag</code></td><td style="text-align: left">UInt32</td><td style="text-align: left">Flag if Amount(N) &gt; Amount(N-1) &gt; Amount(N-2).</td></tr>
+<tr><td style="text-align: left"><code>merchant_category_switch</code></td><td style="text-align: left">UInt32</td><td style="text-align: left">Flag if current category differs from the last.</td></tr>
+</tbody></table>
+</div>
+<h3 id="2-entity-reputation-merchantrs--networkrs"><a class="header" href="#2-entity-reputation-merchantrs--networkrs">2. Entity Reputation (<code>merchant.rs</code> / <code>network.rs</code>)</a></h3>
+<p>Calculates risk scores based on shared entities (IPs, Devices, Merchants).</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Feature</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>merchant_fraud_rate</code></td><td style="text-align: left">Float64</td><td style="text-align: left">Historical % of fraud at this specific merchant.</td></tr>
+<tr><td style="text-align: left"><code>ip_fraud_rate</code></td><td style="text-align: left">Float64</td><td style="text-align: left">% of fraud transactions originating from this IP.</td></tr>
+<tr><td style="text-align: left"><code>dev_fraud_rate</code></td><td style="text-align: left">Float64</td><td style="text-align: left">% of fraud transactions from this User Agent.</td></tr>
+<tr><td style="text-align: left"><code>ip_customer_count</code></td><td style="text-align: left">UInt32</td><td style="text-align: left">Count of distinct customers sharing this IP.</td></tr>
+<tr><td style="text-align: left"><code>suspicious_cluster_member</code></td><td style="text-align: left">UInt32</td><td style="text-align: left">Flag if IP/Dev has &gt;20% fraud and &gt;1 customer.</td></tr>
+</tbody></table>
+</div>
+<h3 id="3-customer-baselines-customerrs"><a class="header" href="#3-customer-baselines-customerrs">3. Customer Baselines (<code>customer.rs</code>)</a></h3>
+<p>Aggregates long-term behavior for each customer.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Feature</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>total_transactions</code></td><td style="text-align: left">UInt32</td><td style="text-align: left">Total historical txn count.</td></tr>
+<tr><td style="text-align: left"><code>avg_transaction_amount</code></td><td style="text-align: left">Float64</td><td style="text-align: left">Mean amount across all txns.</td></tr>
+<tr><td style="text-align: left"><code>unique_merchants_count</code></td><td style="text-align: left">UInt32</td><td style="text-align: left">Count of distinct merchants visited.</td></tr>
+<tr><td style="text-align: left"><code>night_transaction_ratio</code></td><td style="text-align: left">Float64</td><td style="text-align: left">% of txns occurring between 10PM - 6AM.</td></tr>
+<tr><td style="text-align: left"><code>account_count</code></td><td style="text-align: left">UInt32</td><td style="text-align: left">Total number of accounts owned by the user.</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="-gold-layer-the-master-table"><a class="header" href="#-gold-layer-the-master-table">🥇 Gold Layer (The Master Table)</a></h2>
+<p>The Gold Master Table is a fully denormalized view created by joining the Bronze transactions with all Silver feature sets. This is the <strong>Final Training Set</strong>.</p>
+<h3 id="master-join-key-logic"><a class="header" href="#master-join-key-logic">Master Join Key Logic</a></h3>
+<ol>
+<li><strong>Transaction ID</strong>: Joins Sequence and Campaign features.</li>
+<li><strong>Customer ID</strong>: Joins Customer Baselines and Network Aggregates.</li>
+<li><strong>Merchant ID</strong>: Joins Merchant Reputation.</li>
+<li><strong>User Agent</strong>: Joins Device/IP Reputation.</li>
+</ol>
+<h3 id="derived-metadata"><a class="header" href="#derived-metadata">Derived Metadata</a></h3>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Field</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>feature_calculated_at</code></td><td style="text-align: left">String</td><td style="text-align: left">ISO 8601 timestamp of the ETL run.</td></tr>
+<tr><td style="text-align: left"><code>fraud_target</code></td><td style="text-align: left">UInt32</td><td style="text-align: left"><strong>Label</strong>: The ground-truth (hidden) fraud flag.</td></tr>
+<tr><td style="text-align: left"><code>is_fraud</code></td><td style="text-align: left">UInt32</td><td style="text-align: left"><strong>Label</strong>: The noisy (observed) fraud flag.</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="data-flow-summary"><a class="header" href="#data-flow-summary">Data Flow Summary</a></h2>
+<ol>
+<li><strong>Bronze</strong>: <code>transactions.parquet</code> (Raw).</li>
+<li><strong>Transform</strong>: Polars Lazy API performs windowing, group-bys, and joins.</li>
+<li><strong>Silver</strong>: Modular feature tables (parquet or in-memory).</li>
+<li><strong>Gold</strong>: <code>gold_master.parquet</code> (ML-ready).</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="configuration-reference"><a class="header" href="#configuration-reference">Configuration Reference</a></h1>
+<p>RiskFabric uses a modular YAML-based configuration system to control every aspect of the simulation, from demographic distributions to specific fraud attack probabilities.</p>
+<h2 id="-simulation-control-generation_controlyaml"><a class="header" href="#-simulation-control-generation_controlyaml">🛠️ Simulation Control (<code>generation_control.yaml</code>)</a></h2>
+<p>Controls the scale, volume, and performance of the generation pass.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Parameter</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>customer_count</code></td><td style="text-align: left">Integer</td><td style="text-align: left">Total number of synthetic customers to generate.</td></tr>
+<tr><td style="text-align: left"><code>transactions_per_customer</code></td><td style="text-align: left">Range</td><td style="text-align: left">Min/Max transactions generated for each card lifecycle.</td></tr>
+<tr><td style="text-align: left"><code>parallelism</code></td><td style="text-align: left">Object</td><td style="text-align: left">Thread counts for <code>Rayon</code> workers (e.g., <code>transaction_gen_threads</code>).</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="-customer-profile-customer_configyaml"><a class="header" href="#-customer-profile-customer_configyaml">👥 Customer Profile (<code>customer_config.yaml</code>)</a></h2>
+<p>Defines the "Identity" layer of the simulation.</p>
+<ul>
+<li><strong>Names &amp; Email</strong>: Lists of first/last names and email domains used to build synthetic identities.</li>
+<li><strong>Location Types</strong>: Categorizes customers into <code>Metro</code>, <code>Urban</code>, <code>Semi-Urban</code>, and <code>Rural</code>.</li>
+<li><strong>Financial Heuristics</strong>:
+<ul>
+<li><code>base_spend</code>: Sets the average monthly expenditure based on <code>location_type</code>.</li>
+<li><code>credit_score</code>: Defines the starting point and age-based progression of credit risk.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="-product-catalog-product_catalogyaml"><a class="header" href="#-product-catalog-product_catalogyaml">🏛️ Product Catalog (<code>product_catalog.yaml</code>)</a></h2>
+<p>Defines the "Banking" layer, including account types and card networks.</p>
+<ul>
+<li><strong>Accounts</strong>: Sets the balance ranges and the variety of accounts (Savings, Salary, etc.).</li>
+<li><strong>Cards</strong>:
+<ul>
+<li><code>networks</code>: Defines market participation (VISA, Mastercard, RuPay, Amex).</li>
+<li><code>limits</code>: Sets default transaction limits for online and contactless usage.</li>
+<li><code>active_probability</code>: Probability that a card remains in an "Active" state.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="-transaction-logic-transaction_configyaml"><a class="header" href="#-transaction-logic-transaction_configyaml">💸 Transaction Logic (<code>transaction_config.yaml</code>)</a></h2>
+<p>Defines the "Behavioral" layer for legitimate spend.</p>
+<ul>
+<li><strong>Merchant Categories</strong>: Standard industry categories used for merchant assignment.</li>
+<li><strong>Geo Bounds</strong>: The WGS84 bounding box used for "Global" coordinate fallback (defaults to India).</li>
+<li><strong>Success Rate</strong>: The probability that the synthetic bank approves a legitimate transaction.</li>
+</ul>
+<hr />
+<h2 id="-fraud-rules-fraud_rulesyaml"><a class="header" href="#-fraud-rules-fraud_rulesyaml">🕵️ Fraud Rules (<code>fraud_rules.yaml</code>)</a></h2>
+<p>Defines the "Malicious" layer, focusing on specific attack profiles.</p>
+<ul>
+<li><strong>Fraud Profiles</strong>:
+<ul>
+<li><code>frequency</code>: The relative weight of a profile (e.g., <code>upi_scam</code> vs <code>friendly_fraud</code>).</li>
+<li><code>amount_pattern</code>: Links to a specific distribution of amounts.</li>
+<li><code>geo_anomaly_prob</code>: Probability that this fraud type occurs far from the user's home.</li>
+</ul>
+</li>
+<li><strong>Campaigns</strong>: Configures coordinated attacks like <code>sequential_takeover</code> and <code>coordinated_attack</code>.</li>
+</ul>
+<hr />
+<h2 id="-simulation-tuning-fraud_tuningyaml"><a class="header" href="#-simulation-tuning-fraud_tuningyaml">🎛️ Simulation Tuning (<code>fraud_tuning.yaml</code>)</a></h2>
+<p>Provides technical "knobs" to refine the difficulty of detection.</p>
+<ul>
+<li><strong>Probabilities</strong>: Global overrides for <code>geo_anomaly</code>, <code>device_anomaly</code>, and <code>ip_anomaly</code>.</li>
+<li><strong>Salts</strong>: Used to shift the PRNG state for injector and mutator cycles. This ensures that different runs produce unique data even when using the same base seed.</li>
+<li><strong>Campaign params</strong>: Specific escalation rates for coordinated attacks (e.g., <code>ato_escalation_rate</code>).</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="developer-utilities--cli-tools"><a class="header" href="#developer-utilities--cli-tools">Developer Utilities &amp; CLI Tools</a></h1>
+<p>RiskFabric includes a suite of standalone Rust binaries in <code>src/bin/</code> to handle geographic data preparation, OSM extraction, and ETL orchestration. These tools must be run in a specific sequence to prepare the environment for generation.</p>
+<hr />
+<h2 id="-phase-1-geographic-discovery"><a class="header" href="#-phase-1-geographic-discovery">🗺️ Phase 1: Geographic Discovery</a></h2>
+<p>Before generating customers, we must understand the geographic hierarchy of the target region (India).</p>
+<h3 id="1-parse_osm"><a class="header" href="#1-parse_osm">1. <code>parse_osm</code></a></h3>
+<p>Scans the India OSM PBF file to build a mapping of Districts to States using ISO-3166-2 codes.</p>
+<pre><code class="language-bash">cargo run --release --bin parse_osm
+</code></pre>
+<ul>
+<li><strong>Output</strong>: <code>data/state_district_map.txt</code></li>
+</ul>
+<h3 id="2-map_city_state"><a class="header" href="#2-map_city_state">2. <code>map_city_state</code></a></h3>
+<p>Aggregates OSM nodes to count how many residential/merchant points exist in every city/state combination.</p>
+<pre><code class="language-bash">cargo run --release --bin map_city_state
+</code></pre>
+<ul>
+<li><strong>Output</strong>: <code>data/city_state_report.txt</code></li>
+</ul>
+<h3 id="3-normalize_state_names"><a class="header" href="#3-normalize_state_names">3. <code>normalize_state_names</code></a></h3>
+<p>Messy OSM data often contains variations (e.g., "MH", "Maharastra", "Maharashtra"). This tool standardizes all discovered names against a master list.</p>
+<pre><code class="language-bash">cargo run --release --bin normalize_state_names
+</code></pre>
+<ul>
+<li><strong>Output</strong>: <code>data/city_state_report_clean.txt</code></li>
+</ul>
+<hr />
+<h2 id="-phase-2-data-landing"><a class="header" href="#-phase-2-data-landing">📥 Phase 2: Data Landing</a></h2>
+<p>Once the hierarchy is discovered, we extract raw points into the database.</p>
+<h3 id="4-extract_references-lander"><a class="header" href="#4-extract_references-lander">4. <code>extract_references</code> (Lander)</a></h3>
+<p>Performs a high-performance parallel extraction of OSM nodes and writes them to Postgres using binary copy.</p>
+<pre><code class="language-bash">cargo run --release --bin extract_references
+</code></pre>
+<ul>
+<li><strong>Writes to</strong>: <code>raw_residential</code>, <code>raw_merchants</code>, <code>raw_financial</code> in Postgres.</li>
+</ul>
+<hr />
+<h2 id="-phase-3-reference-export"><a class="header" href="#-phase-3-reference-export">🥈 Phase 3: Reference Export</a></h2>
+<p>After the dbt project has enriched the raw data (see <a href="data_warehouse.html">Data Warehouse &amp; dbt</a>), we must export the clean Marts back to Parquet for the Generator to use.</p>
+<h3 id="5-extract_references-exporter"><a class="header" href="#5-extract_references-exporter">5. <code>extract_references</code> (Exporter)</a></h3>
+<p><em>Note: This binary handles both landing and exporting depending on current implementation/flags.</em>
+It reads the <code>geo_enriched_residential</code> Mart from Postgres and saves it as an optimized Parquet file.</p>
+<pre><code class="language-bash">cargo run --release --bin extract_references
+</code></pre>
+<ul>
+<li><strong>Output</strong>: <code>data/references/ref_residential.parquet</code></li>
+</ul>
+<hr />
+<h2 id="-phase-4-medallion-etl"><a class="header" href="#-phase-4-medallion-etl">🧪 Phase 4: Medallion ETL</a></h2>
+<p>These binaries run the feature engineering pipeline on previously generated data.</p>
+<h3 id="6-etl_silver_"><a class="header" href="#6-etl_silver_">6. <code>etl_silver_*</code></a></h3>
+<p>Individual binaries for each feature category (Sequence, Merchant, Network, etc.).</p>
+<pre><code class="language-bash">cargo run --release --bin etl_silver_sequence
+cargo run --release --bin etl_silver_network
+</code></pre>
+<h3 id="7-etl_gold_master"><a class="header" href="#7-etl_gold_master">7. <code>etl_gold_master</code></a></h3>
+<p>The final orchestrator that joins all Silver tables into the ML-ready Gold Master.</p>
+<pre><code class="language-bash">cargo run --release --bin etl_gold_master
+</code></pre>
+<hr />
+<h2 id="-phase-5-the-generator"><a class="header" href="#-phase-5-the-generator">🚀 Phase 5: The Generator</a></h2>
+<p>The main entry point for the simulation.</p>
+<h3 id="8-generate"><a class="header" href="#8-generate">8. <code>generate</code></a></h3>
+<p>Loads all reference Parquet files and YAML configs to produce the final synthetic dataset.</p>
+<pre><code class="language-bash">cargo run --release --bin generate
+</code></pre>
+<ul>
+<li><strong>Output</strong>: <code>data/output/*.parquet</code></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="machine-learning-pipeline"><a class="header" href="#machine-learning-pipeline">Machine Learning Pipeline</a></h1>
+<p>RiskFabric uses <strong>XGBoost</strong>, a high-performance gradient boosting framework, to train fraud detection models on the generated synthetic data. The pipeline is designed to simulate a real-world environment where labels are noisy and ground-truth metadata is unavailable at inference time.</p>
+<h2 id="-model-architecture"><a class="header" href="#-model-architecture">🧠 Model Architecture</a></h2>
+<ul>
+<li><strong>Engine</strong>: XGBoost (Binary Classifier)</li>
+<li><strong>Frameworks</strong>: Python, Polars, Scikit-Learn</li>
+<li><strong>Input</strong>: Gold Master Table (<code>fact_transactions_gold</code>)</li>
+<li><strong>Target</strong>: <code>is_fraud</code> (<strong>Noisy Label</strong>)</li>
+</ul>
+<h2 id="-leakage-prevention-strategy"><a class="header" href="#-leakage-prevention-strategy">🛡️ Leakage Prevention Strategy</a></h2>
+<p>A critical part of the RiskFabric ML pipeline is ensuring the model does not "cheat" by using synthetic markers that would not exist in a real production system.</p>
+<h3 id="1-the-sanitized-feature-vector"><a class="header" href="#1-the-sanitized-feature-vector">1. The Sanitized Feature Vector</a></h3>
+<p>We explicitly exclude ground-truth metadata from the training set:</p>
+<ul>
+<li><strong>Excluded</strong>: <code>geo_anomaly</code>, <code>device_anomaly</code>, <code>ip_anomaly</code>, <code>fraud_type</code>, <code>fraud_target</code>.</li>
+<li><strong>Reasoning</strong>: These are "generator flags." If included, the model achieves a ~0.99 AUC but fails to learn actual human behavior (amounts, locations, timing).</li>
+</ul>
+<h3 id="2-noisy-label-training"><a class="header" href="#2-noisy-label-training">2. Noisy Label Training</a></h3>
+<p>Instead of training on the perfect <code>fraud_target</code> (ground truth), the model trains on <code>is_fraud</code>. This label incorporates simulated <strong>label noise</strong> (False Positives and False Negatives), forcing the model to be robust against real-world data imperfections.</p>
+<hr />
+<h2 id="-training-workflow"><a class="header" href="#-training-workflow">🚀 Training Workflow</a></h2>
+<p>The training script (<code>src/ml/train_xgboost.py</code>) performs the following steps:</p>
+<ol>
+<li><strong>Data Loading</strong>: Connects to ClickHouse via <code>clickhouse_connect</code> and streams the Gold Master Table into a Polars DataFrame.</li>
+<li><strong>Categorical Encoding</strong>: Utilizes Polars' native <code>Categorical</code> type to handle high-cardinality features like <code>merchant_category</code> and <code>transaction_channel</code>.</li>
+<li><strong>Stratified Split</strong>: Performs an 80/20 train-test split, maintaining the low fraud prevalence ratio in both sets.</li>
+<li><strong>Training</strong>: Executes an XGBoost Classifier with <code>tree_method='hist'</code> and native categorical support enabled.</li>
+<li><strong>Evaluation</strong>: Calculates ROC AUC and generates a detailed classification report.</li>
+</ol>
+<h2 id="-feature-importance"><a class="header" href="#-feature-importance">📊 Feature Importance</a></h2>
+<p>The model learns to identify fraud primarily through behavioral signals engineered in the Silver ETL layer:</p>
+<ul>
+<li><strong>Transaction Amount</strong>: The dominant predictor for UPI and high-value scams.</li>
+<li><strong>Merchant Reputation</strong>: Leverages the historical fraud rates of specific merchants.</li>
+<li><strong>Entity sharing</strong>: Identifies high-risk IP and Device clusters.</li>
+</ul>
+<h2 id="-model-artifacts"><a class="header" href="#-model-artifacts">📁 Model Artifacts</a></h2>
+<p>Trained models are saved in JSON format in the <code>/models</code> directory for versioning and inference:</p>
+<pre><code class="language-bash">models/fraud_model_v1.json
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="theory-of-operation"><a class="header" href="#theory-of-operation">Theory of Operation</a></h1>
+<p>This document explains the underlying philosophy, architecture, and logic of the RiskFabric simulation. It answers the question: "How does the engine actually think?"</p>
+<h2 id="1-agent-based-simulation-abm-philosophy"><a class="header" href="#1-agent-based-simulation-abm-philosophy">1. Agent-Based Simulation (ABM) Philosophy</a></h2>
+<p>RiskFabric functions as an <strong>Agent-Based Simulator</strong> rather than a simple random data generator.</p>
+<ul>
+<li><strong>The Agent</strong>: The primary agent, the <code>Customer</code>, drives the logic.</li>
+<li><strong>The World</strong>: <strong>OpenStreetMap (OSM)</strong> reference nodes (Residential and Merchant points) across India define the physical world.</li>
+<li><strong>The Rules</strong>: Agents follow deterministic rules defined in <code>fraud_rules.yaml</code> and <code>transaction_config.yaml</code>.</li>
+</ul>
+<p>Unlike statistical generators that sample from distributions to create flat tables, RiskFabric simulates the <strong>lifecycle</strong> of financial entities.</p>
+<hr />
+<h2 id="2-the-deterministic-lifecycle"><a class="header" href="#2-the-deterministic-lifecycle">2. The Deterministic Lifecycle</a></h2>
+<p>To ensure consistency across 100M rows and all tables, RiskFabric follows a strict creation order:</p>
+<ol>
+<li><strong>Customer Birth</strong>: The generator assigns each customer a name, age, and a <strong>Home Coordinate</strong> based on real residential OSM nodes.</li>
+<li><strong>Financial Anchoring</strong>: The system assigns one or more <code>Accounts</code> to every customer.</li>
+<li><strong>Payment Instruments</strong>: Accounts issue <code>Cards</code>. These cards act as "keys" for generating transaction streams.</li>
+<li><strong>The Spend Loop</strong>: Each card generates transactions based on the customer's <code>monthly_spend</code> profile.</li>
+</ol>
+<hr />
+<h2 id="3-the-one-pass-parallel-architecture"><a class="header" href="#3-the-one-pass-parallel-architecture">3. The "One-Pass" Parallel Architecture</a></h2>
+<p>Traditional simulators often use several passes (e.g., Pass 1: Generate legit data, Pass 2: Inject fraud). This approach increases latency and memory usage.</p>
+<p>RiskFabric uses a <strong>One-Pass Architecture</strong> in Rust:</p>
+<ul>
+<li><strong>Parallelization</strong>: The engine uses the <code>Rayon</code> library to process thousands of entities simultaneously across all CPU cores.</li>
+<li><strong>Unified Logic</strong>: Merchant selection, amount calculation, fraud injection, and campaign coordination all happen in a <strong>single loop</strong>.</li>
+<li><strong>Memory Efficiency</strong>: By using "Batched Generation" (5,000 entities per cycle), the engine maintains a constant memory footprint whether generating 1M or 100M rows.</li>
+</ul>
+<hr />
+<h2 id="4-spatial-realism--h3-indexing"><a class="header" href="#4-spatial-realism--h3-indexing">4. Spatial Realism &amp; H3 Indexing</a></h2>
+<p>RiskFabric differentiates itself through geographic high-fidelity.</p>
+<ul>
+<li><strong>H3 Hierarchies</strong>: We use Uber’s H3 hexagonal grid. When a user spends, the engine first looks for merchants within the same <strong>H3 Resolution 5</strong> cell (neighborhood level) as their home.</li>
+<li><strong>Local vs. Global Spend</strong>: Legitimate transactions remain "local" (same H3 cell) 98% of the time. Fraud profiles (like UPI Scams) explicitly force "Remote" coordinates to simulate offshore or cross-state attacks.</li>
+</ul>
+<hr />
+<h2 id="5-statistical-reproducibility-seeded-prng"><a class="header" href="#5-statistical-reproducibility-seeded-prng">5. Statistical Reproducibility (Seeded PRNG)</a></h2>
+<p>Every card in the system has a <strong>Deterministic Seed</strong>.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut card_rng = StdRng::seed_from_u64(global_seed + salt + card_id_hash);
+<span class="boring">}</span></code></pre></pre>
+<p>If you run the simulation with the same <code>global_seed</code>, every transaction for <code>Card_ABC</code> remains identical. This enables <strong>Machine Learning reproducibility</strong>, allowing data scientists to tweak features without the underlying ground-truth shifting.</p>
+<hr />
+<h2 id="6-simulated-imperfection-label-noise"><a class="header" href="#6-simulated-imperfection-label-noise">6. Simulated Imperfection (Label Noise)</a></h2>
+<p>To mirror real-world banking challenges, RiskFabric implements <strong>Noisy Labeling</strong>:</p>
+<ul>
+<li><strong>Ground Truth (<code>fraud_target</code>)</strong>: The perfect indicator of whether the generator injected a fraud pattern.</li>
+<li><strong>Noisy Label (<code>is_fraud</code>)</strong>: The signal the "Bank" actually sees. It includes False Positives (legit txns flagged as fraud) and False Negatives (fraud txns that went undetected).</li>
+</ul>
+<p>This forces models to learn robustness rather than memorizing perfect patterns.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="fraud-signatures--attack-patterns"><a class="header" href="#fraud-signatures--attack-patterns">Fraud Signatures &amp; Attack Patterns</a></h1>
+<p>This document details the high-fidelity fraud behaviors and coordinated attack campaigns implemented in the <code>riskfabric</code> generator.</p>
+<h2 id="1-fraud-profiles-individual-patterns"><a class="header" href="#1-fraud-profiles-individual-patterns">1. Fraud Profiles (Individual Patterns)</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Profile</th><th style="text-align: left">Behavioral Signature</th><th style="text-align: left">Spatial Signature</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong>UPI Scam</strong></td><td style="text-align: left">High frequency, small to medium amounts (₹1,500 - ₹20,000).</td><td style="text-align: left"><strong>90% Geo-Anomaly</strong>: Scammer is remote.</td></tr>
+<tr><td style="text-align: left"><strong>Account Takeover</strong></td><td style="text-align: left">High-value transfers, sudden change in device/channel.</td><td style="text-align: left"><strong>40% Geo-Anomaly</strong>: Compromised from distant location.</td></tr>
+<tr><td style="text-align: left"><strong>Velocity Abuse</strong></td><td style="text-align: left">Rapid-fire "testing" transactions (₹1.01, ₹1.23, etc.).</td><td style="text-align: left"><strong>10% Geo-Anomaly</strong>: Low spatial signal.</td></tr>
+<tr><td style="text-align: left"><strong>Card Not Present</strong></td><td style="text-align: left">Online-only channel bias, standard e-commerce amounts.</td><td style="text-align: left"><strong>30% Geo-Anomaly</strong>: Card details used remotely.</td></tr>
+<tr><td style="text-align: left"><strong>Friendly Fraud</strong></td><td style="text-align: left">Legitimate channel/device, standard amounts.</td><td style="text-align: left"><strong>0% Geo-Anomaly</strong>: Customer is physically at home.</td></tr>
+</tbody></table>
+</div>
+<h2 id="2-campaign-attack-patterns-coordinated"><a class="header" href="#2-campaign-attack-patterns-coordinated">2. Campaign Attack Patterns (Coordinated)</a></h2>
+<h3 id="coordinated-attack"><a class="header" href="#coordinated-attack">Coordinated Attack</a></h3>
+<ul>
+<li><strong>Signal</strong>: Multiple distinct cards/customers targeted simultaneously by a single entity.</li>
+<li><strong>Hard Correlation</strong>: Every transaction in the campaign shares the <strong>exact same IP Address</strong> and <strong>geographic coordinate</strong> (simulating a scammer hub or proxy).</li>
+<li><strong>Tuning</strong>: Coordinated IP is configurable via <code>fraud_tuning.yaml</code> (Default: <code>103.21.244.12</code>).</li>
+</ul>
+<h3 id="sequential-takeover"><a class="header" href="#sequential-takeover">Sequential Takeover</a></h3>
+<ul>
+<li><strong>Signal</strong>: A single card experiencing a progressive escalation of fraud.</li>
+<li><strong>Monotonic Escalation</strong>: Each subsequent transaction amount is multiplied by the <code>ato_escalation_rate</code> (Default: 30%).</li>
+<li><strong>Persistent Location</strong>: Once the takeover begins, the geographic coordinate "sticks" to the attacker's location for the remainder of the sequence.</li>
+</ul>
+<h3 id="burst-campaign"><a class="header" href="#burst-campaign">Burst Campaign</a></h3>
+<ul>
+<li><strong>Signal</strong>: A high-frequency cluster of fraudulent transactions over a short window.</li>
+<li><strong>Noise</strong>: High volume relative to the individual customer's baseline.</li>
+</ul>
+<h2 id="3-hybrid-campaigns-combination"><a class="header" href="#3-hybrid-campaigns-combination">3. Hybrid Campaigns (Combination)</a></h2>
+<p><strong>Are Hybrid Campaigns present? Yes.</strong></p>
+<p>The current "One-Pass" architecture naturally implements hybrid campaigns. When a card is targeted by a campaign, it first selects a <strong>Base Fraud Profile</strong> (e.g., <code>upi_scam</code> or <code>account_takeover</code>) and then overlays the <strong>Campaign Mutation</strong> (e.g., <code>coordinated_attack</code>).</p>
+<p><strong>Example: Coordinated UPI Scam</strong></p>
+<ol>
+<li><strong>Profile Layer</strong>: Pick amounts from <code>upi_common_amounts</code>.</li>
+<li><strong>Campaign Layer</strong>: Force all transactions to share the <code>103.21.244.12</code> IP and a single "Scammer Hub" coordinate.</li>
+<li><strong>Result</strong>: An extremely sharp, multi-dimensional signal for ML models to learn both individual behavior and network-level coordination.</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="data-warehouse--analytics"><a class="header" href="#data-warehouse--analytics">Data Warehouse &amp; Analytics</a></h1>
+<p>RiskFabric uses a <strong>Dual-Engine Architecture</strong> to balance extreme performance with analytical flexibility.</p>
+<h2 id="the-dual-engine-strategy"><a class="header" href="#the-dual-engine-strategy">The Dual-Engine Strategy</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Task</th><th style="text-align: left">Engine</th><th style="text-align: left">Reason</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong>High-Volume Generation</strong></td><td style="text-align: left">Rust (Polars)</td><td style="text-align: left">Multi-threaded performance for 100M+ rows.</td></tr>
+<tr><td style="text-align: left"><strong>Feature Engineering</strong></td><td style="text-align: left">Rust (Polars)</td><td style="text-align: left">Low-latency sequence and graph calculations.</td></tr>
+<tr><td style="text-align: left"><strong>Reference Data Prep</strong></td><td style="text-align: left">dbt (SQL)</td><td style="text-align: left">Declarative modeling for geographic enrichment.</td></tr>
+<tr><td style="text-align: left"><strong>Analytical Reporting</strong></td><td style="text-align: left">dbt (SQL)</td><td style="text-align: left">Standardization and data quality audits.</td></tr>
+</tbody></table>
+</div>
+<h2 id="dbt-project-structure-warehouse"><a class="header" href="#dbt-project-structure-warehouse">dbt Project Structure (<code>warehouse/</code>)</a></h2>
+<p>The dbt project is responsible for transforming raw OpenStreetMap (OSM) data and geographic boundaries into the "Ground Truth" Parquet files used by the Rust generator.</p>
+<h3 id="1-staging-layer"><a class="header" href="#1-staging-layer">1. Staging Layer</a></h3>
+<ul>
+<li><code>stg_osm__residential</code>: Cleans and deduplicates residential node data extracted from the India OSM PBF.</li>
+<li><code>stg_merchants</code>: Normalizes merchant categories and geographic coordinates.</li>
+</ul>
+<h3 id="2-marts-layer"><a class="header" href="#2-marts-layer">2. Marts Layer</a></h3>
+<ul>
+<li><code>geo_enriched_residential</code>: The "Master Geographic Reference." It joins residential points with state boundaries and assigns H3 indices. This table is exported to <code>data/references/ref_residential.parquet</code>.</li>
+</ul>
+<h3 id="3-seeds"><a class="header" href="#3-seeds">3. Seeds</a></h3>
+<ul>
+<li><code>state_map.csv</code>: Standardized mapping of Indian state names and codes.</li>
+<li><code>merchant_category_map.csv</code>: Maps OSM tags to financial Industry Codes (MCC).</li>
+</ul>
+<h2 id="running-the-warehouse"><a class="header" href="#running-the-warehouse">Running the Warehouse</a></h2>
+<p>To run the dbt models, you must use the Python environment provided in the project:</p>
+<pre><code class="language-bash"># Activate environment
+source env/bin/activate
+
+# Navigate to warehouse
+cd warehouse
+
+# Run models
+dbt run
+</code></pre>
+<h2 id="the-feedback-loop"><a class="header" href="#the-feedback-loop">The Feedback Loop</a></h2>
+<ol>
+<li><strong>Rust (<code>extract_references</code>)</strong>: Extracts raw points from the India OSM PBF -&gt; Lands in Postgres using high-performance binary copy.</li>
+<li><strong>dbt</strong>: Cleans, joins, and enriches data.</li>
+<li><strong>Rust (<code>bin/extract_references</code> - second pass)</strong>: Reads the dbt Marts -&gt; Saves as optimized Parquet in <code>data/references/</code>.</li>
+<li><strong>Rust (<code>generate</code>)</strong>: Uses the Parquet references to ensure synthetic customers live in realistic locations.</li>
+</ol>
+<h2 id="osm-extraction-process"><a class="header" href="#osm-extraction-process">OSM Extraction Process</a></h2>
+<p>The <code>extract_references</code> binary is responsible for the initial "landing" of geographic data. It parses the multi-gigabyte India OSM PBF file in parallel and extracts three specific categories of data into the Postgres database:</p>
+<h3 id="1-raw_residential"><a class="header" href="#1-raw_residential">1. <code>raw_residential</code></a></h3>
+<ul>
+<li><strong>Criteria</strong>: OSM nodes tagged with <code>building=residential</code>, <code>landuse=residential</code>, or containing specific address tags (<code>addr:street</code>).</li>
+<li><strong>Purpose</strong>: Defines the "home" coordinates for synthetic customers.</li>
+<li><strong>Fields</strong>: <code>osm_id</code>, <code>h3_index</code>, <code>lat</code>, <code>lon</code>, <code>city</code>, <code>postcode</code>, <code>state</code>.</li>
+</ul>
+<h3 id="2-raw_merchants"><a class="header" href="#2-raw_merchants">2. <code>raw_merchants</code></a></h3>
+<ul>
+<li><strong>Criteria</strong>: Nodes tagged as <code>shop=*</code>, specific amenities (<code>restaurant</code>, <code>fuel</code>, <code>pharmacy</code>), or tourism spots (<code>hotel</code>).</li>
+<li><strong>Purpose</strong>: Defines where transactions physically occur.</li>
+<li><strong>Fields</strong>: <code>osm_id</code>, <code>h3_index</code>, <code>name</code>, <code>category</code>, <code>sub_category</code>, <code>lat</code>, <code>lon</code>.</li>
+</ul>
+<h3 id="3-raw_financial"><a class="header" href="#3-raw_financial">3. <code>raw_financial</code></a></h3>
+<ul>
+<li><strong>Criteria</strong>: Nodes tagged as <code>amenity=atm</code> or <code>amenity=bank</code>.</li>
+<li><strong>Purpose</strong>: Used to simulate cash-out points and banking locations.</li>
+<li><strong>Fields</strong>: <code>osm_id</code>, <code>h3_index</code>, <code>kind</code>, <code>operator</code>, <code>lat</code>, <code>lon</code>.</li>
+</ul>
+<h2 id="high-performance-ingestion"><a class="header" href="#high-performance-ingestion">High-Performance Ingestion</a></h2>
+<p>To handle millions of OSM nodes efficiently, the Rust engine utilizes the <strong>Postgres Binary Copy</strong> protocol (<code>BinaryCopyInWriter</code>). This bypasses standard SQL parsing overhead, allowing for ingestion speeds that match the multi-threaded parsing of the PBF file.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="project-goals--north-star"><a class="header" href="#project-goals--north-star">Project Goals &amp; North Star</a></h1>
+<p>RiskFabric aims to redefine the performance boundaries of synthetic data generation. This document outlines our strategic goals, the depth of our implementation, and the current progress toward the "North Star."</p>
+<h2 id="-goal-status-summary"><a class="header" href="#-goal-status-summary">📊 Goal Status Summary</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Goal</th><th style="text-align: left">Status</th><th style="text-align: left">Metric / Evidence</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong>100k+ TPS Throughput</strong></td><td style="text-align: left">✅ <strong>Complete</strong></td><td style="text-align: left">Achieved <strong>182,000 TPS</strong> in One-Pass mode.</td></tr>
+<tr><td style="text-align: left"><strong>Medallion Architecture</strong></td><td style="text-align: left">✅ <strong>Complete</strong></td><td style="text-align: left">Full Bronze -&gt; Silver -&gt; Gold pipeline in Rust.</td></tr>
+<tr><td style="text-align: left"><strong>Realistic Fraud Signals</strong></td><td style="text-align: left">🟡 <strong>In-Progress</strong></td><td style="text-align: left">5 patterns implemented; Jittering pending.</td></tr>
+<tr><td style="text-align: left"><strong>XGBoost Training Flow</strong></td><td style="text-align: left">✅ <strong>Complete</strong></td><td style="text-align: left">Pipeline ready; 0.97 AUC achieved on noisy data.</td></tr>
+<tr><td style="text-align: left"><strong>100M-Row Milestone</strong></td><td style="text-align: left">🔵 <strong>Planned</strong></td><td style="text-align: left">Validated up to 17M; Streaming ETL pending.</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="1-the-100-million-row-benchmark"><a class="header" href="#1-the-100-million-row-benchmark">1. The 100-Million-Row Benchmark</a></h2>
+<p>The "North Star" involves generating, storing, and processing <strong>100,000,000</strong> high-fidelity transactions on a single workstation. This benchmark proves that vertical scaling with Rust/Polars can outperform traditional horizontal scaling (Spark) for many financial use cases.</p>
+<h3 id="performance-needs"><a class="header" href="#performance-needs">Performance Needs</a></h3>
+<ul>
+<li><strong>Generation Speed</strong>: Sustain &gt;100,000 TPS using multi-threaded Rust.
+<ul>
+<li><strong>Implementation</strong>: A "One-Pass" architecture that minimizes string allocations and context switching by handling fraud, campaigns, and generation in a single loop, processing the population in segments of 5,000 entities.</li>
+</ul>
+</li>
+<li><strong>Storage Efficiency</strong>: Keep 100M rows within optimized disk footprints using ClickHouse and Snappy-compressed Parquet.
+<ul>
+<li><strong>Target</strong>: ~15GB-25GB for the full raw dataset.</li>
+</ul>
+</li>
+<li><strong>ETL Latency</strong>: Calculate complex behavioral features across 100M rows in under 15 minutes.
+<ul>
+<li><strong>Need</strong>: Migration from Polars eager API to the <strong>Streaming Lazy API</strong> to handle datasets larger than available RAM.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="2-medallion-architecture-implementation"><a class="header" href="#2-medallion-architecture-implementation">2. Medallion Architecture Implementation</a></h2>
+<p>RiskFabric mirrors professional financial technology environments with a strict three-tier data quality pipeline.</p>
+<ul>
+<li><strong>Bronze (Raw)</strong>: Captures the raw output of the generator. It stores transactions exactly as the synthetic banking system "observed" them, including simulated transmission delays.</li>
+<li><strong>Silver (Features)</strong>: The "Engine Room" where the pipeline calculates 22+ features. This layer performs windowed calculations (Time Since Last txn), entity reputations (Merchant Fraud Rate), and network linkage (IP Sharing).</li>
+<li><strong>Gold (Master)</strong>: A flat table ready for Machine Learning. It joins the Bronze stream with Silver features and Customer/Card dimensions to provide a single source of truth for model training.</li>
+</ul>
+<hr />
+<h2 id="3-high-fidelity-fraud-simulation"><a class="header" href="#3-high-fidelity-fraud-simulation">3. High-Fidelity Fraud Simulation</a></h2>
+<p>We generate data that mirrors real fraud through multi-layered mutation logic.</p>
+<h3 id="behavioral-signatures"><a class="header" href="#behavioral-signatures">Behavioral Signatures</a></h3>
+<p>The engine supports five core fraud profiles, each with distinct distributions for amount, time, and frequency:</p>
+<ul>
+<li><strong>UPI Scam</strong>: High-frequency, medium-amount transfers with high geographic anomalies.</li>
+<li><strong>Account Takeover (ATO)</strong>: Sudden shifts in Device ID and User Agent coupled with escalating amounts.</li>
+<li><strong>Velocity Abuse</strong>: "Testing" transactions characterized by round numbers or rapid-fire sequences.</li>
+<li><strong>Card Not Present (CNP)</strong>: Online-only channel bias using standard e-commerce amount distributions.</li>
+<li><strong>Friendly Fraud</strong>: Legitimate device and location signatures but with later chargeback events.</li>
+</ul>
+<h3 id="spatial--network-realism"><a class="header" href="#spatial--network-realism">Spatial &amp; Network Realism</a></h3>
+<ul>
+<li><strong>OSM Integration</strong>: All transactions occur at real-world coordinates extracted from OpenStreetMap India nodes.</li>
+<li><strong>H3 Grid</strong>: We use Uber’s H3 hexagonal grid (Resolution 7) to simulate neighborhood clusters and calculate "Distance from Home" anomalies.</li>
+<li><strong>Entity Sharing</strong>: We simulate coordinated campaigns by forcing many synthetic customers to share the exact same IP Address and Device ID for a burst period.</li>
+</ul>
+<hr />
+<h2 id="4-machine-learning--validation"><a class="header" href="#4-machine-learning--validation">4. Machine Learning &amp; Validation</a></h2>
+<p>A primary goal ensures that the synthetic data remains "trainable" and representative of real-world challenges.</p>
+<ul>
+<li><strong>Leakage Prevention</strong>: We strictly enforce a "Sanitized Feature Vector." The pipeline prevents models from seeing ground-truth metadata (e.g., <code>fraud_type</code>), forcing them to learn from raw behavioral signals.</li>
+<li><strong>Simulated Label Noise</strong>: We inject 3% False Positives and 10% False Negatives into the <code>is_fraud</code> label to mirror the reality of imperfect human-labeled data in banking.</li>
+<li><strong>Validation Metrics</strong>: An XGBoost baseline validates every generation pass to ensure the AUC remains within a realistic range (0.95 - 0.98).</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="machine-learning-model-metrics"><a class="header" href="#machine-learning-model-metrics">Machine Learning Model Metrics</a></h1>
+<p>This document tracks the performance and evolution of the fraud detection models trained on RiskFabric synthetic data.</p>
+<h2 id="v1-iteration-dry-run"><a class="header" href="#v1-iteration-dry-run">v1 Iteration (Dry Run)</a></h2>
+<p><strong>Date</strong>: February 15, 2026<br />
+<strong>Model Type</strong>: XGBoost (Binary Classifier)<br />
+<strong>Dataset Size</strong>: 358,830 rows (Gold Master Table)<br />
+<strong>Training Target</strong>: <code>fraud_target</code> (Ground Truth)</p>
+<h3 id="performance-results"><a class="header" href="#performance-results">Performance Results</a></h3>
+<ul>
+<li><strong>Accuracy</strong>: 0.95</li>
+<li><strong>ROC AUC Score</strong>: 0.9782</li>
+</ul>
+<h4 id="classification-report-test-set"><a class="header" href="#classification-report-test-set">Classification Report (Test Set)</a></h4>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Class</th><th style="text-align: left">Precision</th><th style="text-align: left">Recall</th><th style="text-align: left">F1-Score</th><th style="text-align: left">Support</th></tr></thead><tbody>
+<tr><td style="text-align: left">0 (Legit)</td><td style="text-align: left">0.96</td><td style="text-align: left">1.00</td><td style="text-align: left">0.98</td><td style="text-align: left">67,426</td></tr>
+<tr><td style="text-align: left">1 (Fraud)</td><td style="text-align: left">0.85</td><td style="text-align: left">0.30</td><td style="text-align: left">0.44</td><td style="text-align: left">4,340</td></tr>
+</tbody></table>
+</div>
+<h3 id="observations"><a class="header" href="#observations">Observations</a></h3>
+<ul>
+<li><strong>Recall Gap</strong>: Low recall (0.30) for fraud suggests the model misses significant synthetic patterns.</li>
+<li><strong>Top Signals</strong>: Merchant-level fraud rates and anomaly flags are dominant predictors.</li>
+</ul>
+<hr />
+<h2 id="v2-high-fidelity-iteration-leakage-detected"><a class="header" href="#v2-high-fidelity-iteration-leakage-detected">v2 High-Fidelity Iteration (Leakage Detected)</a></h2>
+<p><strong>Date</strong>: February 13, 2026 (Full 100k run)<br />
+<strong>Model Type</strong>: XGBoost (Binary Classifier)<br />
+<strong>Dataset Size</strong>: 4,391,523 rows (Gold Master Table)<br />
+<strong>Training Target</strong>: <code>fraud_target</code> (Ground Truth)</p>
+<h3 id="performance-results-1"><a class="header" href="#performance-results-1">Performance Results</a></h3>
+<ul>
+<li><strong>Accuracy</strong>: 0.99</li>
+<li><strong>ROC AUC Score</strong>: 0.9993</li>
+</ul>
+<h4 id="classification-report-test-set-1"><a class="header" href="#classification-report-test-set-1">Classification Report (Test Set)</a></h4>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Class</th><th style="text-align: left">Precision</th><th style="text-align: left">Recall</th><th style="text-align: left">F1-Score</th><th style="text-align: left">Support</th></tr></thead><tbody>
+<tr><td style="text-align: left">0 (Legit)</td><td style="text-align: left">0.99</td><td style="text-align: left">1.00</td><td style="text-align: left">1.00</td><td style="text-align: left">807,054</td></tr>
+<tr><td style="text-align: left">1 (Fraud)</td><td style="text-align: left">0.97</td><td style="text-align: left">0.93</td><td style="text-align: left">0.95</td><td style="text-align: left">71,251</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="v2-iteration-leakage-prevention"><a class="header" href="#v2-iteration-leakage-prevention">v2 Iteration (Leakage Prevention)</a></h2>
+<p><strong>Date</strong>: February 13, 2026<br />
+<strong>Model Type</strong>: XGBoost (Binary Classifier)<br />
+<strong>Dataset Size</strong>: 4,391,523 rows (Gold Master Table)<br />
+<strong>Training Target</strong>: <code>is_fraud</code> (Noisy Label)</p>
+<h3 id="performance-results-2"><a class="header" href="#performance-results-2">Performance Results</a></h3>
+<ul>
+<li><strong>Accuracy</strong>: 0.97</li>
+<li><strong>ROC AUC Score</strong>: 0.9746</li>
+</ul>
+<h4 id="classification-report-noisy-labels"><a class="header" href="#classification-report-noisy-labels">Classification Report (Noisy Labels)</a></h4>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Class</th><th style="text-align: left">Precision</th><th style="text-align: left">Recall</th><th style="text-align: left">F1-Score</th><th style="text-align: left">Support</th></tr></thead><tbody>
+<tr><td style="text-align: left">0 (Legit)</td><td style="text-align: left">0.97</td><td style="text-align: left">0.99</td><td style="text-align: left">0.98</td><td style="text-align: left">795,892</td></tr>
+<tr><td style="text-align: left">1 (Fraud)</td><td style="text-align: left">0.92</td><td style="text-align: left">0.72</td><td style="text-align: left">0.81</td><td style="text-align: left">82,413</td></tr>
+</tbody></table>
+</div>
+<h3 id="observations-how-leakage-was-prevented"><a class="header" href="#observations-how-leakage-was-prevented">Observations: How Leakage was Prevented</a></h3>
+<ol>
+<li><strong>Sanitized Feature Vector</strong>: Explicitly excluded synthetic metadata fields (<code>geo_anomaly</code>, <code>device_anomaly</code>, <code>ip_anomaly</code>, <code>label_noise</code>, <code>fraud_type</code>, <code>fraud_target</code>, <code>burst_session</code>, <code>burst_seq</code>) from the training set.</li>
+<li><strong>Noisy Target Shift</strong>: Shifted the training target from the perfect <code>fraud_target</code> to the noisy <code>is_fraud</code> label.</li>
+<li><strong>Behavioral Validation</strong>: The model now identifies fraud based on behavioral signals like <code>amount</code> (36% importance), <code>mf_fraud_rate</code> (33%), and <code>df_fraud_rate</code> (16%).</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="performance-benchmarks"><a class="header" href="#performance-benchmarks">Performance Benchmarks</a></h1>
+<p>This document tracks the evolution of <code>riskfabric</code> generation performance, focusing on the journey to the 100k+ Transactions Per Second (TPS) milestone.</p>
+<h2 id="test-environment"><a class="header" href="#test-environment">Test Environment</a></h2>
+<ul>
+<li><strong>Workload</strong>: 10,000 Customers (~15,000 Accounts, ~150,000 Transactions)</li>
+<li><strong>Format</strong>: Parquet (Snappy compression)</li>
+<li><strong>Hardware</strong>: Single Workstation (Multi-threaded Rust)</li>
+</ul>
+<h2 id="milestone-log"><a class="header" href="#milestone-log">Milestone Log</a></h2>
+<h3 id="1-initial-port-sequential-multi-pass"><a class="header" href="#1-initial-port-sequential-multi-pass">1. Initial Port (Sequential Multi-Pass)</a></h3>
+<p><em>Date: February 2026</em></p>
+<ul>
+<li><strong>Architecture</strong>: Sequential loops for generation, fraud injection, and campaign mutations. Cryptographic <code>Sha256</code> hashing for reproducibility.</li>
+<li><strong>Transaction Gen Time</strong>: 44.11 seconds</li>
+<li><strong>Total Runtime</strong>: 48.76 seconds</li>
+<li><strong>Throughput</strong>: ~3,400 TPS</li>
+<li><strong>Bottleneck</strong>: Cryptographic hashing overhead and high memory access in multiple sequential passes.</li>
+</ul>
+<h3 id="2-parallel-injection--hash-optimization"><a class="header" href="#2-parallel-injection--hash-optimization">2. Parallel Injection &amp; Hash Optimization</a></h3>
+<ul>
+<li><strong>Architecture</strong>: Parallelized the <code>inject</code> pass using <code>rayon</code>. Optimized <code>hash01</code> to reduce string allocations.</li>
+<li><strong>Transaction Gen Time</strong>: 35.86 seconds</li>
+<li><strong>Total Runtime</strong>: 40.35 seconds</li>
+<li><strong>Throughput</strong>: ~4,100 TPS</li>
+<li><strong>Gain</strong>: +20% improvement.</li>
+</ul>
+<h3 id="3-the-one-pass-unified-architecture-current"><a class="header" href="#3-the-one-pass-unified-architecture-current">3. The "One-Pass" Unified Architecture (Current)</a></h3>
+<p><em>Date: February 2026</em></p>
+<ul>
+<li><strong>Architecture</strong>:
+<ul>
+<li><strong>Unified Loop</strong>: All logic (Selection, Generation, Fraud, Campaigns) handled in a single parallel pass.</li>
+<li><strong>Fast PRNG</strong>: Swapped <code>Sha256</code> for <code>StdRng</code> (seeded per card for stability).</li>
+<li><strong>Reduced Allocations</strong>: Replaced UUIDs with synthetic IDs and pre-formatted timestamps.</li>
+</ul>
+</li>
+<li><strong>Transaction Gen Time</strong>: 0.82 seconds</li>
+<li><strong>Total Runtime</strong>: 4.40 seconds (Includes all file I/O)</li>
+<li><strong>Throughput</strong>: <strong>~182,000 TPS</strong></li>
+<li><strong>Gain</strong>: <strong>53x improvement</strong> from baseline.</li>
+</ul>
+<h2 id="summary-of-optimization-impact"><a class="header" href="#summary-of-optimization-impact">Summary of Optimization Impact</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Stage</th><th style="text-align: left">Baseline (s)</th><th style="text-align: left">Optimized (s)</th><th style="text-align: left">Speedup</th></tr></thead><tbody>
+<tr><td style="text-align: left">Customer Gen</td><td style="text-align: left">0.147</td><td style="text-align: left">0.155</td><td style="text-align: left">1x</td></tr>
+<tr><td style="text-align: left">Transaction Gen</td><td style="text-align: left">44.110</td><td style="text-align: left">0.823</td><td style="text-align: left"><strong>53.6x</strong></td></tr>
+<tr><td style="text-align: left">Parquet Write (Txn)</td><td style="text-align: left">3.696</td><td style="text-align: left">2.640</td><td style="text-align: left">1.4x</td></tr>
+<tr><td style="text-align: left"><strong>Total Pipeline</strong></td><td style="text-align: left"><strong>48.763</strong></td><td style="text-align: left"><strong>4.402</strong></td><td style="text-align: left"><strong>11x</strong></td></tr>
+</tbody></table>
+</div>
+<h3 id="4-high-fidelity-one-pass-tuned"><a class="header" href="#4-high-fidelity-one-pass-tuned">4. High-Fidelity One-Pass (Tuned)</a></h3>
+<p><em>Date: February 2026</em></p>
+<ul>
+<li><strong>Architecture</strong>: Added profile-specific geo-anomalies, campaign-coordinated spatial signals, and dynamic failure reasons.</li>
+<li><strong>Performance</strong>: Maintained throughput at <strong>~180,000 TPS</strong> despite increased logic complexity.</li>
+<li><strong>Result</strong>: High-quality training data with sharp spatial/temporal signals generated in &lt; 4 seconds for 150k+ transactions.</li>
+</ul>
+<h2 id="next-goals"><a class="header" href="#next-goals">Next Goals</a></h2>
+<ul>
+<li><strong>Scale Testing</strong>: Achieve similar linear scaling for 100,000,000 transactions (targeting completion in under 15 minutes).</li>
+<li><strong>I/O Optimization</strong>: Investigate partitioned Parquet writes to further reduce the 2.6s write bottleneck.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="knowledge-base-issues--resolutions"><a class="header" href="#knowledge-base-issues--resolutions">Knowledge Base: Issues &amp; Resolutions</a></h1>
+<p>This document tracks technical hurdles encountered during the development of RiskFabric. It serves as a troubleshooting guide for engineers working with the Rust/Polars/ClickHouse stack.</p>
+<h2 id="quick-reference"><a class="header" href="#quick-reference">Quick Reference</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Component</th><th style="text-align: left">Symptom</th><th style="text-align: left">Resolution</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong>Polars</strong></td><td style="text-align: left"><code>cannot create series from UInt8</code></td><td style="text-align: left">Migrate flags to <code>UInt32</code></td></tr>
+<tr><td style="text-align: left"><strong>Polars</strong></td><td style="text-align: left">Kernel panic on <code>.is_in()</code></td><td style="text-align: left">Cast weekday to <code>Int32</code></td></tr>
+<tr><td style="text-align: left"><strong>ClickHouse</strong></td><td style="text-align: left">Timestamp parsing failed</td><td style="text-align: left">Store as String, parse in Silver ETL</td></tr>
+<tr><td style="text-align: left"><strong>System</strong></td><td style="text-align: left">Exit Code 137 (OOM)</td><td style="text-align: left">Use Chunked Generation</td></tr>
+<tr><td style="text-align: left"><strong>ML Model</strong></td><td style="text-align: left">Perfect AUC (0.999)</td><td style="text-align: left">Sanitize features (Leakage prevention)</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="-data-engine--type-safety"><a class="header" href="#-data-engine--type-safety">⚙️ Data Engine &amp; Type Safety</a></h2>
+<h3 id="polars-uint8-series-creation-error"><a class="header" href="#polars-uint8-series-creation-error">Polars <code>UInt8</code> Series Creation Error</a></h3>
+<ul>
+<li><strong>Issue</strong>: Polars threw a <code>ComputeError</code> when materializing a DataFrame containing 8-bit unsigned integers.</li>
+<li><strong>Impact</strong>: Blocked Silver ETL features like <code>is_weekend</code> and boolean flags.</li>
+<li><strong>Resolution</strong>: Migrated all flag and counter columns to <code>DataType::UInt32</code> for native Polars support and better ML compatibility.</li>
+</ul>
+<h3 id="polars-is_in-panic-on-int8"><a class="header" href="#polars-is_in-panic-on-int8">Polars <code>is_in</code> Panic on <code>Int8</code></a></h3>
+<ul>
+<li><strong>Issue</strong>: <code>.dt().weekday()</code> returns <code>Int8</code>, which caused a kernel-level panic during <code>.is_in()</code> checks.</li>
+<li><strong>Impact</strong>: ETL runner crashes during temporal feature calculation.</li>
+<li><strong>Resolution</strong>: Explicitly cast the output of <code>.weekday()</code> to <code>Int32</code> and ensure the comparison set matches exactly (e.g., <code>&amp;[6i32, 7i32]</code>).</li>
+</ul>
+<h3 id="clickhouse-timestamp-precision"><a class="header" href="#clickhouse-timestamp-precision">ClickHouse Timestamp Precision</a></h3>
+<ul>
+<li><strong>Issue</strong>: Standard <code>DateTime64</code> ingestion failed for ISO 8601 strings with nanosecond precision.</li>
+<li><strong>Resolution</strong>: Land raw timestamps as <code>String</code> in the Bronze layer. Use Polars' <code>.str().to_datetime()</code> during Silver ETL for flexible, high-precision parsing.</li>
+</ul>
+<hr />
+<h2 id="-performance--scaling"><a class="header" href="#-performance--scaling">🚀 Performance &amp; Scaling</a></h2>
+<h3 id="out-of-memory-oom-in-network-linkage"><a class="header" href="#out-of-memory-oom-in-network-linkage">Out Of Memory (OOM) in Network Linkage</a></h3>
+<ul>
+<li><strong>Issue</strong>: Multi-million row many-to-many joins on IP/UA caused combinatorial explosion.</li>
+<li><strong>Impact</strong>: OS terminated the process (Exit Code 137).</li>
+<li><strong>Resolution</strong>: Shifted from an <strong>Edge-List Graph approach</strong> to an <strong>Entity Reputation approach</strong>. Calculate risk at the entity level and join back to transactions. Complexity reduced from $O(N^2)$ to $O(N)$.</li>
+</ul>
+<h3 id="oom-in-large-scale-generation"><a class="header" href="#oom-in-large-scale-generation">OOM in Large-Scale Generation</a></h3>
+<ul>
+<li><strong>Issue</strong>: Single-pass generation of 17M+ transactions exhausted RAM.</li>
+<li><strong>Resolution</strong>: Refactored to a <strong>Chunked One-Pass Architecture</strong>. The generator processes the population in batches of 5,000 entities and flushes transactions to Parquet incrementally.</li>
+</ul>
+<hr />
+<h2 id="-machine-learning--data-science"><a class="header" href="#-machine-learning--data-science">🧠 Machine Learning &amp; Data Science</a></h2>
+<h3 id="label-leakage-near-perfect-auc"><a class="header" href="#label-leakage-near-perfect-auc">Label Leakage (Near-Perfect AUC)</a></h3>
+<ul>
+<li><strong>Issue</strong>: Initial training yielded a near-perfect 0.9993 AUC.</li>
+<li><strong>Impact</strong>: The model used hidden synthetic signals rather than behavioral patterns.</li>
+<li><strong>Resolution</strong>:
+<ol>
+<li><strong>Feature sanitization</strong>: Excluded <code>geo_anomaly</code>, <code>device_anomaly</code>, etc.</li>
+<li><strong>Target Shift</strong>: Switched from <code>fraud_target</code> (Ground Truth) to <code>is_fraud</code> (Noisy Label).</li>
+</ol>
+</li>
+</ul>
+<h3 id="observed-vs-configured-fraud-rate-discrepancy"><a class="header" href="#observed-vs-configured-fraud-rate-discrepancy">Observed vs. Configured Fraud Rate Discrepancy</a></h3>
+<ul>
+<li><strong>Issue</strong>: Observed fraud (~13.6%) appeared higher than the 12% configuration.</li>
+<li><strong>Resolution</strong>: Verified that <code>is_fraud</code> deliberately incorporates simulated label noise (3% FP, 10% FN), resulting in the higher observed ratio.</li>
+</ul>
+<h3 id="high-fraud-prevalence-in-initial-runs"><a class="header" href="#high-fraud-prevalence-in-initial-runs">High Fraud Prevalence in Initial Runs</a></h3>
+<ul>
+<li><strong>Issue</strong>: ~86% of customers experienced fraud due to high default config values.</li>
+<li><strong>Resolution</strong>: Tuned <code>target_share</code> to 0.005 (0.5% txn rate) to align with industry sparse-data benchmarks.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+    </div>
+    </body>
+</html>

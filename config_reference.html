@@ -1,0 +1,295 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Configuration Reference - RiskFabric Documentation</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">🎓 Tutorials</li><li class="chapter-item expanded "><a href="tutorial_first_run.html"><strong aria-hidden="true">2.</strong> Your First Generation</a></li><li class="chapter-item expanded affix "><li class="part-title">🛠️ How-to Guides</li><li class="chapter-item expanded "><a href="to-do.html"><strong aria-hidden="true">3.</strong> Project Roadmap</a></li><li class="chapter-item expanded "><a href="how_to_add_fraud.html"><strong aria-hidden="true">4.</strong> Add a New Fraud Signature</a></li><li class="chapter-item expanded affix "><li class="part-title">📋 Technical Reference</li><li class="chapter-item expanded "><a href="data_schema.html"><strong aria-hidden="true">5.</strong> Synthetic Data Schema</a></li><li class="chapter-item expanded "><a href="etl_schema.html"><strong aria-hidden="true">6.</strong> ETL & Feature Schema</a></li><li class="chapter-item expanded "><a href="config_reference.html" class="active"><strong aria-hidden="true">7.</strong> Configuration Reference</a></li><li class="chapter-item expanded "><a href="developer_utilities.html"><strong aria-hidden="true">8.</strong> Developer Utilities CLI</a></li><li class="chapter-item expanded "><a href="machine_learning.html"><strong aria-hidden="true">9.</strong> Machine Learning Pipeline</a></li><li class="chapter-item expanded affix "><li class="part-title">🧠 Conceptual Explanations</li><li class="chapter-item expanded "><a href="theory_of_operation.html"><strong aria-hidden="true">10.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="fraud_signatures.html"><strong aria-hidden="true">11.</strong> Fraud Signatures & Attack Patterns</a></li><li class="chapter-item expanded "><a href="data_warehouse.html"><strong aria-hidden="true">12.</strong> Data Warehouse & dbt Strategy</a></li><li class="chapter-item expanded "><a href="objectives.html"><strong aria-hidden="true">13.</strong> Project Goals</a></li><li class="chapter-item expanded affix "><li class="part-title">📈 Results & Monitoring</li><li class="chapter-item expanded "><a href="ml_metrics.html"><strong aria-hidden="true">14.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="performance_benchmarks.html"><strong aria-hidden="true">15.</strong> Generation Performance</a></li><li class="chapter-item expanded affix "><li class="part-title">📚 Knowledge Base</li><li class="chapter-item expanded "><a href="issues.html"><strong aria-hidden="true">16.</strong> Technical Issues & Resolutions</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">RiskFabric Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/harshafaik/riskfabric" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="configuration-reference"><a class="header" href="#configuration-reference">Configuration Reference</a></h1>
+<p>RiskFabric uses a modular YAML-based configuration system to control every aspect of the simulation, from demographic distributions to specific fraud attack probabilities.</p>
+<h2 id="-simulation-control-generation_controlyaml"><a class="header" href="#-simulation-control-generation_controlyaml">🛠️ Simulation Control (<code>generation_control.yaml</code>)</a></h2>
+<p>Controls the scale, volume, and performance of the generation pass.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Parameter</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>customer_count</code></td><td style="text-align: left">Integer</td><td style="text-align: left">Total number of synthetic customers to generate.</td></tr>
+<tr><td style="text-align: left"><code>transactions_per_customer</code></td><td style="text-align: left">Range</td><td style="text-align: left">Min/Max transactions generated for each card lifecycle.</td></tr>
+<tr><td style="text-align: left"><code>parallelism</code></td><td style="text-align: left">Object</td><td style="text-align: left">Thread counts for <code>Rayon</code> workers (e.g., <code>transaction_gen_threads</code>).</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="-customer-profile-customer_configyaml"><a class="header" href="#-customer-profile-customer_configyaml">👥 Customer Profile (<code>customer_config.yaml</code>)</a></h2>
+<p>Defines the "Identity" layer of the simulation.</p>
+<ul>
+<li><strong>Names &amp; Email</strong>: Lists of first/last names and email domains used to build synthetic identities.</li>
+<li><strong>Location Types</strong>: Categorizes customers into <code>Metro</code>, <code>Urban</code>, <code>Semi-Urban</code>, and <code>Rural</code>.</li>
+<li><strong>Financial Heuristics</strong>:
+<ul>
+<li><code>base_spend</code>: Sets the average monthly expenditure based on <code>location_type</code>.</li>
+<li><code>credit_score</code>: Defines the starting point and age-based progression of credit risk.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="-product-catalog-product_catalogyaml"><a class="header" href="#-product-catalog-product_catalogyaml">🏛️ Product Catalog (<code>product_catalog.yaml</code>)</a></h2>
+<p>Defines the "Banking" layer, including account types and card networks.</p>
+<ul>
+<li><strong>Accounts</strong>: Sets the balance ranges and the variety of accounts (Savings, Salary, etc.).</li>
+<li><strong>Cards</strong>:
+<ul>
+<li><code>networks</code>: Defines market participation (VISA, Mastercard, RuPay, Amex).</li>
+<li><code>limits</code>: Sets default transaction limits for online and contactless usage.</li>
+<li><code>active_probability</code>: Probability that a card remains in an "Active" state.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="-transaction-logic-transaction_configyaml"><a class="header" href="#-transaction-logic-transaction_configyaml">💸 Transaction Logic (<code>transaction_config.yaml</code>)</a></h2>
+<p>Defines the "Behavioral" layer for legitimate spend.</p>
+<ul>
+<li><strong>Merchant Categories</strong>: Standard industry categories used for merchant assignment.</li>
+<li><strong>Geo Bounds</strong>: The WGS84 bounding box used for "Global" coordinate fallback (defaults to India).</li>
+<li><strong>Success Rate</strong>: The probability that the synthetic bank approves a legitimate transaction.</li>
+</ul>
+<hr />
+<h2 id="-fraud-rules-fraud_rulesyaml"><a class="header" href="#-fraud-rules-fraud_rulesyaml">🕵️ Fraud Rules (<code>fraud_rules.yaml</code>)</a></h2>
+<p>Defines the "Malicious" layer, focusing on specific attack profiles.</p>
+<ul>
+<li><strong>Fraud Profiles</strong>:
+<ul>
+<li><code>frequency</code>: The relative weight of a profile (e.g., <code>upi_scam</code> vs <code>friendly_fraud</code>).</li>
+<li><code>amount_pattern</code>: Links to a specific distribution of amounts.</li>
+<li><code>geo_anomaly_prob</code>: Probability that this fraud type occurs far from the user's home.</li>
+</ul>
+</li>
+<li><strong>Campaigns</strong>: Configures coordinated attacks like <code>sequential_takeover</code> and <code>coordinated_attack</code>.</li>
+</ul>
+<hr />
+<h2 id="-simulation-tuning-fraud_tuningyaml"><a class="header" href="#-simulation-tuning-fraud_tuningyaml">🎛️ Simulation Tuning (<code>fraud_tuning.yaml</code>)</a></h2>
+<p>Provides technical "knobs" to refine the difficulty of detection.</p>
+<ul>
+<li><strong>Probabilities</strong>: Global overrides for <code>geo_anomaly</code>, <code>device_anomaly</code>, and <code>ip_anomaly</code>.</li>
+<li><strong>Salts</strong>: Used to shift the PRNG state for injector and mutator cycles. This ensures that different runs produce unique data even when using the same base seed.</li>
+<li><strong>Campaign params</strong>: Specific escalation rates for coordinated attacks (e.g., <code>ato_escalation_rate</code>).</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="etl_schema.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="developer_utilities.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="etl_schema.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="developer_utilities.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

@@ -238,13 +238,45 @@ cargo run --release --bin etl_gold_master
 <p><em>Developed by harshafaik</em></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="tutorial-your-first-generation"><a class="header" href="#tutorial-your-first-generation">Tutorial: Your First Generation</a></h1>
 <p>Welcome to RiskFabric! This tutorial guides you through the "Golden Path" to generate your first synthetic dataset of 150,000 transactions in under 5 minutes.</p>
-<h2 id="1-prerequisites-1"><a class="header" href="#1-prerequisites-1">1. Prerequisites</a></h2>
-<p>Before starting, ensure you have the following running:</p>
-<ul>
-<li><strong>PostgreSQL</strong>: A local instance running on port <code>5432</code> with a database named <code>riskfabric</code>.</li>
-<li><strong>Rust</strong>: Latest stable version installed.</li>
-<li><strong>Python</strong>: A virtual environment set up in <code>env/</code>.</li>
-</ul>
+<h2 id="1-prerequisites--environment-setup"><a class="header" href="#1-prerequisites--environment-setup">1. Prerequisites &amp; Environment Setup</a></h2>
+<p>Before starting, ensure you have the following components installed and running on your system.</p>
+<h3 id="a-postgresql-with-postgis"><a class="header" href="#a-postgresql-with-postgis">A. PostgreSQL with PostGIS</a></h3>
+<p>RiskFabric uses PostGIS for spatial joins and geographic reference storage.</p>
+<ol>
+<li><strong>Install</strong>: <code>sudo apt install postgresql postgresql-contrib postgis</code></li>
+<li><strong>Database</strong>: Create a database named <code>riskfabric</code>.
+<pre><code class="language-bash">sudo -u postgres psql -c "CREATE DATABASE riskfabric;"
+</code></pre>
+</li>
+<li><strong>Enable Extensions</strong>: Enable PostGIS in your new database.
+<pre><code class="language-bash">sudo -u postgres psql -d riskfabric -c "CREATE EXTENSION postgis;"
+</code></pre>
+</li>
+</ol>
+<h3 id="b-clickhouse-optional-for-bronze-sink"><a class="header" href="#b-clickhouse-optional-for-bronze-sink">B. ClickHouse (Optional for Bronze Sink)</a></h3>
+<p>For high-speed analytical storage, we recommend ClickHouse.</p>
+<ol>
+<li><strong>Install</strong>: Follow the <a href="https://clickhouse.com/docs/en/install">official guide</a>.</li>
+<li><strong>Start Server</strong>: Ensure the ClickHouse server runs on default port <code>8123</code> (HTTP) or <code>9000</code> (Native).</li>
+</ol>
+<h3 id="c-python-environment-for-dbt--ml"><a class="header" href="#c-python-environment-for-dbt--ml">C. Python Environment (for dbt &amp; ML)</a></h3>
+<p>We use <code>dbt</code> for geographic modeling and <code>XGBoost</code> for fraud detection.</p>
+<ol>
+<li><strong>Create virtual environment</strong>:
+<pre><code class="language-bash">python -m venv env
+source env/bin/activate
+</code></pre>
+</li>
+<li><strong>Install Dependencies</strong>:
+<pre><code class="language-bash">pip install dbt-postgres polars xgboost pandas pyarrow
+</code></pre>
+</li>
+</ol>
+<h3 id="d-rust-environment"><a class="header" href="#d-rust-environment">D. Rust Environment</a></h3>
+<p>Ensure you have the latest stable Rust compiler.</p>
+<pre><code class="language-bash">rustup update stable
+</code></pre>
+<hr />
 <h2 id="2-preparing-geographic-reference-data"><a class="header" href="#2-preparing-geographic-reference-data">2. Preparing Geographic Reference Data</a></h2>
 <p>RiskFabric uses real-world data from OpenStreetMap (OSM) to place customers in realistic locations.</p>
 <h3 id="step-1-extract-osm-nodes"><a class="header" href="#step-1-extract-osm-nodes">Step 1: Extract OSM Nodes</a></h3>
@@ -270,7 +302,7 @@ cd ..
 <h3 id="step-4-execute-the-generation"><a class="header" href="#step-4-execute-the-generation">Step 4: Execute the Generation</a></h3>
 <pre><code class="language-bash">cargo run --release --bin generate
 </code></pre>
-<p>The engine processes 10,000 cards in parallel and flushes them to disk. You should see a throughput of ~180,000 TPS.</p>
+<p>The engine processes population segments in parallel and flushes them to disk. You should see a throughput of ~182,000 TPS.</p>
 <hr />
 <h2 id="4-verifying-the-results"><a class="header" href="#4-verifying-the-results">4. Verifying the Results</a></h2>
 <p>Your synthetic data awaits in <code>data/output/</code>.</p>

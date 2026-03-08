@@ -1,4 +1,4 @@
-use crate::models::customer::Customer;
+use crate::models::customer::{Customer, GeoLocation, FinancialProfile};
 use polars::prelude::*;
 use rand::Rng;
 use rayon::prelude::*;
@@ -130,15 +130,19 @@ pub fn generate_customers(count: usize) -> Vec<Customer> {
                 name,
                 age,
                 email,
-                states[idx].clone(),
-                cities[idx].clone(),
-                lats[idx],
-                lons[idx],
-                h3_indices[idx].clone(),
-                credit_score,
-                monthly_spend,
-                customer_risk_score,
-                is_fraud,
+                GeoLocation {
+                    state: states[idx].clone(),
+                    city: cities[idx].clone(),
+                    lat: lats[idx],
+                    long: lons[idx],
+                    h3_r7: h3_indices[idx].clone(),
+                },
+                FinancialProfile {
+                    credit_score,
+                    monthly_spend,
+                    customer_risk_score,
+                    is_fraud,
+                },
             );
             
             customer.location_type = location_type;

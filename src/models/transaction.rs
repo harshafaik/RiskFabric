@@ -7,6 +7,16 @@ use serde::{Deserialize, Serialize};
 use crate::config::AppConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MerchantInfo {
+    pub id: String,
+    pub name: String,
+    pub category: String,
+    pub lat: f64,
+    pub long: f64,
+    pub h3_r7: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Transaction {
     pub transaction_id: String,
     pub card_id: String,
@@ -45,12 +55,7 @@ impl Transaction {
         card_id: String,
         account_id: String,
         customer_id: String,
-        merchant_id: String,
-        merchant_name: String,
-        merchant_category: String,
-        lat: f64,
-        long: f64,
-        h3_r7: String,
+        merchant: MerchantInfo,
         config: &AppConfig,
     ) -> Self {
         let mut rng = rand::rng();
@@ -114,9 +119,9 @@ impl Transaction {
             card_id,
             account_id,
             customer_id,
-            merchant_id,
-            merchant_name,
-            merchant_category,
+            merchant_id: merchant.id,
+            merchant_name: merchant.name,
+            merchant_category: merchant.category,
             merchant_country: config.rules.global.default_country.clone(),
             amount,
             currency,
@@ -131,9 +136,9 @@ impl Transaction {
             is_fraud,
             chargeback: false,
             chargeback_days: None,
-            location_lat: lat,
-            location_long: long,
-            h3_r7,
+            location_lat: merchant.lat,
+            location_long: merchant.long,
+            h3_r7: merchant.h3_r7,
         }
     }
 

@@ -48,12 +48,10 @@ impl Card {
 
         let status = if days_to_expiry <= 0 {
             "Expired"
+        } else if rng.random_bool(0.90) {
+            "Active"
         } else {
-            if rng.random_bool(0.90) {
-                "Active"
-            } else {
-                "Blocked"
-            }
+            "Blocked"
         };
 
         let status_reason = match status {

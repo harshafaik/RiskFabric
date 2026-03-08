@@ -10,7 +10,7 @@ use std::str::FromStr;
 
 fn main() {
     let config = AppConfig::load();
-    let count = config.control.customer_count;
+    let count = config.customer.control.customer_count;
     let total_start = Instant::now();
     
     fs::create_dir_all("data/output").expect("Could not create the directory");

@@ -1,49 +1,9 @@
 use crate::models::customer::{Customer, GeoLocation, FinancialProfile};
+use crate::config::CustomerConfig;
 use polars::prelude::*;
 use rand::Rng;
 use rayon::prelude::*;
 use std::fs::File;
-use serde::Deserialize;
-use std::collections::HashMap;
-
-#[derive(Debug, Deserialize)]
-struct CustomerConfig {
-    names: NamesConfig,
-    email: EmailConfig,
-    locations: LocationsConfig,
-    financials: FinancialsConfig,
-}
-
-#[derive(Debug, Deserialize)]
-struct NamesConfig {
-    first_names: Vec<String>,
-    last_names: Vec<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct EmailConfig {
-    domains: Vec<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct LocationsConfig {
-    types: Vec<String>,
-    metro_cities: Vec<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct FinancialsConfig {
-    base_spend: HashMap<String, f64>,
-    credit_score: CreditScoreConfig,
-}
-
-#[derive(Debug, Deserialize)]
-struct CreditScoreConfig {
-    base: i32,
-    age_weight: f64,
-    min: u16,
-    max: u16,
-}
 
 pub fn generate_customers(count: usize) -> Vec<Customer> {
     println!("   ... loading customer configuration and residential reference data");

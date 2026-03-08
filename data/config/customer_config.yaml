@@ -106,3 +106,13 @@ financials:
 registration:
   lookback_years: 5
   default_location_type: "Urban"
+
+# Scale and Volume Controls
+control:
+  customer_count: 5000
+  transactions_per_customer:
+    min: 10
+    max: 50
+  parallelism:
+    customer_gen_threads: 8
+    transaction_gen_threads: 16

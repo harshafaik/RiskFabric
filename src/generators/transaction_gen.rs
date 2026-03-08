@@ -54,7 +54,7 @@ pub fn generate_transactions_chunk(
                 attacker_lon = Some(card_rng.random_range(68.0..97.0));
             }
 
-            let num_txns = card_rng.random_range(config.control.transactions_per_customer.min..config.control.transactions_per_customer.max);
+            let num_txns = card_rng.random_range(config.customer.control.transactions_per_customer.min..config.customer.control.transactions_per_customer.max);
             for i in 0..num_txns {
                 let idx = if card_rng.random_bool(0.98) {
                     if let Some(indices) = spatial_index_res5.get(&p5_key) {

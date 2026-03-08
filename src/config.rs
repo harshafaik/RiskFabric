@@ -6,7 +6,7 @@ use std::fs;
 pub struct AppConfig {
     pub rules: FraudRules,
     pub tuning: FraudTuning,
-    pub control: GenerationControl,
+    pub customer: CustomerConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -108,6 +108,53 @@ pub struct SaltsConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CustomerConfig {
+    pub names: NamesConfig,
+    pub email: EmailConfig,
+    pub locations: LocationsConfig,
+    pub financials: FinancialsConfig,
+    pub registration: RegistrationConfig,
+    pub control: GenerationControl,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NamesConfig {
+    pub first_names: Vec<String>,
+    pub last_names: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EmailConfig {
+    pub domains: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocationsConfig {
+    pub types: Vec<String>,
+    pub metro_cities: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FinancialsConfig {
+    pub base_spend: HashMap<String, f64>,
+    pub credit_score: CreditScoreConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreditScoreConfig {
+    pub base: i32,
+    pub age_weight: f64,
+    pub min: u16,
+    pub max: u16,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RegistrationConfig {
+    pub lookback_years: i32,
+    pub default_location_type: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenerationControl {
     pub customer_count: usize,
     pub transactions_per_customer: RangeControl,
@@ -132,16 +179,16 @@ impl AppConfig {
             .expect("Failed to read data/config/fraud_rules.yaml");
         let tuning_yaml = fs::read_to_string("data/config/fraud_tuning.yaml")
             .expect("Failed to read data/config/fraud_tuning.yaml");
-        let control_yaml = fs::read_to_string("data/config/generation_control.yaml")
-            .expect("Failed to read data/config/generation_control.yaml");
+        let customer_yaml = fs::read_to_string("data/config/customer_config.yaml")
+            .expect("Failed to read data/config/customer_config.yaml");
 
         let rules: FraudRules = serde_yaml::from_str(&rules_yaml)
             .expect("Failed to parse fraud_rules.yaml");
         let tuning: FraudTuning = serde_yaml::from_str(&tuning_yaml)
             .expect("Failed to parse fraud_tuning.yaml");
-        let control: GenerationControl = serde_yaml::from_str(&control_yaml)
-            .expect("Failed to parse generation_control.yaml");
+        let customer: CustomerConfig = serde_yaml::from_str(&customer_yaml)
+            .expect("Failed to parse customer_config.yaml");
 
-        AppConfig { rules, tuning, control }
+        AppConfig { rules, tuning, customer }
     }
 }

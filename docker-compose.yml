@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: riskfabric_postgres
+    shm_size: 1gb
+    environment:
+      - POSTGRES_USER=harshafaik
+      - POSTGRES_PASSWORD=123
+      - POSTGRES_DB=riskfabric
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U harshafaik -d riskfabric"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: riskfabric_clickhouse
+    environment:
+      - CLICKHOUSE_DB=riskfabric
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:8123/ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  clickhouse_data:
+  clickhouse_logs:

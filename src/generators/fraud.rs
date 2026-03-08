@@ -17,9 +17,7 @@ impl<'a> FraudInjector<'a> {
     fn seeded_rng(&self, id: &str, salt: u64) -> StdRng {
         let mut seed = [0u8; 32];
         let id_bytes = id.as_bytes();
-        for i in 0..32.min(id_bytes.len()) {
-            seed[i] = id_bytes[i];
-        }
+        seed[..32.min(id_bytes.len())].copy_from_slice(&id_bytes[..32.min(id_bytes.len())]);
         let s = self.config.rules.global.seed as u64 + salt;
         seed[24..32].copy_from_slice(&s.to_le_bytes());
         StdRng::from_seed(seed)
@@ -115,9 +113,7 @@ impl<'a> FraudMutator<'a> {
     fn seeded_rng(&self, id: &str, salt: u64) -> StdRng {
         let mut seed = [0u8; 32];
         let id_bytes = id.as_bytes();
-        for i in 0..32.min(id_bytes.len()) {
-            seed[i] = id_bytes[i];
-        }
+        seed[..32.min(id_bytes.len())].copy_from_slice(&id_bytes[..32.min(id_bytes.len())]);
         let s = self.config.rules.global.seed as u64 + salt;
         seed[24..32].copy_from_slice(&s.to_le_bytes());
         StdRng::from_seed(seed)
@@ -128,7 +124,14 @@ impl<'a> FraudMutator<'a> {
         let prob = &self.config.tuning.probabilities;
         let defaults = &self.config.tuning.defaults;
 
-        let tx_updates: Vec<(String, bool, bool, bool, Option<String>, Option<i32>)> = transactions.par_iter_mut().filter_map(|tx| {
+        struct TransactionUpdate {
+            id: String,
+            geo: bool,
+            dev: bool,
+            ip: bool,
+        }
+
+        let tx_updates: Vec<TransactionUpdate> = transactions.par_iter_mut().filter_map(|tx| {
             if let Some(meta) = metadata_map.get(&tx.transaction_id) {
                 if !meta.fraud_target {
                     return None;
@@ -140,7 +143,6 @@ impl<'a> FraudMutator<'a> {
                 let mut device_anomaly = false;
                 let mut ip_anomaly = false;
                 let mut failure_reason = None;
-                let mut chargeback_days = None;
 
                 if let Some(profile) = self.config.rules.fraud_injector.profiles.get(&meta.fraud_type) {
                     if !profile.channel_bias.is_empty() {
@@ -195,20 +197,24 @@ impl<'a> FraudMutator<'a> {
                 if rng.random_bool(prob.chargeback) {
                     tx.chargeback = true;
                     tx.chargeback_days = Some(defaults.chargeback_days);
-                    chargeback_days = Some(defaults.chargeback_days);
                 }
 
-                Some((tx.transaction_id.clone(), geo_anomaly, device_anomaly, ip_anomaly, failure_reason, chargeback_days))
+                Some(TransactionUpdate {
+                    id: tx.transaction_id.clone(),
+                    geo: geo_anomaly,
+                    dev: device_anomaly,
+                    ip: ip_anomaly,
+                })
             } else {
                 None
             }
         }).collect();
 
-        for (id, geo, dev, ip, _fail, _cb_days) in tx_updates {
-            if let Some(meta) = metadata_map.get_mut(&id) {
-                meta.geo_anomaly = geo;
-                meta.device_anomaly = dev;
-                meta.ip_anomaly = ip;
+        for update in tx_updates {
+            if let Some(meta) = metadata_map.get_mut(&update.id) {
+                meta.geo_anomaly = update.geo;
+                meta.device_anomaly = update.dev;
+                meta.ip_anomaly = update.ip;
             }
         }
     }
@@ -226,23 +232,20 @@ impl<'a> CampaignInjector<'a> {
     fn seeded_rng(&self, id: &str, salt: u64) -> StdRng {
         let mut seed = [0u8; 32];
         let id_bytes = id.as_bytes();
-        for i in 0..32.min(id_bytes.len()) {
-            seed[i] = id_bytes[i];
-        }
+        seed[..32.min(id_bytes.len())].copy_from_slice(&id_bytes[..32.min(id_bytes.len())]);
         let s = self.config.rules.global.seed as u64 + salt;
         seed[24..32].copy_from_slice(&s.to_le_bytes());
         StdRng::from_seed(seed)
     }
 
-    pub fn inject_campaigns(&self, transactions: &mut Vec<Transaction>, metadata_map: &mut HashMap<String, FraudMetadata>) {
+    pub fn inject_campaigns(&self, transactions: &mut [Transaction], metadata_map: &mut HashMap<String, FraudMetadata>) {
         let campaign_salt = self.config.tuning.salts.campaign as u64;
         
         let mut card_to_tx_ids: HashMap<String, Vec<String>> = HashMap::new();
         for tx in transactions.iter() {
-            if let Some(meta) = metadata_map.get(&tx.transaction_id) {
-                if meta.fraud_target {
-                    card_to_tx_ids.entry(tx.card_id.clone()).or_default().push(tx.transaction_id.clone());
-                }
+            if let Some(meta) = metadata_map.get(&tx.transaction_id)
+                && meta.fraud_target {
+                card_to_tx_ids.entry(tx.card_id.clone()).or_default().push(tx.transaction_id.clone());
             }
         }
 
@@ -260,24 +263,22 @@ impl<'a> CampaignInjector<'a> {
         }
 
         for tx in transactions.iter_mut() {
-            if let Some((camp_id, camp_type)) = card_to_campaign.get(&tx.card_id) {
-                if let Some(meta) = metadata_map.get_mut(&tx.transaction_id) {
-                    meta.campaign_id = Some(camp_id.clone());
-                    meta.campaign_type = Some(camp_type.clone());
-                }
+            if let Some((camp_id, camp_type)) = card_to_campaign.get(&tx.card_id)
+                && let Some(meta) = metadata_map.get_mut(&tx.transaction_id) {
+                meta.campaign_id = Some(camp_id.clone());
+                meta.campaign_type = Some(camp_type.clone());
             }
         }
 
         self.apply_campaign_mutations(transactions, metadata_map);
     }
 
-    fn apply_campaign_mutations(&self, transactions: &mut Vec<Transaction>, metadata_map: &mut HashMap<String, FraudMetadata>) {
+    fn apply_campaign_mutations(&self, transactions: &mut [Transaction], metadata_map: &mut HashMap<String, FraudMetadata>) {
         let mut campaign_groups: HashMap<String, Vec<String>> = HashMap::new();
         for tx in transactions.iter() {
-            if let Some(meta) = metadata_map.get(&tx.transaction_id) {
-                if let Some(camp_id) = &meta.campaign_id {
-                    campaign_groups.entry(camp_id.clone()).or_default().push(tx.transaction_id.clone());
-                }
+            if let Some(meta) = metadata_map.get(&tx.transaction_id)
+                && let Some(camp_id) = &meta.campaign_id {
+                campaign_groups.entry(camp_id.clone()).or_default().push(tx.transaction_id.clone());
             }
         }
 

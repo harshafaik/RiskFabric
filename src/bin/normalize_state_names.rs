@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let count: usize = parts[1].parse().unwrap_or(0);
                 
                 *state_data.entry(current_state.clone())
-                    .or_insert_with(HashMap::new)
+                    .or_default()
                     .entry(city)
                     .or_insert(0) += count;
             }
@@ -63,7 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             for (city, count) in sorted_cities {
                 writeln!(outfile, "  - {}: {}", city, count)?;
             }
-            writeln!(outfile, "")?;
+            writeln!(outfile)?;
         }
     }
 

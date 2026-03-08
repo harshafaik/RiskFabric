@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     
                     if !clean_city.is_empty() && !clean_state.is_empty() {
                         *counts.entry(clean_state)
-                            .or_insert_with(HashMap::new)
+                            .or_default()
                             .entry(clean_city)
                             .or_insert(0) += 1;
                     }
@@ -39,11 +39,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             local_counts
         },
-        || HashMap::new(),
+        HashMap::new,
         |mut a, b| {
             // Merge two hashmaps
             for (state, cities) in b {
-                let state_entry = a.entry(state).or_insert_with(HashMap::new);
+                let state_entry = a.entry(state).or_default();
                 for (city, count) in cities {
                     *state_entry.entry(city).or_insert(0) += count;
                 }
@@ -78,7 +78,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             for (city, count) in sorted_cities {
                 writeln!(file, "  - {}: {}", city, count)?;
             }
-            writeln!(file, "")?;
+            writeln!(file)?;
         }
     }
     

@@ -40,7 +40,7 @@ struct FinancialPoint {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let pbf_path = Path::new("data/india-260126.osm.pbf");
+    let pbf_path = Path::new("data/raw/india-260126.osm.pbf");
     let db_url = "postgres://harshafaik:123@localhost:5432/riskfabric";
 
     if !pbf_path.exists() {
@@ -208,17 +208,17 @@ fn process_tags(
     let h3 = coord.to_cell(Resolution::Eight).to_string();
 
     // 1. Financial (ATM/Bank)
-    if let Some(amenity) = tags.get("amenity") {
-        if *amenity == "atm" || *amenity == "bank" {
-            fin_out.push(FinancialPoint {
-                osm_id: id,
-                h3_index: h3.clone(),
-                kind: amenity.to_string(),
-                operator: tags.get("operator").or(tags.get("brand")).map(|s| s.to_string()),
-                lat,
-                lon,
-            });
-        }
+    if let Some(amenity) = tags.get("amenity")
+        && (*amenity == "atm" || *amenity == "bank")
+    {
+        fin_out.push(FinancialPoint {
+            osm_id: id,
+            h3_index: h3.clone(),
+            kind: amenity.to_string(),
+            operator: tags.get("operator").or(tags.get("brand")).map(|s| s.to_string()),
+            lat,
+            lon,
+        });
     }
 
     // 2. Merchants
@@ -239,12 +239,12 @@ fn process_tags(
             }
             _ => {}
         }
-    } else if let Some(tourism) = tags.get("tourism") {
-        if *tourism == "hotel" || *tourism == "motel" || *tourism == "guest_house" {
-            is_merchant = true;
-            category = "tourism".to_string();
-            sub_category = tourism.to_string();
-        }
+    } else if let Some(tourism) = tags.get("tourism")
+        && (*tourism == "hotel" || *tourism == "motel" || *tourism == "guest_house")
+    {
+        is_merchant = true;
+        category = "tourism".to_string();
+        sub_category = tourism.to_string();
     }
 
     if is_merchant {

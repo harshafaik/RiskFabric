@@ -3,20 +3,20 @@ use crate::models::customer::Customer;
 use crate::models::transaction::Transaction;
 use crate::models::fraud_metadata::FraudMetadata;
 use crate::config::AppConfig;
-use polars::prelude::*;
 use rand::{Rng, SeedableRng, rngs::StdRng};
 use rayon::prelude::*;
-use std::fs::File;
 use std::collections::HashMap;
 use h3o::{CellIndex, Resolution};
 use std::str::FromStr;
 use chrono::{Utc, Duration};
 
+type MerchantTuple = (Vec<String>, Vec<String>, Vec<f64>, Vec<f64>, Vec<String>, Vec<i64>);
+
 pub fn generate_transactions_chunk(
     cards: &[Card], 
     customer_map: &HashMap<String, &Customer>,
     spatial_index_res5: &HashMap<String, Vec<usize>>,
-    merchants: &(Vec<String>, Vec<String>, Vec<f64>, Vec<f64>, Vec<String>, Vec<i64>),
+    merchants: &MerchantTuple,
     config: &AppConfig
 ) -> (Vec<Transaction>, Vec<FraudMetadata>) {
     let (h3_indices, names, lats, lons, categories, osm_ids) = merchants;

@@ -1,7 +1,7 @@
 use osmpbf::{ElementReader, Element};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
-use std::sync::{Mutex, Arc};
+use std::sync::Arc;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let path = Path::new("data/india-260126.osm.pbf");
@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             mappings
         },
-        || HashMap::new(),
+        HashMap::new,
         |mut a, b| {
             a.extend(b);
             a
@@ -76,17 +76,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .to_string();
                         
                         local_map.entry(parent_state.clone())
-                            .or_insert_with(HashSet::new)
+                            .or_default()
                             .insert(district_name);
                     }
                 }
             }
             local_map
         },
-        || HashMap::new(),
+        HashMap::new,
         |mut a, b| {
             for (state, districts) in b {
-                a.entry(state).or_insert_with(HashSet::new).extend(districts);
+                a.entry(state).or_default().extend(districts);
             }
             a
         },

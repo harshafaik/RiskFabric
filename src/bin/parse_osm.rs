@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     };
                     
                     let mut map = map_clone.lock().unwrap();
-                    map.entry(state_key).or_insert_with(HashSet::new).insert(district_name);
+                    map.entry(state_key).or_default().insert(district_name);
                 }
             }
         },

@@ -2,8 +2,6 @@ use polars::prelude::*;
 use riskfabric::generators::{account_gen, card_gen, customer_gen, transaction_gen};
 use riskfabric::config::AppConfig;
 use riskfabric::models::customer::Customer;
-use riskfabric::models::transaction::Transaction;
-use riskfabric::models::fraud_metadata::FraudMetadata;
 use std::fs::{self, File};
 use std::time::Instant;
 use std::collections::HashMap;
@@ -137,7 +135,7 @@ fn main() {
         all_transactions.extend(txs);
         all_metadata.extend(meta);
         print!(".");
-        use std::io::{self, Write};
+        use std::io::Write;
         std::io::stdout().flush().unwrap();
     }
     println!("\n   -> Total Transactions generated: {}", all_transactions.len());

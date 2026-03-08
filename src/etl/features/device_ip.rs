@@ -7,7 +7,7 @@ pub fn transform_device_ip_intelligence(tx_lf: LazyFrame) -> LazyFrame {
     ]);
 
     // 2. Device-level Aggregates
-    let device_agg = tx
+    tx
         .group_by([col("user_agent")]) // Using user_agent as proxy for device
         .agg([
             len().alias("transaction_count"),
@@ -18,7 +18,5 @@ pub fn transform_device_ip_intelligence(tx_lf: LazyFrame) -> LazyFrame {
         .with_columns([
             (col("fraud_tx_count").cast(DataType::Float64) / col("transaction_count").cast(DataType::Float64))
                 .alias("device_fraud_rate"),
-        ]);
-
-    device_agg
+        ])
 }

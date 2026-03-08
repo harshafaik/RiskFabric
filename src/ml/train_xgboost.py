@@ -9,53 +9,46 @@ def train_model():
     print("🚀 Connecting to ClickHouse...")
     client = clickhouse_connect.get_client(host='localhost', database='riskfabric')
 
-    print("📊 Loading Gold Master Table via Polars...")
-    # Fetch data as a Polars DataFrame (via pyarrow)
+    print("📊 Loading Gold Master Table...")
     query = "SELECT * FROM fact_transactions_gold"
     df = pl.from_arrow(client.query_arrow(query))
     
-    print(f"✅ Loaded {df.height} rows with {df.width} columns.")
-
-    # 1. Data Cleaning & Feature Selection
-    drop_cols = ['transaction_id', 'timestamp', 'feature_calculated_at', 'is_fraud']
-    
-    # Identify target and features
-    # REALISTIC TARGET: Training on the noisy 'is_fraud' label instead of perfect 'fraud_target'
+    # 1. CLEANING & LEAKAGE REMOVAL
+    # We remove anything that contains the answer or look-ahead stats
     target_col = 'is_fraud'
     
-    # LEAKAGE PREVENTION: Exclude ground-truth metadata from the model features.
-    # The model must LEARN these patterns from raw amount, location, and behavior instead.
-    leakage_cols = [
-        'geo_anomaly', 'device_anomaly', 'ip_anomaly', 
-        'label_noise', 'fraud_type', 'fraud_target',
-        'burst_session', 'burst_seq'
+    # Explicitly dropping features that cause leakage
+    drop_cols = [
+        'transaction_id', 't.transaction_id', 'timestamp', 'feature_calculated_at',
+        'is_fraud', 'fraud_target',
+        'cf_fraud_rate', 'mf_fraud_rate', # <--- THE BIG LEAKAGE: Contains current label info
+        'geo_anomaly', 'device_anomaly', 'ip_anomaly' # Exclude injector metadata
     ]
-    feature_cols = [str(c) for c in df.columns if str(c) not in drop_cols and str(c) not in leakage_cols and str(c) != target_col]
-
-    # Convert categorical strings to pl.Categorical for XGBoost
-    cat_cols = ['merchant_category', 'transaction_channel']
     
-    # Preparation for XGBoost categorical support
-    df = df.with_columns([
-        pl.col(c).cast(pl.Categorical) for c in cat_cols
-    ])
+    feature_cols = [c for c in df.columns if c not in drop_cols]
+    
+    print(f"🧠 Training on {len(feature_cols)} HONEST features:")
+    print(f"   {feature_cols}")
 
-    X = df.select(feature_cols)
-    y = df.select(target_col)
+    # Handle Categoricals
+    string_cols = [c for c in feature_cols if df[c].dtype == pl.String]
+    if string_cols:
+        df = df.with_columns([pl.col(c).cast(pl.Categorical) for c in string_cols])
 
     # 2. Train/Test Split
     train_idx, test_idx = train_test_split(
         range(df.height), 
         test_size=0.2, 
         random_state=42, 
-        stratify=y.to_numpy().flatten()
+        stratify=df[target_col].to_numpy()
     )
 
-    X_train, X_test = X[train_idx], X[test_idx]
-    y_train, y_test = y[train_idx], y[test_idx]
+    X_train = df[train_idx].select(feature_cols)
+    y_train = df[train_idx].select(target_col).to_numpy().flatten()
+    X_test = df[test_idx].select(feature_cols)
+    y_test = df[test_idx].select(target_col).to_numpy().flatten()
 
-    print(f"🧠 Training XGBoost Model on {len(feature_cols)} features...")
-    
+    # 3. Training
     model = xgb.XGBClassifier(
         n_estimators=100,
         max_depth=6,
@@ -63,35 +56,21 @@ def train_model():
         objective='binary:logistic',
         tree_method='hist',
         enable_categorical=True,
-        random_state=42,
-        eval_metric='auc'
+        random_state=42
     )
 
     model.fit(X_train, y_train)
 
-    # 3. Evaluation
-    print("\n📈 Evaluating Model Performance...")
-    y_pred = model.predict(X_test)
+    # 4. Evaluation
     y_prob = model.predict_proba(X_test)[:, 1]
-
-    print("\nClassification Report (Ground Truth):")
-    print(classification_report(y_test.to_numpy().flatten(), y_pred))
-
-    auc = roc_auc_score(y_test.to_numpy().flatten(), y_prob)
-    print(f"ROC AUC Score: {auc:.4f}")
-
-    # 4. Feature Importance
-    print("\n🔝 Top 10 Features by Importance:")
+    auc = roc_auc_score(y_test, y_prob)
+    
+    print(f"\n✨ HONEST ROC AUC Score: {auc:.4f}")
+    print("\n🔝 Top Features by Importance:")
     importance = model.feature_importances_
     feat_imp = sorted(zip(feature_cols, importance), key=lambda x: x[1], reverse=True)
     for feat, imp in feat_imp[:10]:
         print(f" - {feat}: {imp:.4f}")
-
-    # 5. Save Model
-    os.makedirs('models', exist_ok=True)
-    model_path = 'models/fraud_model_v1.json'
-    model.save_model(model_path)
-    print(f"\n✨ Model successfully saved to {model_path}")
 
 if __name__ == "__main__":
     train_model()

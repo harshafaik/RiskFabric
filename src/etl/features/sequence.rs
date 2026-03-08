@@ -1,14 +1,15 @@
 use polars::prelude::*;
 
 pub fn transform_sequence_features(lf: LazyFrame, fraud_meta_lf: LazyFrame) -> LazyFrame {
-    // 1. Sort by customer and timestamp to ensure correct windowing
-    let lf = lf.sort(["customer_id", "timestamp"], SortMultipleOptions::default());
-    
+    // 1. Prepare timestamp (already Datetime from ClickHouse)
     let lf = lf.with_column(
-        col("timestamp").str().to_datetime(None, None, StrptimeOptions::default(), lit("null")).alias("ts_parsed")
+        col("timestamp").alias("ts_parsed")
     );
 
-    // 2. Join with Fraud Metadata early to have access to ground truth flags
+    // 2. Sort by customer and timestamp to ensure correct windowing
+    let lf = lf.sort(["customer_id", "ts_parsed"], SortMultipleOptions::default());
+    
+    // 3. Join with Fraud Metadata early to have access to ground truth flags
     let lf = lf.join(
         fraud_meta_lf,
         [col("transaction_id")],
@@ -16,9 +17,10 @@ pub fn transform_sequence_features(lf: LazyFrame, fraud_meta_lf: LazyFrame) -> L
         JoinType::Left.into(),
     );
 
-    // 3. Temporal Features
+    // 4. Temporal Features
     let lf = lf.with_columns([
         // time_since_last_transaction
+        // ClickHouse DateTime64(3) is in milliseconds
         (col("ts_parsed").cast(DataType::Int64) - col("ts_parsed").shift(lit(1)).over([col("customer_id")])
             .cast(DataType::Int64))
             .alias("time_since_last_transaction"),
@@ -33,14 +35,13 @@ pub fn transform_sequence_features(lf: LazyFrame, fraud_meta_lf: LazyFrame) -> L
          .alias("hours_since_midnight"),
         
         // is_weekend (Polars ISO: 6=Sat, 7=Sun)
-        // Casting weekday to Int32 to avoid is_in panic on Int8
         col("ts_parsed").dt().weekday().cast(DataType::Int32)
             .is_in(lit(Series::new("wknd".into(), &[6i32, 7i32])), false)
             .cast(DataType::UInt32)
             .alias("is_weekend"),
     ]);
 
-    // 4. Amount Patterns
+    // 5. Amount Patterns
     let lf = lf.with_columns([
         // amount_round_number_flag
         ((col("amount") % lit(1.0)).eq(lit(0.0))
@@ -56,11 +57,11 @@ pub fn transform_sequence_features(lf: LazyFrame, fraud_meta_lf: LazyFrame) -> L
          .alias("amount_deviation_z_score"),
     ]);
 
-    // 5. Sequential Risk (Rapid Fire & Escalation)
+    // 6. Sequential Risk (Rapid Fire & Escalation)
     let lf = lf.with_columns([
-        // rapid_fire_transaction_flag (<= 300 seconds)
+        // rapid_fire_transaction_flag (<= 300 seconds = 300,000 ms)
         col("time_since_last_transaction").is_not_null()
-            .and(col("time_since_last_transaction").lt_eq(lit(300)))
+            .and(col("time_since_last_transaction").lt_eq(lit(300000)))
             .cast(DataType::UInt32)
             .alias("rapid_fire_transaction_flag"),
             
@@ -81,7 +82,7 @@ pub fn transform_sequence_features(lf: LazyFrame, fraud_meta_lf: LazyFrame) -> L
         col("transaction_id"),
         col("customer_id"),
         col("ts_parsed").alias("timestamp"),
-        col("time_since_last_transaction").cast(DataType::Float64) / lit(1_000_000_000.0), // Convert nanoseconds to seconds
+        (col("time_since_last_transaction").cast(DataType::Float64) / lit(1000.0)).alias("time_since_last_transaction"), // Convert ms to seconds
         col("transaction_sequence_number").cast(DataType::UInt64),
         lit(0u64).alias("same_day_transaction_count"), // Placeholder for now
         col("hours_since_midnight"),

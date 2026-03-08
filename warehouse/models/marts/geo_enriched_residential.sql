@@ -26,16 +26,15 @@ spatial_match as (
         r.city,
         r.postcode,
         -- Step 1: Resolve the Unknowns using the Map
-        case 
-            when r.state_standardized = 'Unknown' then (
-                select b.state_name 
-                from state_boundaries b 
-                where ST_Contains(b.geom, ST_SetSRID(ST_Point(r.longitude, r.latitude), 4326))
-                limit 1
-            )
-            else r.state_standardized
-        end as raw_state_name
+        coalesce(
+            nullif(r.state_standardized, 'Unknown'),
+            b.state_name,
+            'Unknown'
+        ) as raw_state_name
     from residential r
+    left join state_boundaries b 
+        on r.state_standardized = 'Unknown' 
+        and ST_Contains(b.geom, ST_SetSRID(ST_Point(r.longitude, r.latitude), 4326))
 )
 
 -- Step 2: Clean up the duplicates in the final output

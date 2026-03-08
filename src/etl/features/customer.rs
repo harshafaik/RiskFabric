@@ -7,7 +7,7 @@ pub fn transform_customer_features(
 ) -> LazyFrame {
     // 1. Prepare Transactions
     let tx = tx_lf.with_columns([
-        col("timestamp").str().to_datetime(None, None, StrptimeOptions::default(), lit("null")).alias("ts"),
+        col("timestamp").alias("ts"),
         col("is_fraud").cast(DataType::UInt32),
     ]);
 

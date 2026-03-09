@@ -1,5 +1,4 @@
 {{ config(
-    materialized='table',
     indexes=[
       {'columns': ['state_standardized']},
       {'columns': ['h3_index'], 'type': 'btree'}
@@ -11,7 +10,7 @@ with raw_data as (
 ),
 
 mapping as (
-    select * from {{ ref('state_map') }}
+    select * from {{ ref('ref_state_map') }}
 )
 
 select 
@@ -21,7 +20,6 @@ select
     r.lon as longitude,
     r.city,
     r.postcode,
-    -- The State Fix: Match messy state names to the clean seed
     coalesce(m.clean_name, r.state, 'Unknown') as state_standardized
 from raw_data r
 left join mapping m 

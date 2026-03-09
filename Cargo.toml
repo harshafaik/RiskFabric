@@ -27,3 +27,4 @@ polars = { version = "0.51.0", features = [
 ] }
 osmpbf = "0.3.3"
 postgres = { version = "0.19", features = ["with-chrono-0_4", "with-uuid-1"] }
+clap = { version = "4.5.60", features = ["derive"] }

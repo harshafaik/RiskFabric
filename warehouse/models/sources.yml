@@ -6,17 +6,15 @@ sources:
     schema: public
     tables:
       - name: raw_residential
-        description: "Raw OSM points landed by the Rust engine"
-        columns:
-          - name: osm_id
-          - name: h3_index
-          - name: state
+        description: "Raw residential nodes from OSM"
+      - name: raw_merchants
+        description: "Raw merchant nodes from OSM"
+      - name: raw_financial
+        description: "Raw financial nodes (ATM/Banks) from OSM"
 
-  - name: public
+  - name: reference
     database: riskfabric
     schema: public
     tables:
-      - name: ref_india_states
-        description: "India state boundaries for spatial joins"
-      - name: raw_merchants
-        description: "Raw OSM merchant data"
+      - name: ref_boundaries
+        description: "India state boundaries from shapefiles"

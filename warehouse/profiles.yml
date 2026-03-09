@@ -10,3 +10,12 @@ warehouse:
       dbname: riskfabric
       schema: public
       threads: 4
+    docker:
+      type: postgres
+      host: postgres
+      port: 5432
+      user: harshafaik
+      password: "123"
+      dbname: riskfabric
+      schema: public
+      threads: 4

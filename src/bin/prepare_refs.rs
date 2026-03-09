@@ -1,15 +1,15 @@
 use clap::{Parser, Subcommand};
-use std::error::Error;
 use h3o::{LatLng, Resolution};
 use osmpbf::{Element, ElementReader};
-use postgres::{Client, NoTls};
 use postgres::binary_copy::BinaryCopyInWriter;
 use postgres::types::Type;
+use postgres::{Client, NoTls};
 use std::collections::{HashMap, HashSet};
-use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
+use std::path::Path;
+use std::sync::{Arc, Mutex};
 
 #[derive(Parser)]
 #[command(name = "riskfabric-prepare-refs")]
@@ -25,7 +25,11 @@ enum Commands {
     ExtractNodes {
         #[arg(short, long, default_value = "data/raw/india-260126.osm.pbf")]
         pbf: String,
-        #[arg(short, long, default_value = "postgres://harshafaik:123@localhost:5432/riskfabric")]
+        #[arg(
+            short,
+            long,
+            default_value = "postgres://harshafaik:123@localhost:5432/riskfabric"
+        )]
         db: String,
     },
     /// Map Cities to States based on Node addresses
@@ -106,9 +110,10 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
 
     println!("Connecting to database...");
     let mut client = Client::connect(db_url, NoTls)?;
-    
+
     println!("Creating/Resetting raw tables...");
-    client.batch_execute("
+    client.batch_execute(
+        "
         DROP TABLE IF EXISTS raw_residential;
         CREATE TABLE raw_residential (
             osm_id BIGINT,
@@ -140,7 +145,8 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
             lat DOUBLE PRECISION,
             lon DOUBLE PRECISION
         );
-    ")?;
+    ",
+    )?;
 
     println!("Starting OSM extraction from {:?}", pbf_path);
 
@@ -154,52 +160,54 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
 
     let reader = ElementReader::from_path(pbf_path)?;
 
-    reader.par_map_reduce(
-        move |element| {
-            let mut local_res = Vec::new();
-            let mut local_merch = Vec::new();
-            let mut local_fin = Vec::new();
+    reader
+        .par_map_reduce(
+            move |element| {
+                let mut local_res = Vec::new();
+                let mut local_merch = Vec::new();
+                let mut local_fin = Vec::new();
 
-            match element {
-                Element::Node(node) => {
-                    process_tags_extract(
-                        node.id(),
-                        node.lat(),
-                        node.lon(),
-                        node.tags().collect(),
-                        &mut local_res,
-                        &mut local_merch,
-                        &mut local_fin,
-                    );
+                match element {
+                    Element::Node(node) => {
+                        process_tags_extract(
+                            node.id(),
+                            node.lat(),
+                            node.lon(),
+                            node.tags().collect(),
+                            &mut local_res,
+                            &mut local_merch,
+                            &mut local_fin,
+                        );
+                    }
+                    Element::DenseNode(node) => {
+                        process_tags_extract(
+                            node.id(),
+                            node.lat(),
+                            node.lon(),
+                            node.tags().collect(),
+                            &mut local_res,
+                            &mut local_merch,
+                            &mut local_fin,
+                        );
+                    }
+                    _ => {}
                 }
-                Element::DenseNode(node) => {
-                     process_tags_extract(
-                        node.id(),
-                        node.lat(),
-                        node.lon(),
-                        node.tags().collect(),
-                        &mut local_res,
-                        &mut local_merch,
-                        &mut local_fin,
-                    );
-                }
-                _ => {}
-            }
 
-            (local_res, local_merch, local_fin)
-        },
-        || (Vec::new(), Vec::new(), Vec::new()),
-        |mut a, b| {
-            a.0.extend(b.0);
-            a.1.extend(b.1);
-            a.2.extend(b.2);
-            a
-        },
-    ).map(|(r, m, f)| {
-        res_clone.lock().unwrap().extend(r);
-        merch_clone.lock().unwrap().extend(m);
-        fin_clone.lock().unwrap().extend(f);
-    })?;
+                (local_res, local_merch, local_fin)
+            },
+            || (Vec::new(), Vec::new(), Vec::new()),
+            |mut a, b| {
+                a.0.extend(b.0);
+                a.1.extend(b.1);
+                a.2.extend(b.2);
+                a
+            },
+        )
+        .map(|(r, m, f)| {
+            res_clone.lock().unwrap().extend(r);
+            merch_clone.lock().unwrap().extend(m);
+            fin_clone.lock().unwrap().extend(f);
+        })?;
 
     println!("Extraction complete. Writing to Database...");
 
@@ -207,9 +215,28 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
     if !res_points.is_empty() {
         println!("Inserting {} residential points...", res_points.len());
         let sink = client.copy_in("COPY raw_residential (osm_id, h3_index, lat, lon, city, postcode, state) FROM STDIN BINARY")?;
-        let mut writer = BinaryCopyInWriter::new(sink, &[Type::INT8, Type::TEXT, Type::FLOAT8, Type::FLOAT8, Type::TEXT, Type::TEXT, Type::TEXT]);
+        let mut writer = BinaryCopyInWriter::new(
+            sink,
+            &[
+                Type::INT8,
+                Type::TEXT,
+                Type::FLOAT8,
+                Type::FLOAT8,
+                Type::TEXT,
+                Type::TEXT,
+                Type::TEXT,
+            ],
+        );
         for p in res_points.iter() {
-            writer.write(&[&p.osm_id, &p.h3_index, &p.lat, &p.lon, &p.city, &p.postcode, &p.state])?;
+            writer.write(&[
+                &p.osm_id,
+                &p.h3_index,
+                &p.lat,
+                &p.lon,
+                &p.city,
+                &p.postcode,
+                &p.state,
+            ])?;
         }
         writer.finish()?;
     }
@@ -218,9 +245,28 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
     if !merch_points.is_empty() {
         println!("Inserting {} merchant points...", merch_points.len());
         let sink = client.copy_in("COPY raw_merchants (osm_id, h3_index, name, category, sub_category, lat, lon) FROM STDIN BINARY")?;
-        let mut writer = BinaryCopyInWriter::new(sink, &[Type::INT8, Type::TEXT, Type::TEXT, Type::TEXT, Type::TEXT, Type::FLOAT8, Type::FLOAT8]);
+        let mut writer = BinaryCopyInWriter::new(
+            sink,
+            &[
+                Type::INT8,
+                Type::TEXT,
+                Type::TEXT,
+                Type::TEXT,
+                Type::TEXT,
+                Type::FLOAT8,
+                Type::FLOAT8,
+            ],
+        );
         for p in merch_points.iter() {
-            writer.write(&[&p.osm_id, &p.h3_index, &p.name, &p.category, &p.sub_category, &p.lat, &p.lon])?;
+            writer.write(&[
+                &p.osm_id,
+                &p.h3_index,
+                &p.name,
+                &p.category,
+                &p.sub_category,
+                &p.lat,
+                &p.lon,
+            ])?;
         }
         writer.finish()?;
     }
@@ -228,8 +274,20 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
     let fin_points = financial_data.lock().unwrap();
     if !fin_points.is_empty() {
         println!("Inserting {} financial points...", fin_points.len());
-        let sink = client.copy_in("COPY raw_financial (osm_id, h3_index, kind, operator, lat, lon) FROM STDIN BINARY")?;
-        let mut writer = BinaryCopyInWriter::new(sink, &[Type::INT8, Type::TEXT, Type::TEXT, Type::TEXT, Type::FLOAT8, Type::FLOAT8]);
+        let sink = client.copy_in(
+            "COPY raw_financial (osm_id, h3_index, kind, operator, lat, lon) FROM STDIN BINARY",
+        )?;
+        let mut writer = BinaryCopyInWriter::new(
+            sink,
+            &[
+                Type::INT8,
+                Type::TEXT,
+                Type::TEXT,
+                Type::TEXT,
+                Type::FLOAT8,
+                Type::FLOAT8,
+            ],
+        );
         for p in fin_points.iter() {
             writer.write(&[&p.osm_id, &p.h3_index, &p.kind, &p.operator, &p.lat, &p.lon])?;
         }
@@ -251,7 +309,7 @@ fn process_tags_extract(
 ) {
     let coord = match LatLng::new(lat, lon) {
         Ok(c) => c,
-        Err(_) => return, 
+        Err(_) => return,
     };
     let h3 = coord.to_cell(Resolution::Eight).to_string();
 
@@ -262,7 +320,10 @@ fn process_tags_extract(
             osm_id: id,
             h3_index: h3.clone(),
             kind: amenity.to_string(),
-            operator: tags.get("operator").or(tags.get("brand")).map(|s| s.to_string()),
+            operator: tags
+                .get("operator")
+                .or(tags.get("brand"))
+                .map(|s| s.to_string()),
             lat,
             lon,
         });
@@ -278,7 +339,8 @@ fn process_tags_extract(
         sub_category = shop.to_string();
     } else if let Some(amenity) = tags.get("amenity") {
         match *amenity {
-            "restaurant" | "cafe" | "fast_food" | "bar" | "pub" | "fuel" | "cinema" | "pharmacy" => {
+            "restaurant" | "cafe" | "fast_food" | "bar" | "pub" | "fuel" | "cinema"
+            | "pharmacy" => {
                 is_merchant = true;
                 category = "amenity".to_string();
                 sub_category = amenity.to_string();
@@ -307,8 +369,9 @@ fn process_tags_extract(
     }
 
     let has_addr = tags.contains_key("addr:housenumber") || tags.contains_key("addr:street");
-    let is_residential = tags.get("building") == Some(&"residential") || tags.get("landuse") == Some(&"residential");
-    
+    let is_residential =
+        tags.get("building") == Some(&"residential") || tags.get("landuse") == Some(&"residential");
+
     if !is_merchant && (is_residential || has_addr) {
         res_out.push(ResidentialPoint {
             osm_id: id,
@@ -328,7 +391,7 @@ fn run_map_city_state(pbf_path_str: &str) -> Result<(), Box<dyn Error>> {
     let path = Path::new(pbf_path_str);
     println!("Mapping Cities to States based on Node addresses...");
     let reader = ElementReader::from_path(path)?;
-    
+
     let state_city_counts: HashMap<String, HashMap<String, usize>> = reader.par_map_reduce(
         |element| {
             let mut local_counts: HashMap<String, HashMap<String, usize>> = HashMap::new();
@@ -337,8 +400,11 @@ fn run_map_city_state(pbf_path_str: &str) -> Result<(), Box<dyn Error>> {
                     let clean_city = city.trim().to_string();
                     let clean_state = state.trim().to_string();
                     if !clean_city.is_empty() && !clean_state.is_empty() {
-                        *local_counts.entry(clean_state).or_default()
-                            .entry(clean_city).or_insert(0) += 1;
+                        *local_counts
+                            .entry(clean_state)
+                            .or_default()
+                            .entry(clean_city)
+                            .or_insert(0) += 1;
                     }
                 }
             };
@@ -369,7 +435,11 @@ fn run_map_city_state(pbf_path_str: &str) -> Result<(), Box<dyn Error>> {
         if let Some(cities) = state_city_counts.get(state) {
             let total_nodes: usize = cities.values().sum();
             let total_unique_cities = cities.len();
-            writeln!(file, "State: {} ({} unique cities, {} total nodes)", state, total_unique_cities, total_nodes)?;
+            writeln!(
+                file,
+                "State: {} ({} unique cities, {} total nodes)",
+                state, total_unique_cities, total_nodes
+            )?;
             let mut sorted_cities: Vec<_> = cities.iter().collect();
             sorted_cities.sort_by(|a, b| b.1.cmp(a.1));
             for (city, count) in sorted_cities {
@@ -397,27 +467,47 @@ fn run_parse_districts(pbf_path_str: &str) -> Result<(), Box<dyn Error>> {
                 let tags: HashMap<&str, &str> = relation.tags().collect();
                 let is_admin = tags.get("boundary") == Some(&"administrative");
                 let is_level_5 = tags.get("admin_level") == Some(&"5");
-                let is_india = tags.get("ISO3166-2").map(|v| v.starts_with("IN-")).unwrap_or(false) ||
-                               tags.get("is_in:country_code") == Some(&"IN") ||
-                               tags.get("addr:country") == Some(&"IN") ||
-                               tags.iter().any(|(k, _)| k.starts_with("ref:LGD")) || 
-                               tags.iter().any(|(k, _)| k.starts_with("mdds:")) ||
-                               tags.contains_key("is_in:state");
+                let is_india = tags
+                    .get("ISO3166-2")
+                    .map(|v| v.starts_with("IN-"))
+                    .unwrap_or(false)
+                    || tags.get("is_in:country_code") == Some(&"IN")
+                    || tags.get("addr:country") == Some(&"IN")
+                    || tags.iter().any(|(k, _)| k.starts_with("ref:LGD"))
+                    || tags.iter().any(|(k, _)| k.starts_with("mdds:"))
+                    || tags.contains_key("is_in:state");
 
                 if is_admin && is_level_5 && is_india {
-                    let district_name = tags.get("name").or_else(|| tags.get("name:en")).unwrap_or(&"Unnamed District").to_string();
-                    let state_key = if let Some(state) = tags.get("is_in:state") { state.to_string() }
-                                    else if let Some(state) = tags.get("addr:state") { state.to_string() }
-                                    else if let Some(iso) = tags.get("ISO3166-2") {
-                                        let parts: Vec<&str> = iso.split('-').collect();
-                                        if parts.len() >= 2 { format!("{}-{}", parts[0], parts[1]) }
-                                        else { "Unknown State".to_string() }
-                                    } else { "Unknown State".to_string() };
-                    map_clone.lock().unwrap().entry(state_key).or_default().insert(district_name);
+                    let district_name = tags
+                        .get("name")
+                        .or_else(|| tags.get("name:en"))
+                        .unwrap_or(&"Unnamed District")
+                        .to_string();
+                    let state_key = if let Some(state) = tags.get("is_in:state") {
+                        state.to_string()
+                    } else if let Some(state) = tags.get("addr:state") {
+                        state.to_string()
+                    } else if let Some(iso) = tags.get("ISO3166-2") {
+                        let parts: Vec<&str> = iso.split('-').collect();
+                        if parts.len() >= 2 {
+                            format!("{}-{}", parts[0], parts[1])
+                        } else {
+                            "Unknown State".to_string()
+                        }
+                    } else {
+                        "Unknown State".to_string()
+                    };
+                    map_clone
+                        .lock()
+                        .unwrap()
+                        .entry(state_key)
+                        .or_default()
+                        .insert(district_name);
                 }
             }
         },
-        || (), |_, _| (),
+        || (),
+        |_, _| (),
     )?;
 
     let final_map = state_district_map.lock().unwrap();
@@ -445,7 +535,7 @@ fn run_map_state_districts(pbf_path_str: &str) -> Result<(), Box<dyn Error>> {
     let path = Path::new(pbf_path_str);
     println!("Step 1: building State -> Member Relation map...");
     let reader = ElementReader::from_path(path)?;
-    
+
     let member_to_state: HashMap<i64, String> = reader.par_map_reduce(
         |element| {
             let mut mappings = HashMap::new();
@@ -453,8 +543,11 @@ fn run_map_state_districts(pbf_path_str: &str) -> Result<(), Box<dyn Error>> {
                 let tags: HashMap<&str, &str> = relation.tags().collect();
                 let is_admin = tags.get("boundary") == Some(&"administrative");
                 let is_level_4 = tags.get("admin_level") == Some(&"4");
-                let is_india = tags.get("ISO3166-2").map(|v| v.starts_with("IN-")).unwrap_or(false) ||
-                               tags.get("is_in:country_code") == Some(&"IN");
+                let is_india = tags
+                    .get("ISO3166-2")
+                    .map(|v| v.starts_with("IN-"))
+                    .unwrap_or(false)
+                    || tags.get("is_in:country_code") == Some(&"IN");
 
                 if is_admin && is_level_4 && is_india {
                     let state_name = tags.get("name").unwrap_or(&"Unnamed State").to_string();
@@ -468,13 +561,16 @@ fn run_map_state_districts(pbf_path_str: &str) -> Result<(), Box<dyn Error>> {
             mappings
         },
         HashMap::new,
-        |mut a, b| { a.extend(b); a },
+        |mut a, b| {
+            a.extend(b);
+            a
+        },
     )?;
-    
+
     println!("Step 2: Resolving District Names...");
     let reader = ElementReader::from_path(path)?;
     let lookup = Arc::new(member_to_state);
-    
+
     let state_district_map: HashMap<String, HashSet<String>> = reader.par_map_reduce(
         move |element| {
             let mut local_map: HashMap<String, HashSet<String>> = HashMap::new();
@@ -482,8 +578,15 @@ fn run_map_state_districts(pbf_path_str: &str) -> Result<(), Box<dyn Error>> {
                 if let Some(parent_state) = lookup.get(&relation.id()) {
                     let tags: HashMap<&str, &str> = relation.tags().collect();
                     if tags.get("admin_level") == Some(&"5") {
-                        let district_name = tags.get("name").or_else(|| tags.get("name:en")).unwrap_or(&"Unnamed District").to_string();
-                        local_map.entry(parent_state.clone()).or_default().insert(district_name);
+                        let district_name = tags
+                            .get("name")
+                            .or_else(|| tags.get("name:en"))
+                            .unwrap_or(&"Unnamed District")
+                            .to_string();
+                        local_map
+                            .entry(parent_state.clone())
+                            .or_default()
+                            .insert(district_name);
                     }
                 }
             }
@@ -491,7 +594,9 @@ fn run_map_state_districts(pbf_path_str: &str) -> Result<(), Box<dyn Error>> {
         },
         HashMap::new,
         |mut a, b| {
-            for (state, districts) in b { a.entry(state).or_default().extend(districts); }
+            for (state, districts) in b {
+                a.entry(state).or_default().extend(districts);
+            }
             a
         },
     )?;
@@ -505,7 +610,9 @@ fn run_map_state_districts(pbf_path_str: &str) -> Result<(), Box<dyn Error>> {
             let mut sorted_districts: Vec<_> = districts.iter().collect();
             sorted_districts.sort();
             writeln!(file, "\nState: {} ({})", state, sorted_districts.len())?;
-            for district in sorted_districts { writeln!(file, "  - {}", district)?; }
+            for district in sorted_districts {
+                writeln!(file, "  - {}", district)?;
+            }
         }
     }
     println!("Saved to data/final_state_districts.txt");
@@ -526,7 +633,9 @@ fn run_normalize_states() -> Result<(), Box<dyn Error>> {
     for line in reader.lines() {
         let line = line?;
         let line = line.trim();
-        if line.is_empty() { continue; }
+        if line.is_empty() {
+            continue;
+        }
         if line.starts_with("State: ") {
             let parts: Vec<&str> = line.split(" (").collect();
             let raw_state = parts[0].trim_start_matches("State: ").trim();
@@ -536,7 +645,11 @@ fn run_normalize_states() -> Result<(), Box<dyn Error>> {
             if parts.len() >= 2 {
                 let city = parts[0].trim().to_string();
                 let count: usize = parts[1].parse().unwrap_or(0);
-                *state_data.entry(current_state.clone()).or_default().entry(city).or_insert(0) += count;
+                *state_data
+                    .entry(current_state.clone())
+                    .or_default()
+                    .entry(city)
+                    .or_insert(0) += count;
             }
         }
     }
@@ -546,10 +659,18 @@ fn run_normalize_states() -> Result<(), Box<dyn Error>> {
     sorted_states.sort();
     for state in sorted_states {
         if let Some(cities) = state_data.get(state) {
-            writeln!(outfile, "State: {} ({} unique cities, {} total nodes)", state, cities.len(), cities.values().sum::<usize>())?;
+            writeln!(
+                outfile,
+                "State: {} ({} unique cities, {} total nodes)",
+                state,
+                cities.len(),
+                cities.values().sum::<usize>()
+            )?;
             let mut sorted_cities: Vec<_> = cities.iter().collect();
             sorted_cities.sort_by(|a, b| b.1.cmp(a.1));
-            for (city, count) in sorted_cities { writeln!(outfile, "  - {}: {}", city, count)?; }
+            for (city, count) in sorted_cities {
+                writeln!(outfile, "  - {}: {}", city, count)?;
+            }
             writeln!(outfile)?;
         }
     }
@@ -570,7 +691,9 @@ fn normalize_state_name(raw: &str) -> String {
         "gujarat" | "gj" | "gu" | "gujrat" => "Gujarat".to_string(),
         "haryana" | "hr" => "Haryana".to_string(),
         "himachal pradesh" => "Himachal Pradesh".to_string(),
-        "jammu and kashmir" | "jammu & kashmir" | "j and k" | "kashmir" => "Jammu and Kashmir".to_string(),
+        "jammu and kashmir" | "jammu & kashmir" | "j and k" | "kashmir" => {
+            "Jammu and Kashmir".to_string()
+        }
         "jharkhand" => "Jharkhand".to_string(),
         "karnataka" | "ka" => "Karnataka".to_string(),
         "kerala" | "kl" | "kera" => "Kerala".to_string(),
@@ -586,23 +709,29 @@ fn normalize_state_name(raw: &str) -> String {
         "punjab" | "punjab, india" => "Punjab".to_string(),
         "rajasthan" | "rj" => "Rajasthan".to_string(),
         "sikkim" => "Sikkim".to_string(),
-        "tamil nadu" | "tn" | "tamilnadu" | "தமிழ்நாடு" => "Tamil Nadu".to_string(),
+        "tamil nadu" | "tn" | "tamilnadu" | "தமிழ்நாடு" => {
+            "Tamil Nadu".to_string()
+        }
         "telangana" | "tg" | "telanagana" => "Telangana".to_string(),
         "tripura" => "Tripura".to_string(),
         "uttar pradesh" | "up" | "utrar pradesh" => "Uttar Pradesh".to_string(),
         "uttarakhand" => "Uttarakhand".to_string(),
         "west bengal" | "wb" | "west-bengal" => "West Bengal".to_string(),
-        "dadra and nagar haveli" | "daman and diu" => "Dadra and Nagar Haveli and Daman and Diu".to_string(),
+        "dadra and nagar haveli" | "daman and diu" => {
+            "Dadra and Nagar Haveli and Daman and Diu".to_string()
+        }
         "andaman and nicobar islands" => "Andaman and Nicobar Islands".to_string(),
-        _ => {
-            raw.split_whitespace().map(|w| {
+        _ => raw
+            .split_whitespace()
+            .map(|w| {
                 let mut c = w.chars();
                 match c.next() {
                     None => String::new(),
                     Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
                 }
-            }).collect::<Vec<String>>().join(" ")
-        }
+            })
+            .collect::<Vec<String>>()
+            .join(" "),
     }
 }
 
@@ -616,8 +745,15 @@ fn run_compare_city_district() -> Result<(), Box<dyn Error>> {
     println!("Loading Cities...");
     let cities = load_city_names_simple(cities_path)?;
     let mut intersection = HashSet::new();
-    for city in &cities { if districts.contains(city) { intersection.insert(city.clone()); } }
-    println!("Matches (City Name == District Name): {}", intersection.len());
+    for city in &cities {
+        if districts.contains(city) {
+            intersection.insert(city.clone());
+        }
+    }
+    println!(
+        "Matches (City Name == District Name): {}",
+        intersection.len()
+    );
     Ok(())
 }
 
@@ -627,7 +763,9 @@ fn load_names_simple(path: &Path) -> Result<HashSet<String>, Box<dyn Error>> {
     let mut set = HashSet::new();
     for line in reader.lines() {
         let line = line?;
-        if !line.trim().is_empty() { set.insert(line.trim().to_lowercase()); }
+        if !line.trim().is_empty() {
+            set.insert(line.trim().to_lowercase());
+        }
     }
     Ok(set)
 }
@@ -640,8 +778,10 @@ fn load_city_names_simple(path: &Path) -> Result<HashSet<String>, Box<dyn Error>
         let line = line?;
         let line = line.trim();
         if line.starts_with("- ") {
-             let parts: Vec<&str> = line.trim_start_matches("- ").split(": ").collect();
-             if !parts.is_empty() { set.insert(parts[0].trim().to_lowercase()); }
+            let parts: Vec<&str> = line.trim_start_matches("- ").split(": ").collect();
+            if !parts.is_empty() {
+                set.insert(parts[0].trim().to_lowercase());
+            }
         }
     }
     Ok(set)

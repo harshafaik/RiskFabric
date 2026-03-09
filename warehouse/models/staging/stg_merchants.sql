@@ -1,32 +1,26 @@
-{{ config(materialized='table') }}
+{{ config(
+    indexes=[
+      {'columns': ['merchant_category'], 'type': 'btree'},
+      {'columns': ['risk_level'], 'type': 'btree'}
+    ]
+) }}
 
-with raw_data as (
-    -- Selecting from your raw table
-    select 
-        osm_id,
-        h3_index,
-        -- Clean up the name: Title Case, and fill NULLs with the category
-        coalesce(initcap(name), initcap(sub_category), 'Unknown Merchant') as merchant_name,
-        category as raw_category,
-        sub_category as raw_sub_category,
-        lat,
-        lon
-    from {{ source('public', 'raw_merchants') }}
+with raw_merchants as (
+    select * from {{ source('raw_osm', 'raw_merchants') }}
 ),
 
 category_map as (
-    select * from {{ ref('merchant_category_map') }}
+    select * from {{ ref('ref_category_map') }}
 )
 
 select 
-    r.osm_id,
-    r.h3_index,
-    r.merchant_name,
-    r.lat,
-    r.lon,
-    -- Map the risk category
-    coalesce(m.standardized_category, 'GENERAL_RETAIL') as merchant_category,
-    coalesce(m.risk_level, 'LOW') as risk_level
-from raw_data r
-left join category_map m 
-    on trim(lower(r.raw_sub_category)) = trim(lower(m.sub_category))
+    m.osm_id,
+    m.h3_index,
+    m.name as merchant_name,
+    m.lat as latitude,
+    m.lon as longitude,
+    coalesce(cm.standardized_category, 'GENERAL_RETAIL') as merchant_category,
+    coalesce(cm.risk_level, 'LOW') as risk_level
+from raw_merchants m
+left join category_map cm 
+    on trim(lower(m.sub_category)) = trim(lower(cm.sub_category))

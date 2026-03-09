@@ -7,37 +7,36 @@
 ) }}
 
 with residential as (
-    select * from {{ ref('stg_osm__residential') }}
+    select * from {{ ref('stg_residential') }}
 ),
 
 state_boundaries as (
     select 
         st_nm as state_name, 
         wkb_geometry as geom 
-    from {{ source('public', 'ref_india_states') }}
+    from {{ source('reference', 'ref_boundaries') }}
 ),
 
-spatial_match as (
-    select 
-        r.osm_id,
-        r.h3_index,
-        r.latitude,
-        r.longitude,
-        r.city,
-        r.postcode,
-        -- Step 1: Resolve the Unknowns using the Map
-        coalesce(
-            nullif(r.state_standardized, 'Unknown'),
-            b.state_name,
-            'Unknown'
-        ) as raw_state_name
+known_states as (
+    select *, state_standardized as raw_state_name
+    from residential
+    where state_standardized != 'Unknown'
+),
+
+unknown_states as (
+    select r.*, b.state_name as raw_state_name
     from residential r
     left join state_boundaries b 
-        on r.state_standardized = 'Unknown' 
-        and ST_Contains(b.geom, ST_SetSRID(ST_Point(r.longitude, r.latitude), 4326))
+        on ST_Intersects(b.geom, ST_SetSRID(ST_Point(r.longitude, r.latitude), 4326))
+    where r.state_standardized = 'Unknown'
+),
+
+combined as (
+    select * from known_states
+    union all
+    select * from unknown_states
 )
 
--- Step 2: Clean up the duplicates in the final output
 select
     osm_id,
     h3_index,
@@ -52,4 +51,4 @@ select
         when raw_state_name is null then 'Unknown'
         else raw_state_name
     end as final_state
-from spatial_match
+from combined

@@ -34,6 +34,40 @@ services:
       timeout: 5s
       retries: 5
 
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-postgres:1.8.2
+    container_name: riskfabric_dbt
+    volumes:
+      - ./warehouse:/usr/app:z
+    working_dir: /usr/app
+    environment:
+      - DBT_PROFILES_DIR=.
+    networks:
+      - default
+    depends_on:
+      - postgres
+
+  dlt:
+    image: python:3.11-slim
+    container_name: riskfabric_dlt
+    volumes:
+      - .:/usr/app:z
+    working_dir: /usr/app
+    environment:
+      - PIP_CACHE_DIR=/usr/app/.cache/pip
+      - PYTHONUNBUFFERED=1
+    networks:
+      - default
+    entrypoint: ["/bin/sh", "-c", "pip install dlt[postgres,clickhouse,sql_database,parquet] && exec \"$@\"", "--"]
+    profiles: ["cli"]
+    depends_on:
+      - postgres
+      - clickhouse
+
+networks:
+  default:
+    name: riskfabric_default
+
 volumes:
   postgres_data:
   clickhouse_data:

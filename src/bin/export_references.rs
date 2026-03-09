@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // 1. Export Residential
-    println!("Exporting geo_enriched_residential...");
+    println!("Exporting mart_residential...");
     let mut osm_ids = Vec::new();
     let mut h3_indices = Vec::new();
     let mut lats = Vec::new();
@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut postcodes = Vec::new();
     let mut states = Vec::new();
 
-    for row in client.query("SELECT osm_id, h3_index, latitude, longitude, city, postcode, final_state FROM geo_enriched_residential", &[])? {
+    for row in client.query("SELECT osm_id, h3_index, latitude, longitude, city, postcode, final_state FROM mart_residential", &[])? {
         osm_ids.push(row.get::<_, Option<i64>>(0));
         h3_indices.push(row.get::<_, Option<&str>>(1).map(|s| s.to_string()));
         lats.push(row.get::<_, Option<f64>>(2));
@@ -43,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ParquetWriter::new(&mut file).finish(&mut res_df)?;
 
     // 2. Export Merchants
-    println!("Exporting stg_merchants...");
+    println!("Exporting mart_merchants...");
     let mut m_osm_ids = Vec::new();
     let mut m_h3_indices = Vec::new();
     let mut m_names = Vec::new();
@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut m_cats = Vec::new();
     let mut m_risks = Vec::new();
 
-    for row in client.query("SELECT osm_id, h3_index, merchant_name, lat, lon, merchant_category, risk_level FROM stg_merchants", &[])? {
+    for row in client.query("SELECT osm_id, h3_index, merchant_name, lat, lon, merchant_category, risk_level FROM mart_merchants", &[])? {
         m_osm_ids.push(row.get::<_, Option<i64>>(0));
         m_h3_indices.push(row.get::<_, Option<&str>>(1).map(|s| s.to_string()));
         m_names.push(row.get::<_, Option<&str>>(2).map(|s| s.to_string()));

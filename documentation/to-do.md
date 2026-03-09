@@ -2,18 +2,19 @@
 
 ## Customer Generation
 - [x] **Fix Location Heuristics:** Currently, `location_type` (Urban/Rural) is assigned based on city name or fallback from config.
-- [ ] **Spatial Jittering (Clustering):** Instead of pointing all customers to exact OSM node coordinates, introduce a small random "drift" (jitter) to simulate neighbors and improve spatial clustering.
-- [x] **Improve City Name Fallbacks:** Using "{State} Region" for missing city names to maintain geographic consistency.
+- [x] **Spatial Jittering (Clustering):** Introduced random "drift" (~500m) to customer and transaction locations to simulate neighbors and improve spatial clustering.
+- [x] **Improve City Name Fallbacks:** Using "{State} Region" for missing city names and appended Pincodes for geographic consistency.
 - [x] **Validate Demographics:** Indian-centric names and email domains implemented via `customer_config.yaml`.
 - [x] **Fix Customer Schema Mismatch:** Resolved issue where `customer_risk_score` and H3 indices (`home_h3r5`, `home_h3r7`) were zero/empty due to naming mismatches and missing columns in the Parquet export.
 - [x] **Streamline Customer Tables:** Removed redundant date part columns (`registration_year/month/day`) from ClickHouse, favoring dynamic derivation from the base `registration_date`.
 
 ## Transaction & Merchant Logic
 - [x] **"One-Pass" Chunked Generation:** Refactored generator to process cards in chunks of 5,000 to prevent OOM errors, enabling the generation of 4.3M+ transactions on standard hardware.
-- [ ] **Accurate MCC Mapping:** Map `merchant_category` from OSM to standard Merchant Category Codes (MCC) for realistic financial analysis.
-- [ ] **Budget-Aware Generation:** Link transaction amounts to the customer's `monthly_spend`. Ensure the sum of monthly transactions respects the customer's financial profile.
-- [ ] **Temporal Refinement:** Implement hourly/daily weights for transactions (e.g., more restaurant spend in the evening, less banking at 3 AM).
-- [ ] **User Agent Variance:** Reduce `user_agent` string length and increase variance/realism for different payment channels.
+- [x] **Accurate MCC Mapping:** Mapped `merchant_category` from OSM to standard Merchant Category Codes (MCC) for realistic financial analysis via `transaction_config.yaml`.
+- [x] **Budget-Aware Generation:** Linked transaction amounts to the customer's `monthly_spend`. Individual transaction amounts are now derived from the annual budget distributed across transaction counts with noise.
+- [x] **Temporal Refinement:** Implemented hourly and daily weights via `transaction_config.yaml`. Transactions now follow a realistic circadian rhythm (daytime peaks, nighttime lows).
+- [x] **User Agent Variance:** Replaced long browser strings with realistic app identifiers (GPay, PhonePe) and concise browser strings.
+- [x] **Device Persistence:** Each customer now has pre-assigned persistent devices per payment channel, enhancing behavioral consistency.
 - [ ] **Spatial Refinement:** Review how transaction locations are selected. Ensure "near home" transactions aren't just at one point, but spread across a local radius.
 
 ## ETL & Infrastructure

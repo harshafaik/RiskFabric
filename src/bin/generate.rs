@@ -149,7 +149,9 @@ fn main() {
         "merchant_id" => all_transactions.iter().map(|t| t.merchant_id.clone()).collect::<Vec<_>>(),
         "merchant_name" => all_transactions.iter().map(|t| t.merchant_name.clone()).collect::<Vec<_>>(),
         "merchant_category" => all_transactions.iter().map(|t| t.merchant_category.clone()).collect::<Vec<_>>(),
+        "mcc" => all_transactions.iter().map(|t| t.mcc.clone()).collect::<Vec<_>>(),
         "merchant_country" => all_transactions.iter().map(|t| t.merchant_country.clone()).collect::<Vec<_>>(),
+
         "amount" => all_transactions.iter().map(|t| t.amount).collect::<Vec<_>>(),
         "currency" => all_transactions.iter().map(|t| t.currency.clone()).collect::<Vec<_>>(),
         "timestamp" => all_transactions.iter().map(|t| t.timestamp.clone()).collect::<Vec<_>>(),

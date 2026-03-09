@@ -8,7 +8,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use h3o::{CellIndex, Resolution};
 use std::str::FromStr;
-use chrono::{Utc, Duration};
+use chrono::{Utc, Duration, Timelike, Datelike};
 
 type MerchantTuple = (Vec<String>, Vec<String>, Vec<f64>, Vec<f64>, Vec<String>, Vec<i64>);
 
@@ -22,10 +22,18 @@ pub fn generate_transactions_chunk(
     let (h3_indices, names, lats, lons, categories, osm_ids) = merchants;
     let ref_count = h3_indices.len();
 
-    // Pre-calculate base timestamp
+    let mut mcc_map: HashMap<String, String> = HashMap::new();
+    for entry in &config.transactions.transactions.merchant_categories {
+        mcc_map.insert(entry.name.clone(), entry.mcc.clone());
+    }
+
+    let hourly_weights = &config.transactions.transactions.temporal_patterns.hourly_weights;
+    let daily_weights = &config.transactions.transactions.temporal_patterns.daily_weights;
+    let total_hourly_weight: f64 = hourly_weights.iter().sum();
+    let total_daily_weight: f64 = daily_weights.iter().sum();
+
     let base_end_date = Utc::now();
     let base_start_date = base_end_date - Duration::days(365);
-    let total_seconds = (base_end_date - base_start_date).num_seconds();
 
     let results: Vec<(Vec<Transaction>, Vec<FraudMetadata>)> = cards
         .par_iter()
@@ -38,6 +46,17 @@ pub fn generate_transactions_chunk(
             let customer = customer_map.get(&card.customer_id).expect("Customer missing");
             let cust_cell = CellIndex::from_str(&customer.home_h3r7).expect("H3 invalid");
             let p5_key = cust_cell.parent(Resolution::Five).unwrap().to_string();
+
+            let annual_budget = customer.monthly_spend * 12.0;
+
+            // --- Device Persistence: Pre-assign a device for each channel for this card ---
+            let mut device_map: HashMap<String, String> = HashMap::new();
+            for (channel, chan_config) in &config.rules.payment_channels {
+                if !chan_config.user_agents.is_empty() {
+                    let idx = card_rng.random_range(0..chan_config.user_agents.len());
+                    device_map.insert(channel.clone(), chan_config.user_agents[idx].clone());
+                }
+            }
 
             let mut camp_id = None;
             let mut camp_type = None;
@@ -55,6 +74,8 @@ pub fn generate_transactions_chunk(
             }
 
             let num_txns = card_rng.random_range(config.customer.control.transactions_per_customer.min..config.customer.control.transactions_per_customer.max);
+            let avg_txn_amount = annual_budget / num_txns as f64;
+
             for i in 0..num_txns {
                 let idx = if card_rng.random_bool(0.98) {
                     if let Some(indices) = spatial_index_res5.get(&p5_key) {
@@ -67,8 +88,33 @@ pub fn generate_transactions_chunk(
                 };
 
                 let tx_id = format!("tx_{}_{}_{}", &card.card_id[..8], i, card_rng.random_range(1000..9999));
-                let amount = card_rng.random_range(10.0..50000.0);
-                let tx_date = base_start_date + Duration::seconds(card_rng.random_range(0..total_seconds));
+                let amount_noise = card_rng.random_range(0.4..1.6);
+                let amount = (avg_txn_amount * amount_noise).clamp(1.0, 500000.0);
+
+                let mut r_hour: f64 = card_rng.random_range(0.0..total_hourly_weight);
+                let mut selected_hour = 0;
+                for (h, weight) in hourly_weights.iter().enumerate() {
+                    if r_hour < *weight {
+                        selected_hour = h;
+                        break;
+                    }
+                    r_hour -= weight;
+                }
+
+                let mut random_day_offset = card_rng.random_range(0..365);
+                loop {
+                    let date = base_start_date + Duration::days(random_day_offset);
+                    let weekday = date.weekday().num_days_from_monday() as usize;
+                    let day_weight = daily_weights[weekday];
+                    if card_rng.random_range(0.0..total_daily_weight / 7.0 * 1.5) < day_weight {
+                        break;
+                    }
+                    random_day_offset = card_rng.random_range(0..365);
+                }
+
+                let tx_date = base_start_date + Duration::days(random_day_offset) 
+                    + Duration::hours(selected_hour as i64) 
+                    + Duration::minutes(card_rng.random_range(0..60));
                 
                 let r_target: f64 = card_rng.random();
                 let fraud_target = r_target < config.rules.fraud_injector.target_share;
@@ -87,11 +133,28 @@ pub fn generate_transactions_chunk(
                 }
 
                 let mut final_amount = amount;
-                let final_channel = "online".to_string();
-                let mut final_ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 15_4 like Mac OS X) [PhonePe/4.2]".to_string();
+                
+                // --- Channel Selection ---
+                let total_share: f64 = config.rules.payment_channels.values().map(|c| c.market_share).sum();
+                let mut r_chan: f64 = card_rng.random_range(0.0..total_share);
+                let mut final_channel = "upi".to_string();
+                for (name, c_config) in &config.rules.payment_channels {
+                    if r_chan < c_config.market_share {
+                        final_channel = name.clone();
+                        break;
+                    }
+                    r_chan -= c_config.market_share;
+                }
+
+                // --- Device Assignment (Persistent) ---
+                let mut final_ua = device_map.get(&final_channel).cloned().unwrap_or_else(|| "Mozilla/5.0".to_string());
+                
                 let final_country = config.rules.global.default_country.clone();
-                let mut final_lat = lats[idx];
-                let mut final_lon = lons[idx];
+                let jitter_lat = card_rng.random_range(-0.005..0.005);
+                let jitter_lon = card_rng.random_range(-0.005..0.005);
+                let mut final_lat = lats[idx] + jitter_lat;
+                let mut final_lon = lons[idx] + jitter_lon;
+                
                 let mut final_ip = format!("103.21.{}.{}", card_rng.random_range(1..255), card_rng.random_range(1..255));
                 let mut geo_anomaly = false;
                 let mut device_anomaly = false;
@@ -99,6 +162,9 @@ pub fn generate_transactions_chunk(
                 let mut final_status = "Success".to_string();
                 let mut auth_status = "approved".to_string();
                 let mut failure_reason = None;
+
+                let cat_name = &categories[idx];
+                let mcc = mcc_map.get(cat_name).unwrap_or(&"5999".to_string()).clone();
 
                 if fraud_target {
                     let profiles: Vec<&String> = config.rules.fraud_injector.profiles.keys().collect();
@@ -161,7 +227,7 @@ pub fn generate_transactions_chunk(
                         device_anomaly,
                         ip_anomaly,
                         burst_session: camp_type == Some("sequential_takeover".to_string()),
-                        burst_seq: Some(i as i32 + 1),
+                        burst_seq: Some(i as i32 + i32::try_from(local_txs.len()).unwrap_or(0)),
                         campaign_id: camp_id.clone(),
                         campaign_type: camp_type.clone(),
                         campaign_phase: Some("active".to_string()),
@@ -193,7 +259,8 @@ pub fn generate_transactions_chunk(
                     customer_id: card.customer_id.clone(),
                     merchant_id: osm_ids[idx].to_string(),
                     merchant_name: names[idx].clone(),
-                    merchant_category: categories[idx].clone(),
+                    merchant_category: cat_name.clone(),
+                    mcc,
                     merchant_country: final_country,
                     amount: final_amount,
                     currency: config.rules.global.base_currency.clone(),

@@ -7,6 +7,8 @@ pub struct AppConfig {
     pub rules: FraudRules,
     pub tuning: FraudTuning,
     pub customer: CustomerConfig,
+    pub transactions: TransactionConfig,
+    pub product_catalog: ProductCatalog,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -68,6 +70,7 @@ pub struct FraudCampaignConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TemporalPatternConfig {
     pub hourly_weights: Vec<f64>,
+    pub daily_weights: Vec<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -173,6 +176,68 @@ pub struct ParallelismControl {
     pub transaction_gen_threads: usize,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransactionConfig {
+    pub transactions: TransactionBaseConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransactionBaseConfig {
+    pub merchant_categories: Vec<CategoryMccMap>,
+    pub amount_range: Vec<f64>,
+    pub success_rate: f64,
+    pub card_present_probability: f64,
+    pub geo_bounds: GeoBounds,
+    pub lookback_days: i32,
+    pub status_codes: HashMap<String, Vec<String>>,
+    pub temporal_patterns: TemporalPatternConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CategoryMccMap {
+    pub name: String,
+    pub mcc: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeoBounds {
+    pub lat_range: Vec<f64>,
+    pub long_range: Vec<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProductCatalog {
+    pub accounts: AccountCatalogConfig,
+    pub cards: CardCatalogConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AccountCatalogConfig {
+    pub types: Vec<String>,
+    pub creation_window_years: i32,
+    pub bank_id_range: Vec<i32>,
+    pub balance_range: Vec<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CardCatalogConfig {
+    pub networks: Vec<String>,
+    pub types: Vec<String>,
+    pub issue_window_years: i32,
+    pub expiry_duration_years: i32,
+    pub activation_delay_days: Vec<i32>,
+    pub active_probability: f64,
+    pub limits: CardLimitsConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CardLimitsConfig {
+    pub contactless_default: String,
+    pub daily_atm_default: String,
+    pub online_default: String,
+    pub international_enabled_prob: f64,
+}
+
 impl AppConfig {
     pub fn load() -> Self {
         let rules_yaml = fs::read_to_string("data/config/fraud_rules.yaml")
@@ -181,6 +246,10 @@ impl AppConfig {
             .expect("Failed to read data/config/fraud_tuning.yaml");
         let customer_yaml = fs::read_to_string("data/config/customer_config.yaml")
             .expect("Failed to read data/config/customer_config.yaml");
+        let transaction_yaml = fs::read_to_string("data/config/transaction_config.yaml")
+            .expect("Failed to read data/config/transaction_config.yaml");
+        let product_yaml = fs::read_to_string("data/config/product_catalog.yaml")
+            .expect("Failed to read data/config/product_catalog.yaml");
 
         let rules: FraudRules = serde_yaml::from_str(&rules_yaml)
             .expect("Failed to parse fraud_rules.yaml");
@@ -188,7 +257,17 @@ impl AppConfig {
             .expect("Failed to parse fraud_tuning.yaml");
         let customer: CustomerConfig = serde_yaml::from_str(&customer_yaml)
             .expect("Failed to parse customer_config.yaml");
+        let transactions: TransactionConfig = serde_yaml::from_str(&transaction_yaml)
+            .expect("Failed to parse transaction_config.yaml");
+        let product_catalog: ProductCatalog = serde_yaml::from_str(&product_yaml)
+            .expect("Failed to parse product_catalog.yaml");
 
-        AppConfig { rules, tuning, customer }
+        AppConfig { 
+            rules, 
+            tuning, 
+            customer, 
+            transactions,
+            product_catalog
+        }
     }
 }

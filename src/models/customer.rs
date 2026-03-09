@@ -59,6 +59,7 @@ impl Customer {
         age: u8,
         email: String,
         geo: GeoLocation,
+        pincode: Option<String>,
         fin: FinancialProfile,
     ) -> Self {
         let mut rng = rand::rng();
@@ -70,8 +71,9 @@ impl Customer {
             .city
             .clone()
             .unwrap_or_else(|| format!("{} Region", geo.state));
+        let pin_str = pincode.map(|p| format!(" - {}", p)).unwrap_or_default();
 
-        let location = format!("No. {}, {}, {}", house_no, street, city_str);
+        let location = format!("No. {}, {}, {}{}", house_no, street, city_str, pin_str);
 
         let coord = LatLng::new(geo.lat, geo.long).expect("Invalid coordinates");
         let h3r5 = coord.to_cell(Resolution::Five).to_string();

@@ -26,6 +26,7 @@ pub struct Transaction {
     pub merchant_id: String,
     pub merchant_name: String,
     pub merchant_category: String,
+    pub mcc: String,
     pub merchant_country: String,
 
     pub amount: f64,
@@ -51,97 +52,6 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub fn new_from_merchant(
-        card_id: String,
-        account_id: String,
-        customer_id: String,
-        merchant: MerchantInfo,
-        config: &AppConfig,
-    ) -> Self {
-        let mut rng = rand::rng();
-        
-        let transaction_id = uuid::Uuid::new_v4().to_string();
-        let amount = rng.random_range(10.0..50000.0);
-        let currency = config.rules.global.base_currency.clone();
-
-        let end_date = Utc::now();
-        let start_date = end_date - Duration::days(365);
-        let random_seconds = rng.random_range(0..(end_date - start_date).num_seconds());
-        let transaction_date = start_date + Duration::seconds(random_seconds);
-        
-        let (status, auth_status, failure_reason) = if rng.random_bool(1.0 - config.tuning.probabilities.failure) { 
-            ("Success".to_string(), "approved".to_string(), None)
-        } else { 
-            ("Failed".to_string(), "declined".to_string(), Some(config.tuning.defaults.fallback_failure_reason.clone())) 
-        };
-        let is_fraud = false;
-
-        // Determine channel based on market_share in config
-        let mut channel = "online".to_string();
-        let mut user_agent = "Mozilla/5.0".to_string();
-        let mut card_present = false;
-        
-        let total_weight: f64 = config.rules.payment_channels.values().map(|c| c.market_share).sum();
-        let mut r: f64 = rng.random_range(0.0..total_weight);
-        
-        for (name, chan_config) in &config.rules.payment_channels {
-            if r < chan_config.market_share {
-                channel = name.clone();
-                
-                if channel.contains("card") {
-                    if rng.random_bool(0.30) {
-                        card_present = true;
-                        user_agent = format!("POS-Terminal-{:04X}", rng.random_range(0..0xFFFF));
-                    } else if !chan_config.user_agents.is_empty() {
-                        let ua_idx = rng.random_range(0..chan_config.user_agents.len());
-                        user_agent = chan_config.user_agents[ua_idx].clone();
-                    }
-                } else if !chan_config.user_agents.is_empty() {
-                    let ua_idx = rng.random_range(0..chan_config.user_agents.len());
-                    user_agent = chan_config.user_agents[ua_idx].clone();
-                }
-                break;
-            }
-            r -= chan_config.market_share;
-        }
-
-        // Generate IP from device_patterns
-        let ip_address = if !config.rules.device_patterns.ip_prefixes.is_empty() {
-            let prefix_idx = rng.random_range(0..config.rules.device_patterns.ip_prefixes.len());
-            let prefix = &config.rules.device_patterns.ip_prefixes[prefix_idx];
-            format!("{}{}.{}", prefix, rng.random_range(1..255), rng.random_range(1..255))
-        } else {
-            "127.0.0.1".to_string()
-        };
-
-        Transaction {
-            transaction_id,
-            card_id,
-            account_id,
-            customer_id,
-            merchant_id: merchant.id,
-            merchant_name: merchant.name,
-            merchant_category: merchant.category,
-            merchant_country: config.rules.global.default_country.clone(),
-            amount,
-            currency,
-            timestamp: transaction_date.to_rfc3339(),
-            transaction_channel: channel,
-            card_present,
-            user_agent,
-            ip_address,
-            status,
-            auth_status,
-            failure_reason,
-            is_fraud,
-            chargeback: false,
-            chargeback_days: None,
-            location_lat: merchant.lat,
-            location_long: merchant.long,
-            h3_r7: merchant.h3_r7,
-        }
-    }
-
     pub fn new(card_id: String, account_id: String, customer_id: String, config: &AppConfig) -> Self {
         let mut rng = rand::rng();
         
@@ -217,6 +127,7 @@ impl Transaction {
             merchant_id: "PLACEHOLDER".to_string(),
             merchant_name,
             merchant_category,
+            mcc: "5999".to_string(), // Placeholder
             merchant_country: config.rules.global.default_country.clone(),
             amount,
             currency,

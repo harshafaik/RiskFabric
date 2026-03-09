@@ -1,17 +1,24 @@
 # General Transaction Generation Settings
 transactions:
   merchant_categories:
-    - "GROCERY"
-    - "FOOD_AND_BEVERAGE"
-    - "GENERAL_RETAIL"
-    - "SERVICES"
-    - "ENTERTAINMENT"
-    - "ELECTRONICS"
-    - "TRAVEL"
-    - "HEALTHCARE"
-    - "UTILITIES"
-    - "APPAREL"
-  
+    - { name: "GROCERY", mcc: "5411" }
+    - { name: "FOOD_AND_DRINK", mcc: "5812" }
+    - { name: "GENERAL_RETAIL", mcc: "5311" }
+    - { name: "SERVICES", mcc: "7299" }
+    - { name: "ENTERTAINMENT", mcc: "7999" }
+    - { name: "ELECTRONICS", mcc: "5732" }
+    - { name: "TRAVEL", mcc: "4722" }
+    - { name: "MEDICAL", mcc: "8099" }
+    - { name: "AUTOMOTIVE", mcc: "5511" }
+    - { name: "LUXURY", mcc: "5944" }
+    - { name: "B2B_WHOLESALE", mcc: "5099" }
+    - { name: "HOME_GARDEN", mcc: "5200" }
+    - { name: "TRANSPORT", mcc: "4111" }
+    - { name: "CHARITY", mcc: "8398" }
+    - { name: "RETAIL", mcc: "5999" }
+    - { name: "ALCOHOL", mcc: "5921" }
+    - { name: "GAMBLING", mcc: "7995" }
+
   amount_range: [10.0, 50000.0]
   success_rate: 0.96
   card_present_probability: 0.35
@@ -27,3 +34,8 @@ transactions:
   status_codes:
     success: ["Success", "approved"]
     failure: ["Failed", "declined"]
+
+  # Temporal Weights
+  temporal_patterns:
+    hourly_weights: [0.2, 0.1, 0.05, 0.05, 0.1, 0.3, 0.8, 1.2, 1.5, 1.8, 2.0, 2.2, 2.5, 2.4, 2.3, 2.5, 2.8, 3.0, 3.5, 4.0, 3.8, 3.0, 1.5, 0.8]
+    daily_weights: [1.0, 1.0, 1.0, 1.1, 1.3, 1.5, 1.2] # Mon-Sun

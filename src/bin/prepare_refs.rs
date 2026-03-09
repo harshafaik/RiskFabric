@@ -90,6 +90,9 @@ struct MerchantPoint {
     sub_category: String,
     lat: f64,
     lon: f64,
+    city: Option<String>,
+    postcode: Option<String>,
+    state: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -100,6 +103,9 @@ struct FinancialPoint {
     operator: Option<String>,
     lat: f64,
     lon: f64,
+    city: Option<String>,
+    postcode: Option<String>,
+    state: Option<String>,
 }
 
 fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Error>> {
@@ -114,7 +120,7 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
     println!("Creating/Resetting raw tables...");
     client.batch_execute(
         "
-        DROP TABLE IF EXISTS raw_residential;
+        DROP TABLE IF EXISTS raw_residential CASCADE;
         CREATE TABLE raw_residential (
             osm_id BIGINT,
             h3_index TEXT,
@@ -125,7 +131,7 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
             state TEXT
         );
 
-        DROP TABLE IF EXISTS raw_merchants;
+        DROP TABLE IF EXISTS raw_merchants CASCADE;
         CREATE TABLE raw_merchants (
             osm_id BIGINT,
             h3_index TEXT,
@@ -133,17 +139,23 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
             category TEXT,
             sub_category TEXT,
             lat DOUBLE PRECISION,
-            lon DOUBLE PRECISION
+            lon DOUBLE PRECISION,
+            city TEXT,
+            postcode TEXT,
+            state TEXT
         );
 
-        DROP TABLE IF EXISTS raw_financial;
+        DROP TABLE IF EXISTS raw_financial CASCADE;
         CREATE TABLE raw_financial (
             osm_id BIGINT,
             h3_index TEXT,
             kind TEXT,
             operator TEXT,
             lat DOUBLE PRECISION,
-            lon DOUBLE PRECISION
+            lon DOUBLE PRECISION,
+            city TEXT,
+            postcode TEXT,
+            state TEXT
         );
     ",
     )?;
@@ -244,7 +256,7 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
     let merch_points = merchant_data.lock().unwrap();
     if !merch_points.is_empty() {
         println!("Inserting {} merchant points...", merch_points.len());
-        let sink = client.copy_in("COPY raw_merchants (osm_id, h3_index, name, category, sub_category, lat, lon) FROM STDIN BINARY")?;
+        let sink = client.copy_in("COPY raw_merchants (osm_id, h3_index, name, category, sub_category, lat, lon, city, postcode, state) FROM STDIN BINARY")?;
         let mut writer = BinaryCopyInWriter::new(
             sink,
             &[
@@ -255,6 +267,9 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
                 Type::TEXT,
                 Type::FLOAT8,
                 Type::FLOAT8,
+                Type::TEXT,
+                Type::TEXT,
+                Type::TEXT,
             ],
         );
         for p in merch_points.iter() {
@@ -266,6 +281,9 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
                 &p.sub_category,
                 &p.lat,
                 &p.lon,
+                &p.city,
+                &p.postcode,
+                &p.state,
             ])?;
         }
         writer.finish()?;
@@ -275,7 +293,7 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
     if !fin_points.is_empty() {
         println!("Inserting {} financial points...", fin_points.len());
         let sink = client.copy_in(
-            "COPY raw_financial (osm_id, h3_index, kind, operator, lat, lon) FROM STDIN BINARY",
+            "COPY raw_financial (osm_id, h3_index, kind, operator, lat, lon, city, postcode, state) FROM STDIN BINARY",
         )?;
         let mut writer = BinaryCopyInWriter::new(
             sink,
@@ -286,10 +304,23 @@ fn run_extract_nodes(pbf_path_str: &str, db_url: &str) -> Result<(), Box<dyn Err
                 Type::TEXT,
                 Type::FLOAT8,
                 Type::FLOAT8,
+                Type::TEXT,
+                Type::TEXT,
+                Type::TEXT,
             ],
         );
         for p in fin_points.iter() {
-            writer.write(&[&p.osm_id, &p.h3_index, &p.kind, &p.operator, &p.lat, &p.lon])?;
+            writer.write(&[
+                &p.osm_id,
+                &p.h3_index,
+                &p.kind,
+                &p.operator,
+                &p.lat,
+                &p.lon,
+                &p.city,
+                &p.postcode,
+                &p.state,
+            ])?;
         }
         writer.finish()?;
     }
@@ -326,6 +357,9 @@ fn process_tags_extract(
                 .map(|s| s.to_string()),
             lat,
             lon,
+            city: tags.get("addr:city").map(|s| s.to_string()),
+            postcode: tags.get("addr:postcode").map(|s| s.to_string()),
+            state: tags.get("addr:state").map(|s| s.to_string()),
         });
     }
 
@@ -365,6 +399,9 @@ fn process_tags_extract(
             sub_category,
             lat,
             lon,
+            city: tags.get("addr:city").map(|s| s.to_string()),
+            postcode: tags.get("addr:postcode").map(|s| s.to_string()),
+            state: tags.get("addr:state").map(|s| s.to_string()),
         });
     }
 

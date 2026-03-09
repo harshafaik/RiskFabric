@@ -330,10 +330,10 @@ print(df["is_fraud"].value_counts())
 <ul>
 <li><input disabled="" type="checkbox" checked=""/>
 <strong>Fix Location Heuristics:</strong> Currently, <code>location_type</code> (Urban/Rural) is assigned based on city name or fallback from config.</li>
-<li><input disabled="" type="checkbox"/>
-<strong>Spatial Jittering (Clustering):</strong> Instead of pointing all customers to exact OSM node coordinates, introduce a small random "drift" (jitter) to simulate neighbors and improve spatial clustering.</li>
 <li><input disabled="" type="checkbox" checked=""/>
-<strong>Improve City Name Fallbacks:</strong> Using "{State} Region" for missing city names to maintain geographic consistency.</li>
+<strong>Spatial Jittering (Clustering):</strong> Introduced random "drift" (~500m) to customer and transaction locations to simulate neighbors and improve spatial clustering.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Improve City Name Fallbacks:</strong> Using "{State} Region" for missing city names and appended Pincodes for geographic consistency.</li>
 <li><input disabled="" type="checkbox" checked=""/>
 <strong>Validate Demographics:</strong> Indian-centric names and email domains implemented via <code>customer_config.yaml</code>.</li>
 <li><input disabled="" type="checkbox" checked=""/>
@@ -345,14 +345,16 @@ print(df["is_fraud"].value_counts())
 <ul>
 <li><input disabled="" type="checkbox" checked=""/>
 <strong>"One-Pass" Chunked Generation:</strong> Refactored generator to process cards in chunks of 5,000 to prevent OOM errors, enabling the generation of 4.3M+ transactions on standard hardware.</li>
-<li><input disabled="" type="checkbox"/>
-<strong>Accurate MCC Mapping:</strong> Map <code>merchant_category</code> from OSM to standard Merchant Category Codes (MCC) for realistic financial analysis.</li>
-<li><input disabled="" type="checkbox"/>
-<strong>Budget-Aware Generation:</strong> Link transaction amounts to the customer's <code>monthly_spend</code>. Ensure the sum of monthly transactions respects the customer's financial profile.</li>
-<li><input disabled="" type="checkbox"/>
-<strong>Temporal Refinement:</strong> Implement hourly/daily weights for transactions (e.g., more restaurant spend in the evening, less banking at 3 AM).</li>
-<li><input disabled="" type="checkbox"/>
-<strong>User Agent Variance:</strong> Reduce <code>user_agent</code> string length and increase variance/realism for different payment channels.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Accurate MCC Mapping:</strong> Mapped <code>merchant_category</code> from OSM to standard Merchant Category Codes (MCC) for realistic financial analysis via <code>transaction_config.yaml</code>.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Budget-Aware Generation:</strong> Linked transaction amounts to the customer's <code>monthly_spend</code>. Individual transaction amounts are now derived from the annual budget distributed across transaction counts with noise.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Temporal Refinement:</strong> Implemented hourly and daily weights via <code>transaction_config.yaml</code>. Transactions now follow a realistic circadian rhythm (daytime peaks, nighttime lows).</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>User Agent Variance:</strong> Replaced long browser strings with realistic app identifiers (GPay, PhonePe) and concise browser strings.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Device Persistence:</strong> Each customer now has pre-assigned persistent devices per payment channel, enhancing behavioral consistency.</li>
 <li><input disabled="" type="checkbox"/>
 <strong>Spatial Refinement:</strong> Review how transaction locations are selected. Ensure "near home" transactions aren't just at one point, but spread across a local radius.</li>
 </ul>

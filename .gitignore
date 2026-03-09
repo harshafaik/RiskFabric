@@ -10,3 +10,5 @@ book/
 vale
 *.tar.gz
 index.html
+.cache/
+ingest_datameet.sh

@@ -16,5 +16,9 @@ sources:
     database: riskfabric
     schema: public
     tables:
+      - name: ref_boundaries_states
+        description: "Official India state boundaries from DataMeet"
+      - name: ref_boundaries_districts
+        description: "Official India district boundaries (Census 2011) from DataMeet"
       - name: ref_boundaries
-        description: "India state boundaries from shapefiles"
+        description: "Legacy state boundaries from shapefiles"

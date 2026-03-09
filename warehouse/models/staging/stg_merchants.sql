@@ -19,6 +19,9 @@ select
     m.name as merchant_name,
     m.lat as latitude,
     m.lon as longitude,
+    m.city,
+    m.postcode,
+    m.state,
     coalesce(cm.standardized_category, 'GENERAL_RETAIL') as merchant_category,
     coalesce(cm.risk_level, 'LOW') as risk_level
 from raw_merchants m

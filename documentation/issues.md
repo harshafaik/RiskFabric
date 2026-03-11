@@ -11,6 +11,7 @@ This document tracks technical hurdles encountered during the development of Ris
 | **ClickHouse**| Timestamp parsing failed | Store as String, parse in Silver ETL |
 | **System** | Exit Code 137 (OOM) | Use Chunked Generation |
 | **ML Model** | Perfect AUC (0.999) | Sanitize features (Leakage prevention) |
+| **DLT** | ClickHouse Driver/SSL Woes | Deprecated in favor of Rust Native Ingestor |
 
 ---
 
@@ -61,3 +62,15 @@ This document tracks technical hurdles encountered during the development of Ris
 ### High Fraud Prevalence in Initial Runs
 - **Issue**: ~86% of customers experienced fraud due to high default config values.
 - **Resolution**: Tuned `target_share` to 0.005 (0.5% txn rate) to align with industry sparse-data benchmarks.
+
+---
+
+## 🔄 Data Ingestion & Orchestration
+
+### DLT ClickHouse Ingestion Complexity
+- **Issue**: Attempting to use `dlt` for Parquet-to-ClickHouse ingestion in a containerized environment led to a cascade of driver, network, and permission failures.
+- **Root Causes**:
+    1. **Driver Ambiguity**: DLT switches between `clickhouse-driver` (Native, port 9000) and `clickhouse-connect` (HTTP, port 8123). Misconfiguration often triggered automatic SSL upgrades to port 8443, causing `[SSL] record layer failure`.
+    2. **Strict Type Casting**: Connection parameters in DLT (like `secure` and `http`) must be passed as integers (`0` or `1`) rather than booleans when using certain string formats, or they trigger `ValueError`.
+    3. **Permission Wall**: DLT requires `SELECT` access to `INFORMATION_SCHEMA.COLUMNS` for schema synchronization. The default ClickHouse user is restricted to `localhost`, necessitating the creation of a remote user with broad grants.
+- **Resolution**: Deprecated DLT for the ClickHouse sink to avoid orchestration bloat. Migrated to a **Native Rust Ingestor** (`src/bin/ingest.rs`) that utilizes `podman exec` and `clickhouse-client` pipes. This approach is faster, requires zero additional Python dependencies, and uses the database's native high-performance Parquet parser.

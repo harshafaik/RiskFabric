@@ -3,7 +3,7 @@
 ## Customer Generation
 - [x] **Fix Location Heuristics:** Currently, `location_type` (Urban/Rural) is assigned based on city name or fallback from config.
 - [x] **Spatial Jittering (Clustering):** Introduced random "drift" (~500m) to customer and transaction locations to simulate neighbors and improve spatial clustering.
-- [x] **Improve City Name Fallbacks:** Using "{State} Region" for missing city names and appended Pincodes for geographic consistency.
+- [x] **Improve City Name Fallbacks:** Using "{State} Region" for missing city names to maintain geographic consistency.
 - [x] **Validate Demographics:** Indian-centric names and email domains implemented via `customer_config.yaml`.
 - [x] **Fix Customer Schema Mismatch:** Resolved issue where `customer_risk_score` and H3 indices (`home_h3r5`, `home_h3r7`) were zero/empty due to naming mismatches and missing columns in the Parquet export.
 - [x] **Streamline Customer Tables:** Removed redundant date part columns (`registration_year/month/day`) from ClickHouse, favoring dynamic derivation from the base `registration_date`.
@@ -15,7 +15,7 @@
 - [x] **Temporal Refinement:** Implemented hourly and daily weights via `transaction_config.yaml`. Transactions now follow a realistic circadian rhythm (daytime peaks, nighttime lows).
 - [x] **User Agent Variance:** Replaced long browser strings with realistic app identifiers (GPay, PhonePe) and concise browser strings.
 - [x] **Device Persistence:** Each customer now has pre-assigned persistent devices per payment channel, enhancing behavioral consistency.
-- [ ] **Spatial Refinement:** Review how transaction locations are selected. Ensure "near home" transactions aren't just at one point, but spread across a local radius.
+- [x] **Spatial Refinement:** Implemented multi-tier selection logic (Local, City, Regional, Global) based on H3 hierarchical indices and state-level lookups for realistic transaction geography.
 
 ## ETL & Infrastructure
 - [x] **Fix Polars API Breakage:** Migrated ETL logic to Polars 0.51.0. Implemented UInt32 casting for flags and Int32 casting for weekday comparisons to resolve engine panics.

@@ -7,22 +7,28 @@ import os
 
 def train_model():
     print("🚀 Connecting to ClickHouse...")
-    client = clickhouse_connect.get_client(host='localhost', database='riskfabric')
+    client = clickhouse_connect.get_client(
+        host='riskfabric_clickhouse', 
+        username='riskfabric_user',
+        password='123',
+        database='riskfabric'
+    )
 
     print("📊 Loading Gold Master Table...")
     query = "SELECT * FROM fact_transactions_gold"
     df = pl.from_arrow(client.query_arrow(query))
     
     # 1. CLEANING & LEAKAGE REMOVAL
-    # We remove anything that contains the answer or look-ahead stats
     target_col = 'is_fraud'
     
     # Explicitly dropping features that cause leakage
     drop_cols = [
         'transaction_id', 't.transaction_id', 'timestamp', 'feature_calculated_at',
         'is_fraud', 'fraud_target',
-        'cf_fraud_rate', 'mf_fraud_rate', # <--- THE BIG LEAKAGE: Contains current label info
-        'geo_anomaly', 'device_anomaly', 'ip_anomaly' # Exclude injector metadata
+        'cf_fraud_rate', 'mf_fraud_rate', 
+        'geo_anomaly', 'device_anomaly', 'ip_anomaly',
+        'fraud_type', 'campaign_id', 
+        'amount' # Keep Z-Score, but drop absolute amount
     ]
     
     feature_cols = [c for c in df.columns if c not in drop_cols]

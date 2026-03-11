@@ -109,10 +109,10 @@ registration:
 
 # Scale and Volume Controls
 control:
-  customer_count: 5000
+  customer_count: 10000
   transactions_per_customer:
-    min: 10
-    max: 50
+    min: 200
+    max: 600
   parallelism:
     customer_gen_threads: 8
-    transaction_gen_threads: 16
+    transaction_gen_threads: 32

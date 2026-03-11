@@ -7,11 +7,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeoLocation {
-    pub state: String,
+    pub location: String,
     pub city: Option<String>,
-    pub lat: f64,
-    pub long: f64,
-    pub h3_r7: String,
+    pub state: String,
+    pub location_type: String,
+    pub home_latitude: f64,
+    pub home_longitude: f64,
+    pub home_h3r5: String,
+    pub home_h3r7: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -30,20 +33,8 @@ pub struct Customer {
     pub age: u8,
     pub email: String,
 
-    // Geography
-    pub location: String,
-    pub state: String,
-    pub location_type: String,
-    pub home_latitude: f64,
-    pub home_longitude: f64,
-    pub home_h3r5: String,
-    pub home_h3r7: String,
-
-    //Demographics
-    pub credit_score: u16,
-    pub monthly_spend: f64,
-    pub customer_risk_score: f32,
-    pub is_fraud: bool,
+    pub location: GeoLocation,
+    pub financial: FinancialProfile,
 
     // --- Metadata ---
     pub registration_date: String, // "YYYY-MM-DD"
@@ -71,12 +62,16 @@ impl Customer {
             .city
             .clone()
             .unwrap_or_else(|| format!("{} Region", geo.state));
+
         let pin_str = pincode.map(|p| format!(" - {}", p)).unwrap_or_default();
 
-        let location = format!("No. {}, {}, {}{}", house_no, street, city_str, pin_str);
+        let mut geo = geo;
+        geo.location = format!("No. {}, {}, {}{}", house_no, street, city_str, pin_str);
 
-        let coord = LatLng::new(geo.lat, geo.long).expect("Invalid coordinates");
-        let h3r5 = coord.to_cell(Resolution::Five).to_string();
+        let coord =
+            LatLng::new(geo.home_latitude, geo.home_longitude).expect("Invalid coordinates");
+
+        geo.home_h3r5 = coord.to_cell(Resolution::Five).to_string();
 
         let end_date = chrono::Utc::now().date_naive();
         let start_date = end_date - chrono::Duration::days(365 * 5);
@@ -89,17 +84,8 @@ impl Customer {
             name,
             age,
             email,
-            state: geo.state,
-            location,
-            location_type: "Urban".to_string(), // Usually overridden
-            home_latitude: geo.lat,
-            home_longitude: geo.long,
-            home_h3r5: h3r5,
-            home_h3r7: geo.h3_r7,
-            credit_score: fin.credit_score,
-            monthly_spend: fin.monthly_spend,
-            customer_risk_score: fin.customer_risk_score,
-            is_fraud: fin.is_fraud,
+            location: geo,
+            financial: fin,
             registration_date: reg_date.to_string(),
             registration_year: reg_date.year(),
             registration_month: reg_date.month(),

@@ -30,6 +30,7 @@ pub struct Card {
     pub bank_code: String,
 }
 impl Card {
+    #[must_use]
     pub fn new(account_id: String, customer_id: String, bank_id: String) -> Self {
         let mut rng = rand::rng();
 

@@ -16,6 +16,7 @@ pub struct Account {
     pub creation_date: String, //YYYY-MM
 }
 impl Account {
+    #[must_use]
     pub fn new(customer_id: String) -> Self {
         let mut rng: ThreadRng = rand::rng();
 
@@ -35,7 +36,7 @@ impl Account {
                 .fake::<u64>()
                 .to_string(),
             account_type: selected_type,
-            balance: rng.random_range(1000.00..500000.00),
+            balance: rng.random_range(1000.00..500_000.00),
             account_status: "Active".to_string(),
             creation_date: open_date.to_string(),
         }

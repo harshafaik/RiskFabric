@@ -56,6 +56,8 @@ pub struct FraudInjectorConfig {
 pub struct FraudProfileConfig {
     pub frequency: f64,
     pub amount_pattern: String,
+    pub amount_strategy: Option<String>,
+    pub amount_multiplier: Option<String>,
     pub channel_bias: HashMap<String, f64>,
     pub geo_anomaly_prob: f64,
 }

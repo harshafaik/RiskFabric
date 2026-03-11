@@ -611,20 +611,20 @@ fn run_map_state_districts(pbf_path_str: &str) -> Result<(), Box<dyn Error>> {
     let state_district_map: HashMap<String, HashSet<String>> = reader.par_map_reduce(
         move |element| {
             let mut local_map: HashMap<String, HashSet<String>> = HashMap::new();
-            if let Element::Relation(relation) = element {
-                if let Some(parent_state) = lookup.get(&relation.id()) {
-                    let tags: HashMap<&str, &str> = relation.tags().collect();
-                    if tags.get("admin_level") == Some(&"5") {
-                        let district_name = tags
-                            .get("name")
-                            .or_else(|| tags.get("name:en"))
-                            .unwrap_or(&"Unnamed District")
-                            .to_string();
-                        local_map
-                            .entry(parent_state.clone())
-                            .or_default()
-                            .insert(district_name);
-                    }
+            if let Element::Relation(relation) = element
+                && let Some(parent_state) = lookup.get(&relation.id())
+            {
+                let tags: HashMap<&str, &str> = relation.tags().collect();
+                if tags.get("admin_level") == Some(&"5") {
+                    let district_name = tags
+                        .get("name")
+                        .or_else(|| tags.get("name:en"))
+                        .unwrap_or(&"Unnamed District")
+                        .to_string();
+                    local_map
+                        .entry(parent_state.clone())
+                        .or_default()
+                        .insert(district_name);
                 }
             }
             local_map

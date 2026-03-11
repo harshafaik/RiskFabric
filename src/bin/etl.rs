@@ -153,7 +153,7 @@ fn run_silver_merchant() -> Result<(), Box<dyn Error>> {
     use riskfabric::etl::features::merchant::transform_merchant_features;
     use std::process::Command;
 
-    let tx_query = "SELECT transaction_id, merchant_id, merchant_name, merchant_category, amount, timestamp, toUInt32(is_fraud) as is_fraud FROM fact_transactions_bronze FORMAT Parquet";
+    let tx_query = "SELECT transaction_id, customer_id, merchant_id, merchant_name, merchant_category, amount, timestamp, toUInt32(is_fraud) as is_fraud FROM fact_transactions_bronze FORMAT Parquet";
     let tx_out = Command::new("podman")
         .args([
             "exec",
@@ -289,14 +289,19 @@ fn run_silver_sequence() -> Result<(), Box<dyn Error>> {
             transaction_sequence_number UInt32,
             hours_since_midnight Float64,
             is_weekend UInt32,
+            spatial_velocity Float64,
+            hour_deviation_from_norm Float64,
             amount_round_number_flag UInt32,
+            amount_deviation_z_score Float64,
             rapid_fire_transaction_flag UInt32,
             escalating_amounts_flag UInt32,
             merchant_category_switch_flag UInt32,
             fraud_target UInt32,
+            fraud_type String,
             geo_anomaly UInt32,
             device_anomaly UInt32,
-            ip_anomaly UInt32
+            ip_anomaly UInt32,
+            campaign_id Nullable(String)
         ) ENGINE = MergeTree() ORDER BY transaction_id
     ",
         ])
@@ -547,22 +552,27 @@ fn run_gold_master() -> Result<(), Box<dyn Error>> {
             toUInt32(t.card_present) as card_present,
             toUInt32(t.is_fraud) as is_fraud,
             s.fraud_target,
+            s.fraud_type,
             s.time_since_last_transaction,
             s.transaction_sequence_number,
+            s.spatial_velocity,
+            s.hour_deviation_from_norm,
+            s.amount_deviation_z_score,
             s.rapid_fire_transaction_flag,
             s.escalating_amounts_flag,
             s.merchant_category_switch_flag,
             s.geo_anomaly,
             s.device_anomaly,
             s.ip_anomaly,
+            s.campaign_id,
             c.fraud_rate as cf_fraud_rate,
             c.night_transaction_ratio as cf_night_tx_ratio,
             m.merchant_fraud_rate as mf_fraud_rate,
             now() as feature_calculated_at
         FROM fact_transactions_bronze t
-        LEFT JOIN fact_transactions_silver s ON t.transaction_id = s.transaction_id
-        LEFT JOIN customer_features_silver c ON t.customer_id = c.customer_id
-        LEFT JOIN merchant_features_silver m ON t.merchant_id = m.merchant_id
+        LEFT JOIN (SELECT transaction_id, fraud_target, fraud_type, time_since_last_transaction, transaction_sequence_number, spatial_velocity, hour_deviation_from_norm, amount_deviation_z_score, rapid_fire_transaction_flag, escalating_amounts_flag, merchant_category_switch_flag, geo_anomaly, device_anomaly, ip_anomaly, campaign_id FROM fact_transactions_silver LIMIT 1 BY transaction_id) s ON t.transaction_id = s.transaction_id
+        LEFT JOIN (SELECT * FROM customer_features_silver LIMIT 1 BY customer_id) c ON t.customer_id = c.customer_id
+        LEFT JOIN (SELECT * FROM merchant_features_silver LIMIT 1 BY merchant_id) m ON t.merchant_id = m.merchant_id
     ";
 
     Command::new("podman")

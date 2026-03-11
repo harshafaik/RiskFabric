@@ -333,7 +333,7 @@ print(df["is_fraud"].value_counts())
 <li><input disabled="" type="checkbox" checked=""/>
 <strong>Spatial Jittering (Clustering):</strong> Introduced random "drift" (~500m) to customer and transaction locations to simulate neighbors and improve spatial clustering.</li>
 <li><input disabled="" type="checkbox" checked=""/>
-<strong>Improve City Name Fallbacks:</strong> Using "{State} Region" for missing city names and appended Pincodes for geographic consistency.</li>
+<strong>Improve City Name Fallbacks:</strong> Using "{State} Region" for missing city names to maintain geographic consistency.</li>
 <li><input disabled="" type="checkbox" checked=""/>
 <strong>Validate Demographics:</strong> Indian-centric names and email domains implemented via <code>customer_config.yaml</code>.</li>
 <li><input disabled="" type="checkbox" checked=""/>
@@ -355,8 +355,8 @@ print(df["is_fraud"].value_counts())
 <strong>User Agent Variance:</strong> Replaced long browser strings with realistic app identifiers (GPay, PhonePe) and concise browser strings.</li>
 <li><input disabled="" type="checkbox" checked=""/>
 <strong>Device Persistence:</strong> Each customer now has pre-assigned persistent devices per payment channel, enhancing behavioral consistency.</li>
-<li><input disabled="" type="checkbox"/>
-<strong>Spatial Refinement:</strong> Review how transaction locations are selected. Ensure "near home" transactions aren't just at one point, but spread across a local radius.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Spatial Refinement:</strong> Implemented multi-tier selection logic (Local, City, Regional, Global) based on H3 hierarchical indices and state-level lookups for realistic transaction geography.</li>
 </ul>
 <h2 id="etl--infrastructure"><a class="header" href="#etl--infrastructure">ETL &amp; Infrastructure</a></h2>
 <ul>
@@ -1143,6 +1143,7 @@ dbt run
 <tr><td style="text-align: left"><strong>ClickHouse</strong></td><td style="text-align: left">Timestamp parsing failed</td><td style="text-align: left">Store as String, parse in Silver ETL</td></tr>
 <tr><td style="text-align: left"><strong>System</strong></td><td style="text-align: left">Exit Code 137 (OOM)</td><td style="text-align: left">Use Chunked Generation</td></tr>
 <tr><td style="text-align: left"><strong>ML Model</strong></td><td style="text-align: left">Perfect AUC (0.999)</td><td style="text-align: left">Sanitize features (Leakage prevention)</td></tr>
+<tr><td style="text-align: left"><strong>DLT</strong></td><td style="text-align: left">ClickHouse Driver/SSL Woes</td><td style="text-align: left">Deprecated in favor of Rust Native Ingestor</td></tr>
 </tbody></table>
 </div>
 <hr />
@@ -1199,6 +1200,20 @@ dbt run
 <ul>
 <li><strong>Issue</strong>: ~86% of customers experienced fraud due to high default config values.</li>
 <li><strong>Resolution</strong>: Tuned <code>target_share</code> to 0.005 (0.5% txn rate) to align with industry sparse-data benchmarks.</li>
+</ul>
+<hr />
+<h2 id="-data-ingestion--orchestration"><a class="header" href="#-data-ingestion--orchestration">🔄 Data Ingestion &amp; Orchestration</a></h2>
+<h3 id="dlt-clickhouse-ingestion-complexity"><a class="header" href="#dlt-clickhouse-ingestion-complexity">DLT ClickHouse Ingestion Complexity</a></h3>
+<ul>
+<li><strong>Issue</strong>: Attempting to use <code>dlt</code> for Parquet-to-ClickHouse ingestion in a containerized environment led to a cascade of driver, network, and permission failures.</li>
+<li><strong>Root Causes</strong>:
+<ol>
+<li><strong>Driver Ambiguity</strong>: DLT switches between <code>clickhouse-driver</code> (Native, port 9000) and <code>clickhouse-connect</code> (HTTP, port 8123). Misconfiguration often triggered automatic SSL upgrades to port 8443, causing <code>[SSL] record layer failure</code>.</li>
+<li><strong>Strict Type Casting</strong>: Connection parameters in DLT (like <code>secure</code> and <code>http</code>) must be passed as integers (<code>0</code> or <code>1</code>) rather than booleans when using certain string formats, or they trigger <code>ValueError</code>.</li>
+<li><strong>Permission Wall</strong>: DLT requires <code>SELECT</code> access to <code>INFORMATION_SCHEMA.COLUMNS</code> for schema synchronization. The default ClickHouse user is restricted to <code>localhost</code>, necessitating the creation of a remote user with broad grants.</li>
+</ol>
+</li>
+<li><strong>Resolution</strong>: Deprecated DLT for the ClickHouse sink to avoid orchestration bloat. Migrated to a <strong>Native Rust Ingestor</strong> (<code>src/bin/ingest.rs</code>) that utilizes <code>podman exec</code> and <code>clickhouse-client</code> pipes. This approach is faster, requires zero additional Python dependencies, and uses the database's native high-performance Parquet parser.</li>
 </ul>
 
                     </main>

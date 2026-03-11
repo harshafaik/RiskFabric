@@ -184,7 +184,7 @@
 <li><input disabled="" type="checkbox" checked=""/>
 <strong>Spatial Jittering (Clustering):</strong> Introduced random "drift" (~500m) to customer and transaction locations to simulate neighbors and improve spatial clustering.</li>
 <li><input disabled="" type="checkbox" checked=""/>
-<strong>Improve City Name Fallbacks:</strong> Using "{State} Region" for missing city names and appended Pincodes for geographic consistency.</li>
+<strong>Improve City Name Fallbacks:</strong> Using "{State} Region" for missing city names to maintain geographic consistency.</li>
 <li><input disabled="" type="checkbox" checked=""/>
 <strong>Validate Demographics:</strong> Indian-centric names and email domains implemented via <code>customer_config.yaml</code>.</li>
 <li><input disabled="" type="checkbox" checked=""/>
@@ -206,8 +206,8 @@
 <strong>User Agent Variance:</strong> Replaced long browser strings with realistic app identifiers (GPay, PhonePe) and concise browser strings.</li>
 <li><input disabled="" type="checkbox" checked=""/>
 <strong>Device Persistence:</strong> Each customer now has pre-assigned persistent devices per payment channel, enhancing behavioral consistency.</li>
-<li><input disabled="" type="checkbox"/>
-<strong>Spatial Refinement:</strong> Review how transaction locations are selected. Ensure "near home" transactions aren't just at one point, but spread across a local radius.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<strong>Spatial Refinement:</strong> Implemented multi-tier selection logic (Local, City, Regional, Global) based on H3 hierarchical indices and state-level lookups for realistic transaction geography.</li>
 </ul>
 <h2 id="etl--infrastructure"><a class="header" href="#etl--infrastructure">ETL &amp; Infrastructure</a></h2>
 <ul>

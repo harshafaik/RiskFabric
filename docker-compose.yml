@@ -48,17 +48,15 @@ services:
       - postgres
 
   dlt:
-    image: python:3.11-slim
+    image: riskfabric_dlt
     container_name: riskfabric_dlt
     volumes:
       - .:/usr/app:z
     working_dir: /usr/app
     environment:
-      - PIP_CACHE_DIR=/usr/app/.cache/pip
       - PYTHONUNBUFFERED=1
     networks:
       - default
-    entrypoint: ["/bin/sh", "-c", "pip install dlt[postgres,clickhouse,sql_database,parquet] && exec \"$@\"", "--"]
     profiles: ["cli"]
     depends_on:
       - postgres

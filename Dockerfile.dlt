@@ -1,0 +1,10 @@
+FROM python:3.11-slim
+
+WORKDIR /usr/app
+
+RUN pip install --no-cache-dir \
+    dlt[postgres,clickhouse,sql_database,parquet] \
+    clickhouse-connect \
+    polars xgboost scikit-learn pyarrow
+
+CMD ["/bin/sh"]

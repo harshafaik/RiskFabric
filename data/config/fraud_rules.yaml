@@ -7,7 +7,7 @@ global:
 # Payment Channel Distribution (Market Share)
 payment_channels:
   upi:
-    market_share: 0.85
+    market_share: 0.70 # Was 0.85
     risk_level: 0.7
     user_agents:
       - "GPay/1.1 (Android 11)"
@@ -22,11 +22,23 @@ payment_channels:
       - "MobiKwik/4.2"
       - "Freecharge/5.1"
   cards:
-    market_share: 0.05
+    market_share: 0.10 # Was 0.05
     risk_level: 0.9
     user_agents:
       - "Chrome/121.0 (Win10)"
       - "Safari/15.4 (macOS)"
+  online:
+    market_share: 0.07 # New
+    risk_level: 0.8
+    user_agents:
+      - "Chrome/121.0 (Win10)"
+      - "Safari/15.4 (macOS)"
+  mobile_banking:
+    market_share: 0.03 # New
+    risk_level: 0.5
+    user_agents:
+      - "BankApp/4.0 (iOS 16)"
+      - "BankApp/3.5 (Android 13)"
 
 # High-Fidelity Amount Patterns
 fraud_patterns:
@@ -58,31 +70,31 @@ fraud_injector:
     upi_scam:
       frequency: 0.35
       amount_pattern: "upi_common_amounts"
-      channel_bias: { upi: 0.95 }
+      channel_bias: { upi: 0.80 } # Was 0.95
       geo_anomaly_prob: 0.95 # Sharpened geo-anomaly
     account_takeover:
       frequency: 0.25
       amount_pattern: "high_value_amounts"
       amount_strategy: "customer_normal_range"
       amount_multiplier: "0.8_to_1.5"
-      channel_bias: { mobile_banking: 0.70, upi: 0.30 }
+      channel_bias: { mobile_banking: 0.40, upi: 0.30, online: 0.30 } # Was 0.70 mobile_banking
       geo_anomaly_prob: 0.60 # Sharpened geo-anomaly
     velocity_abuse:
       frequency: 0.15
       amount_pattern: "velocity_test_amounts"
-      channel_bias: { upi: 0.90, online: 0.10 }
+      channel_bias: { upi: 0.70, online: 0.30 } # Was 0.90 upi
       geo_anomaly_prob: 0.20
     card_not_present:
       frequency: 0.15
       amount_pattern: "cnp_common_amounts"
-      channel_bias: { online: 0.95 }
+      channel_bias: { online: 0.70, cards: 0.30 } # Was 0.95 online
       geo_anomaly_prob: 0.40
     friendly_fraud:
       frequency: 0.10
       amount_pattern: "round_amounts"
       amount_strategy: "customer_normal_range"
       amount_multiplier: "0.5_to_1.1"
-      channel_bias: { upi: 0.50, card: 0.50 }
+      channel_bias: { upi: 0.40, cards: 0.60 } # Was 0.50 card (singular)
       geo_anomaly_prob: 0.00
 
 # Campaign Configurations

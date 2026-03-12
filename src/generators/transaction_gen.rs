@@ -1,4 +1,5 @@
 use crate::config::AppConfig;
+use crate::generators::fraud;
 use crate::models::card::Card;
 use crate::models::customer::Customer;
 use crate::models::fraud_metadata::FraudMetadata;
@@ -184,8 +185,6 @@ pub fn generate_transactions_chunk(
                     i,
                     card_rng.random_range(1000..9999)
                 );
-                let amount_noise = card_rng.random_range(0.4..1.6);
-                let amount = (avg_txn_amount * amount_noise).clamp(1.0, 500_000.0);
 
                 let r_target: f64 = card_rng.random();
                 let fraud_target = r_target < config.rules.fraud_injector.target_share;
@@ -203,16 +202,9 @@ pub fn generate_transactions_chunk(
                     label_noise = "fp".to_string();
                 }
 
-                // --- NEW: Burst-Aware Timestamp Selection ---
-                let mut tx_date = timestamps[i];
-
-                let mut final_amount = amount;
-                let total_share: f64 = config
-                    .rules
-                    .payment_channels
-                    .values()
-                    .map(|c| c.market_share)
-                    .sum();
+                // --- Step 2: Base Attribute Selection ---
+                let tx_date = timestamps[i];
+                let total_share: f64 = config.rules.payment_channels.values().map(|c| c.market_share).sum();
                 let mut r_chan: f64 = card_rng.random_range(0.0..total_share);
                 let mut final_channel = "upi".to_string();
                 for (name, c_config) in &config.rules.payment_channels {
@@ -223,110 +215,76 @@ pub fn generate_transactions_chunk(
                     r_chan -= c_config.market_share;
                 }
 
-                let mut final_ua = device_map
-                    .get(&final_channel)
-                    .cloned()
-                    .unwrap_or_else(|| "Mozilla/5.0".to_string());
-
-                // Spatial Jitter: Reduced jitter (~100m) for transactions to keep them clustered but not identical
+                let final_ua = device_map.get(&final_channel).cloned().unwrap_or_else(|| "Mozilla/5.0".to_string());
+                let mut final_ip = format!("103.21.{}.{}", card_rng.random_range(1..255), card_rng.random_range(1..255));
+                let mut final_amount = (avg_txn_amount * card_rng.random_range(0.4..1.6)).clamp(1.0, 500_000.0);
+                
                 let jitter_lat = card_rng.random_range(-0.001..0.001);
                 let jitter_lon = card_rng.random_range(-0.001..0.001);
-                let mut final_lat = lats[idx] + jitter_lat;
-                let mut final_lon = lons[idx] + jitter_lon;
+                let final_lat = lats[idx] + jitter_lat;
+                let final_lon = lons[idx] + jitter_lon;
+                
+                let final_card_present = card_rng.random_bool(config.transactions.transactions.card_present_probability);
 
-                let mut final_ip = format!(
-                    "103.21.{}.{}",
-                    card_rng.random_range(1..255),
-                    card_rng.random_range(1..255)
-                );
                 let mut geo_anomaly = false;
                 let mut device_anomaly = false;
                 let mut ip_anomaly = false;
-                let mut final_status = "Success".to_string();
-                let mut auth_status = "approved".to_string();
-                let mut failure_reason = None;
-                let mut final_card_present = card_rng.random_bool(config.transactions.transactions.card_present_probability);
+                let mut f_type = "none".to_string();
 
+                // --- Step 3: Construct Temporary Transaction for Mutation ---
                 let cat_name = &categories[idx];
                 let mcc = mcc_map.get(cat_name).unwrap_or(&"5999".to_string()).clone();
+                let merchant = crate::models::transaction::MerchantInfo {
+                    id: osm_ids[idx].to_string(),
+                    name: names[idx].clone(),
+                    category: cat_name.clone(),
+                    mcc,
+                    lat: final_lat,
+                    long: final_lon,
+                    h3_r7: h3_indices[idx].clone(),
+                };
 
+                let mut tx = Transaction::new(
+                    tx_id.clone(),
+                    card.card_id.clone(),
+                    card.account_id.clone(),
+                    card.customer_id.clone(),
+                    merchant,
+                    final_amount,
+                    tx_date,
+                    final_channel,
+                    final_ua,
+                    final_ip,
+                    ("Success".to_string(), "approved".to_string(), None),
+                    is_fraud_label,
+                    final_card_present,
+                    config,
+                );
+
+                // --- Step 5: Apply Sneaky Fraud Logic ---
                 if fraud_target {
-                    let profiles: Vec<&String> =
-                        config.rules.fraud_injector.profiles.keys().collect();
-                    let f_type = profiles[card_rng.random_range(0..profiles.len())];
-                    let profile = &config.rules.fraud_injector.profiles[f_type];
+                    let profiles: Vec<&String> = config.rules.fraud_injector.profiles.keys().collect();
+                    f_type = profiles[card_rng.random_range(0..profiles.len())].clone();
+                    let profile = &config.rules.fraud_injector.profiles[&f_type];
 
-                    // --- NEW: Profile-Aware Temporal Warping ---
-                    if let Some(last_date) = last_processed_date {
-                        if f_type == "account_takeover" || f_type == "velocity_abuse" {
-                            // 10 to 60 seconds apart
-                            tx_date = last_date + Duration::seconds(card_rng.random_range(10..60));
-                        }
-                    }
+                    // 5a. Temporal Warping
+                    tx.timestamp = fraud::calculate_fraud_timestamp(&f_type, last_processed_date, tx_date, &mut card_rng).to_rfc3339();
+                    
+                    // 5b. Amount Mimicry
+                    tx.amount = fraud::calculate_fraud_amount(profile, avg_txn_amount, config, &mut card_rng);
 
-                    // --- NEW: Customer-Aware Amount Strategy ---
-                    if let Some(strategy) = &profile.amount_strategy {
-                        if strategy == "customer_normal_range" {
-                            let multiplier_str = profile.amount_multiplier.clone().unwrap_or_else(|| "0.8_to_1.2".to_string());
-                            let parts: Vec<&str> = multiplier_str.split("_to_").collect();
-                            if parts.len() == 2 {
-                                let min_m: f64 = parts[0].parse().unwrap_or(0.8);
-                                let max_m: f64 = parts[1].parse().unwrap_or(1.2);
-                                let m = card_rng.random_range(min_m..max_m);
-                                final_amount = (avg_txn_amount * m).clamp(1.0, 500_000.0);
-                            }
-                        }
-                    } else if let Some(amounts) = config.rules.fraud_patterns.get(&profile.amount_pattern) {
-                        final_amount = amounts[card_rng.random_range(0..amounts.len())];
-                    }
+                    // 5c. Behavioral Mutations (UA, IP, Geo, Channel)
+                    let (geo, dev, ip) = fraud::apply_behavioral_mutations(&f_type, profile, &mut tx, config, &mut card_rng);
+                    geo_anomaly = geo;
+                    device_anomaly = dev;
+                    ip_anomaly = ip;
 
-                    // CNP Fraud ALWAYS has card_present = false
-                    if f_type == "card_not_present" {
-                        final_card_present = false;
-                    }
-
-                    if card_rng.random_bool(profile.geo_anomaly_prob) {
-                        geo_anomaly = true;
-                        final_lat = card_rng.random_range(8.0..37.0);
-                        final_lon = card_rng.random_range(68.0..97.0);
-                    }
-
-                    if card_rng.random_bool(config.tuning.probabilities.device_anomaly) {
-                        final_ua = config.rules.device_patterns.bot_user_agent_prefix.clone();
-                        device_anomaly = true;
-                    }
-
-                    if card_rng.random_bool(config.tuning.probabilities.failure) {
-                        final_status = "Failed".to_string();
-                        auth_status = "declined".to_string();
-                        if let Some(reasons) = config.rules.failure_reasons_by_type.get(f_type) {
-                            failure_reason =
-                                Some(reasons[card_rng.random_range(0..reasons.len())].clone());
-                        } else {
-                            failure_reason =
-                                Some(config.tuning.defaults.fallback_failure_reason.clone());
-                        }
-                    }
-
-                    if let (Some(_c_id), Some(c_type)) = (&camp_id, &camp_type) {
-                        if c_type == "coordinated_attack" {
-                            final_ip = config.tuning.campaigns.coordinated_scam_ip.clone();
-                            final_ua = config.rules.device_patterns.bot_user_agent_prefix.clone();
-                            ip_anomaly = true;
-                            if let (Some(alat), Some(alon)) = (attacker_lat, attacker_lon) {
-                                final_lat = alat;
-                                final_lon = alon;
-                                geo_anomaly = true;
-                            }
-                        } else if c_type == "sequential_takeover" {
-                            let escalation = config.tuning.campaigns.ato_escalation_rate;
-                            final_amount *= 1.0 + (escalation * i as f64);
-                            if let (Some(alat), Some(alon)) = (attacker_lat, attacker_lon) {
-                                final_lat = alat;
-                                final_lon = alon;
-                                geo_anomaly = true;
-                            }
-                        }
+                    // 5d. Campaign Coordination
+                    if let (Some(c_id), Some(c_type)) = (&camp_id, &camp_type) {
+                        let (c_geo, c_dev, c_ip) = fraud::apply_campaign_logic(c_type, c_id, &mut tx, (attacker_lat.unwrap_or(0.0), attacker_lon.unwrap_or(0.0)), config);
+                        if c_geo { geo_anomaly = true; }
+                        if c_dev { device_anomaly = true; }
+                        if c_ip { ip_anomaly = true; }
                     }
 
                     local_meta.push(FraudMetadata {
@@ -334,12 +292,12 @@ pub fn generate_transactions_chunk(
                         fraud_target,
                         fraud_type: f_type.clone(),
                         label_noise: label_noise.clone(),
-                        injector_version: "v2_chunked".to_string(),
+                        injector_version: "v3_modular".to_string(),
                         geo_anomaly,
                         device_anomaly,
                         ip_anomaly,
                         burst_session: camp_type == Some("sequential_takeover".to_string()),
-                        burst_seq: Some(i as i32 + i32::try_from(local_txs.len()).unwrap_or(0)),
+                        burst_seq: Some(i as i32 + 1),
                         campaign_id: camp_id.clone(),
                         campaign_type: camp_type.clone(),
                         campaign_phase: Some("active".to_string()),
@@ -351,7 +309,7 @@ pub fn generate_transactions_chunk(
                         fraud_target: false,
                         fraud_type: "none".to_string(),
                         label_noise: "fp".to_string(),
-                        injector_version: "v2_chunked".to_string(),
+                        injector_version: "v3_modular".to_string(),
                         geo_anomaly: false,
                         device_anomaly: false,
                         ip_anomaly: false,
@@ -364,33 +322,8 @@ pub fn generate_transactions_chunk(
                     });
                 }
 
-                let merchant = crate::models::transaction::MerchantInfo {
-                    id: osm_ids[idx].to_string(),
-                    name: names[idx].clone(),
-                    category: cat_name.clone(),
-                    mcc,
-                    lat: final_lat,
-                    long: final_lon,
-                    h3_r7: h3_indices[idx].clone(),
-                };
-
-                local_txs.push(Transaction::new(
-                    tx_id,
-                    card.card_id.clone(),
-                    card.account_id.clone(),
-                    card.customer_id.clone(),
-                    merchant,
-                    final_amount,
-                    tx_date,
-                    final_channel,
-                    final_ua,
-                    final_ip,
-                    (final_status, auth_status, failure_reason),
-                    is_fraud_label,
-                    final_card_present,
-                    config,
-                ));
-                last_processed_date = Some(tx_date);
+                last_processed_date = Some(chrono::DateTime::parse_from_rfc3339(&tx.timestamp).unwrap().with_timezone(&Utc));
+                local_txs.push(tx);
             }
 
             (local_txs, local_meta)

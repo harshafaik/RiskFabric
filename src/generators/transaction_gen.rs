@@ -287,23 +287,25 @@ pub fn generate_transactions_chunk(
                         if c_ip { ip_anomaly = true; }
                     }
 
-                    local_meta.push(FraudMetadata {
-                        transaction_id: tx_id.clone(),
-                        fraud_target,
-                        fraud_type: f_type.clone(),
-                        label_noise: label_noise.clone(),
-                        injector_version: "v3_modular".to_string(),
-                        geo_anomaly,
-                        device_anomaly,
-                        ip_anomaly,
-                        burst_session: camp_type == Some("sequential_takeover".to_string()),
-                        burst_seq: Some(i as i32 + 1),
-                        campaign_id: camp_id.clone(),
-                        campaign_type: camp_type.clone(),
-                        campaign_phase: Some("active".to_string()),
-                        campaign_day_number: Some((i / 5) as i32 + 1),
-                    });
-                } else if is_fraud_label {
+                    if !config.transactions.transactions.streaming_mode {
+                        local_meta.push(FraudMetadata {
+                            transaction_id: tx_id.clone(),
+                            fraud_target,
+                            fraud_type: f_type.clone(),
+                            label_noise: label_noise.clone(),
+                            injector_version: "v3_modular".to_string(),
+                            geo_anomaly,
+                            device_anomaly,
+                            ip_anomaly,
+                            burst_session: camp_type == Some("sequential_takeover".to_string()),
+                            burst_seq: Some(i as i32 + 1),
+                            campaign_id: camp_id.clone(),
+                            campaign_type: camp_type.clone(),
+                            campaign_phase: Some("active".to_string()),
+                            campaign_day_number: Some((i / 5) as i32 + 1),
+                        });
+                    }
+                } else if is_fraud_label && !config.transactions.transactions.streaming_mode {
                     local_meta.push(FraudMetadata {
                         transaction_id: tx_id.clone(),
                         fraud_target: false,

@@ -193,7 +193,13 @@ pub struct TransactionBaseConfig {
     pub lookback_days: i32,
     pub status_codes: HashMap<String, Vec<String>>,
     pub temporal_patterns: TemporalPatternConfig,
+    #[serde(default)]
+    pub streaming_mode: bool,
+    #[serde(default = "default_streaming_rate")]
+    pub streaming_rate: u32,
 }
+
+fn default_streaming_rate() -> u32 { 100 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CategoryMccMap {

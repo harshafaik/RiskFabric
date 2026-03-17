@@ -22,6 +22,9 @@ services:
     container_name: riskfabric_clickhouse
     environment:
       - CLICKHOUSE_DB=riskfabric
+      - CLICKHOUSE_USER=riskfabric_user
+      - CLICKHOUSE_PASSWORD=123
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
     ports:
       - "8123:8123"
       - "9000:9000"
@@ -62,6 +65,110 @@ services:
       - postgres
       - clickhouse
 
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.1.2
+    container_name: riskfabric_redpanda
+    command:
+      - redpanda start
+      - --overprovisioned
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
+      - --node-id 0
+      - --check=false
+      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    healthcheck:
+      test: ["CMD", "rpk", "cluster", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: riskfabric_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  scorer:
+    image: riskfabric_dlt
+    container_name: riskfabric_scorer
+    volumes:
+      - .:/usr/app:z
+    working_dir: /usr/app
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=redpanda:29092
+      - REDIS_HOST=redis
+      - CLICKHOUSE_HOST=clickhouse
+      - PYTHONUNBUFFERED=1
+    command: python src/ml/scorer.py
+    depends_on:
+      - redpanda
+      - redis
+      - clickhouse
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: riskfabric_prometheus
+    volumes:
+      - ./data/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9091:9090"
+    networks:
+      - default
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: riskfabric_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=123
+      - GF_INSTALL_PLUGINS=grafana-clickhouse-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./data/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./data/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./data/grafana/dashboards:/etc/grafana/provisioning/dashboards/riskfabric
+    networks:
+      - default
+    depends_on:
+      - prometheus
+      - clickhouse
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: riskfabric_postgres_exporter
+    environment:
+      - DATA_SOURCE_NAME=postgresql://harshafaik:123@postgres:5432/riskfabric?sslmode=disable
+    networks:
+      - default
+    depends_on:
+      - postgres
+
+  redis-exporter:
+    image: oliver006/redis_exporter
+    container_name: riskfabric_redis_exporter
+    command: --redis.addr=redis:6379
+    networks:
+      - default
+    depends_on:
+      - redis
+
 networks:
   default:
     name: riskfabric_default
@@ -70,3 +177,5 @@ volumes:
   postgres_data:
   clickhouse_data:
   clickhouse_logs:
+  prometheus_data:
+  grafana_data:

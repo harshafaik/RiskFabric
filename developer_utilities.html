@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Developer Utilities CLI - RiskFabric Documentation</title>
+        <title>Developer Utilities CLI CLIP - RiskFabric Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -88,7 +88,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">🎓 Tutorials</li><li class="chapter-item expanded "><a href="tutorial_first_run.html"><strong aria-hidden="true">2.</strong> Your First Generation</a></li><li class="chapter-item expanded affix "><li class="part-title">🛠️ How-to Guides</li><li class="chapter-item expanded "><a href="to-do.html"><strong aria-hidden="true">3.</strong> Project Roadmap</a></li><li class="chapter-item expanded "><a href="how_to_add_fraud.html"><strong aria-hidden="true">4.</strong> Add a New Fraud Signature</a></li><li class="chapter-item expanded affix "><li class="part-title">📋 Technical Reference</li><li class="chapter-item expanded "><a href="data_schema.html"><strong aria-hidden="true">5.</strong> Synthetic Data Schema</a></li><li class="chapter-item expanded "><a href="etl_schema.html"><strong aria-hidden="true">6.</strong> ETL & Feature Schema</a></li><li class="chapter-item expanded "><a href="config_reference.html"><strong aria-hidden="true">7.</strong> Configuration Reference</a></li><li class="chapter-item expanded "><a href="developer_utilities.html" class="active"><strong aria-hidden="true">8.</strong> Developer Utilities CLI</a></li><li class="chapter-item expanded "><a href="machine_learning.html"><strong aria-hidden="true">9.</strong> Machine Learning Pipeline</a></li><li class="chapter-item expanded affix "><li class="part-title">🧠 Conceptual Explanations</li><li class="chapter-item expanded "><a href="theory_of_operation.html"><strong aria-hidden="true">10.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="fraud_signatures.html"><strong aria-hidden="true">11.</strong> Fraud Signatures & Attack Patterns</a></li><li class="chapter-item expanded "><a href="data_warehouse.html"><strong aria-hidden="true">12.</strong> Data Warehouse & dbt Strategy</a></li><li class="chapter-item expanded "><a href="objectives.html"><strong aria-hidden="true">13.</strong> Project Goals</a></li><li class="chapter-item expanded affix "><li class="part-title">📈 Results & Monitoring</li><li class="chapter-item expanded "><a href="ml_metrics.html"><strong aria-hidden="true">14.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="performance_benchmarks.html"><strong aria-hidden="true">15.</strong> Generation Performance</a></li><li class="chapter-item expanded affix "><li class="part-title">📚 Knowledge Base</li><li class="chapter-item expanded "><a href="issues.html"><strong aria-hidden="true">16.</strong> Technical Issues & Resolutions</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="style_guide.html"><strong aria-hidden="true">2.</strong> Documentation Style Guide</a></li><li class="chapter-item expanded affix "><li class="part-title">🎓 Tutorials</li><li class="chapter-item expanded "><a href="tutorial_first_run.html"><strong aria-hidden="true">3.</strong> Your First Generation</a></li><li class="chapter-item expanded affix "><li class="part-title">🛠️ How-to Guides</li><li class="chapter-item expanded "><a href="to-do.html"><strong aria-hidden="true">4.</strong> Project Roadmap</a></li><li class="chapter-item expanded "><a href="how_to_add_fraud.html"><strong aria-hidden="true">5.</strong> Add a New Fraud Signature</a></li><li class="chapter-item expanded affix "><li class="part-title">🧩 Codebase Components</li><li class="chapter-item expanded "><a href="components/generate_rs.html"><strong aria-hidden="true">6.</strong> Batch Generator (generate.rs)</a></li><li class="chapter-item expanded "><a href="components/stream_rs.html"><strong aria-hidden="true">7.</strong> Streaming Generator (stream.rs)</a></li><li class="chapter-item expanded "><a href="components/population_generator.html"><strong aria-hidden="true">8.</strong> Population Generator (customer_gen.rs)</a></li><li class="chapter-item expanded "><a href="components/financial_entities.html"><strong aria-hidden="true">9.</strong> Financial Entity Linking (account_gen.rs & card_gen.rs)</a></li><li class="chapter-item expanded "><a href="components/transaction_engine.html"><strong aria-hidden="true">10.</strong> Simulation Engine (transaction_gen.rs)</a></li><li class="chapter-item expanded "><a href="components/adversary_logic.html"><strong aria-hidden="true">11.</strong> Adversary Logic Engine (fraud.rs)</a></li><li class="chapter-item expanded "><a href="components/config_engine.html"><strong aria-hidden="true">12.</strong> Central Configuration Engine (config.rs)</a></li><li class="chapter-item expanded "><a href="components/reference_preparator.html"><strong aria-hidden="true">13.</strong> Reference Data Preparator (prepare_refs.rs)</a></li><li class="chapter-item expanded "><a href="components/reference_exporter.html"><strong aria-hidden="true">14.</strong> Reference Data Exporter (export_references.rs)</a></li><li class="chapter-item expanded "><a href="components/dbt_models.html"><strong aria-hidden="true">15.</strong> Physical World Transformation (warehouse/)</a></li><li class="chapter-item expanded "><a href="components/dlt_pipeline.html"><strong aria-hidden="true">16.</strong> Reference Data Pipeline (dlt/pipelines.py)</a></li><li class="chapter-item expanded "><a href="components/etl_system.html"><strong aria-hidden="true">17.</strong> ETL Pipeline System (etl.rs)</a></li><li class="chapter-item expanded "><a href="components/behavioral_features.html"><strong aria-hidden="true">18.</strong> Behavioral Feature Engineering (src/etl/features/)</a></li><li class="chapter-item expanded "><a href="components/ingestor_rs.html"><strong aria-hidden="true">19.</strong> Data Warehouse Ingestor (ingest.rs)</a></li><li class="chapter-item expanded "><a href="components/ml_training.html"><strong aria-hidden="true">20.</strong> Machine Learning Pipeline (train_xgboost.py)</a></li><li class="chapter-item expanded "><a href="components/realtime_scorer.html"><strong aria-hidden="true">21.</strong> Real-Time Scoring Service (scorer.py)</a></li><li class="chapter-item expanded "><a href="components/model_metadata.html"><strong aria-hidden="true">22.</strong> Model Metadata Utility (dump_model.py)</a></li><li class="chapter-item expanded "><a href="components/redis_seeder.html"><strong aria-hidden="true">23.</strong> Redis Feature Seeder (seed_redis.py)</a></li><li class="chapter-item expanded "><a href="components/infrastructure.html"><strong aria-hidden="true">24.</strong> Infrastructure & Local Stack (docker-compose.yml)</a></li><li class="chapter-item expanded affix "><li class="part-title">📋 Technical Reference</li><li class="chapter-item expanded "><a href="data_schema.html"><strong aria-hidden="true">25.</strong> Synthetic Data Schema</a></li><li class="chapter-item expanded "><a href="etl_schema.html"><strong aria-hidden="true">26.</strong> ETL & Feature Schema</a></li><li class="chapter-item expanded "><a href="config_reference.html"><strong aria-hidden="true">27.</strong> Configuration Reference</a></li><li class="chapter-item expanded "><a href="developer_utilities.html" class="active"><strong aria-hidden="true">28.</strong> Developer Utilities CLI CLIP</a></li><li class="chapter-item expanded "><a href="machine_learning.html"><strong aria-hidden="true">29.</strong> Machine Learning Pipeline</a></li><li class="chapter-item expanded affix "><li class="part-title">🧠 Conceptual Explanations</li><li class="chapter-item expanded "><a href="theory_of_operation.html"><strong aria-hidden="true">30.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="fraud_signatures.html"><strong aria-hidden="true">31.</strong> Fraud Signatures & Attack Patterns</a></li><li class="chapter-item expanded "><a href="data_warehouse.html"><strong aria-hidden="true">32.</strong> Data Warehouse & dbt Strategy</a></li><li class="chapter-item expanded "><a href="objectives.html"><strong aria-hidden="true">33.</strong> Project Goals</a></li><li class="chapter-item expanded affix "><li class="part-title">📈 Results & Monitoring</li><li class="chapter-item expanded "><a href="ml_metrics.html"><strong aria-hidden="true">34.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="performance_benchmarks.html"><strong aria-hidden="true">35.</strong> Generation Performance</a></li><li class="chapter-item expanded affix "><li class="part-title">📚 Knowledge Base</li><li class="chapter-item expanded "><a href="issues.html"><strong aria-hidden="true">36.</strong> Technical Issues & Resolutions</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -176,75 +176,34 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="developer-utilities--cli-tools"><a class="header" href="#developer-utilities--cli-tools">Developer Utilities &amp; CLI Tools</a></h1>
-<p>RiskFabric includes a suite of standalone Rust binaries in <code>src/bin/</code> to handle geographic data preparation, OSM extraction, and ETL orchestration. These tools must be run in a specific sequence to prepare the environment for generation.</p>
+                        <h1 id="developer-utilities-cli"><a class="header" href="#developer-utilities-cli">Developer Utilities CLI</a></h1>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>The <code>developer_utilities.md</code> document details specialized binaries and tools designed to support the RiskFabric development lifecycle. These utilities automate auxiliary tasks surrounding synthetic data generation, such as geographic preprocessing, reference data export, and model metadata inspection.</p>
+<h2 id="design-intent"><a class="header" href="#design-intent">Design Intent</a></h2>
+<p>These utilities function as a <strong>Developer's Toolkit</strong> for the simulation. By decomposing complex tasks—such as OSM node extraction and Parquet serialization—into dedicated CLI binaries, the core generation engine remains focused. This modular approach allows the synthetic environment to be rebuilt independently of the transaction simulation, enabling iteration on geographic density and merchant risk profiles.</p>
+<p>A critical design choice was the use of <strong>Strongly-Typed Subcommands</strong> via the <code>clap</code> library. This provides a consistent, self-documenting interface for every utility, reducing cognitive load and ensuring operational errors are caught during argument parsing.</p>
 <hr />
-<h2 id="-phase-1-geographic-discovery"><a class="header" href="#-phase-1-geographic-discovery">🗺️ Phase 1: Geographic Discovery</a></h2>
-<p>Before generating customers, we must understand the geographic hierarchy of the target region (India).</p>
-<h3 id="1-parse_osm"><a class="header" href="#1-parse_osm">1. <code>parse_osm</code></a></h3>
-<p>Scans the India OSM PBF file to build a mapping of Districts to States using ISO-3166-2 codes.</p>
-<pre><code class="language-bash">cargo run --release --bin parse_osm
-</code></pre>
+<h2 id="-core-utilities"><a class="header" href="#-core-utilities">🔧 Core Utilities</a></h2>
+<h3 id="riskfabric-prepare-refs"><a class="header" href="#riskfabric-prepare-refs"><code>riskfabric-prepare-refs</code></a></h3>
+<p>The primary utility for extracting and normalizing OSM data.</p>
 <ul>
-<li><strong>Output</strong>: <code>data/state_district_map.txt</code></li>
+<li><strong><code>extract-nodes</code></strong>: Parallel parsing of PBF files into a Postgres staging layer.</li>
+<li><strong><code>map-city-state</code></strong>: Rules-based geographic normalization.</li>
 </ul>
-<h3 id="2-map_city_state"><a class="header" href="#2-map_city_state">2. <code>map_city_state</code></a></h3>
-<p>Aggregates OSM nodes to count how many residential/merchant points exist in every city/state combination.</p>
-<pre><code class="language-bash">cargo run --release --bin map_city_state
-</code></pre>
+<h3 id="riskfabric-export-references"><a class="header" href="#riskfabric-export-references"><code>riskfabric-export-references</code></a></h3>
+<p>The serializer bridging the staging database and the generation layer.</p>
 <ul>
-<li><strong>Output</strong>: <code>data/city_state_report.txt</code></li>
+<li><strong>Function</strong>: Converts Postgres tables into H3-indexed Parquet files.</li>
 </ul>
-<h3 id="3-normalize_state_names"><a class="header" href="#3-normalize_state_names">3. <code>normalize_state_names</code></a></h3>
-<p>Messy OSM data often contains variations (e.g., "MH", "Maharastra", "Maharashtra"). This tool standardizes all discovered names against a master list.</p>
-<pre><code class="language-bash">cargo run --release --bin normalize_state_names
-</code></pre>
+<h3 id="riskfabric-ingest"><a class="header" href="#riskfabric-ingest"><code>riskfabric-ingest</code></a></h3>
+<p>The automated loader for the ClickHouse data warehouse.</p>
 <ul>
-<li><strong>Output</strong>: <code>data/city_state_report_clean.txt</code></li>
+<li><strong>Function</strong>: Handles schema creation and bulk loading of generated transactions.</li>
 </ul>
 <hr />
-<h2 id="-phase-2-data-landing"><a class="header" href="#-phase-2-data-landing">📥 Phase 2: Data Landing</a></h2>
-<p>Once the hierarchy is discovered, we extract raw points into the database.</p>
-<h3 id="4-extract_references-lander"><a class="header" href="#4-extract_references-lander">4. <code>extract_references</code> (Lander)</a></h3>
-<p>Performs a high-performance parallel extraction of OSM nodes and writes them to Postgres using binary copy.</p>
-<pre><code class="language-bash">cargo run --release --bin extract_references
-</code></pre>
-<ul>
-<li><strong>Writes to</strong>: <code>raw_residential</code>, <code>raw_merchants</code>, <code>raw_financial</code> in Postgres.</li>
-</ul>
-<hr />
-<h2 id="-phase-3-reference-export"><a class="header" href="#-phase-3-reference-export">🥈 Phase 3: Reference Export</a></h2>
-<p>After the dbt project has enriched the raw data (see <a href="data_warehouse.html">Data Warehouse &amp; dbt</a>), we must export the clean Marts back to Parquet for the Generator to use.</p>
-<h3 id="5-extract_references-exporter"><a class="header" href="#5-extract_references-exporter">5. <code>extract_references</code> (Exporter)</a></h3>
-<p><em>Note: This binary handles both landing and exporting depending on current implementation/flags.</em>
-It reads the <code>geo_enriched_residential</code> Mart from Postgres and saves it as an optimized Parquet file.</p>
-<pre><code class="language-bash">cargo run --release --bin extract_references
-</code></pre>
-<ul>
-<li><strong>Output</strong>: <code>data/references/ref_residential.parquet</code></li>
-</ul>
-<hr />
-<h2 id="-phase-4-medallion-etl"><a class="header" href="#-phase-4-medallion-etl">🧪 Phase 4: Medallion ETL</a></h2>
-<p>These binaries run the feature engineering pipeline on previously generated data.</p>
-<h3 id="6-etl_silver_"><a class="header" href="#6-etl_silver_">6. <code>etl_silver_*</code></a></h3>
-<p>Individual binaries for each feature category (Sequence, Merchant, Network, etc.).</p>
-<pre><code class="language-bash">cargo run --release --bin etl_silver_sequence
-cargo run --release --bin etl_silver_network
-</code></pre>
-<h3 id="7-etl_gold_master"><a class="header" href="#7-etl_gold_master">7. <code>etl_gold_master</code></a></h3>
-<p>The final orchestrator that joins all Silver tables into the ML-ready Gold Master.</p>
-<pre><code class="language-bash">cargo run --release --bin etl_gold_master
-</code></pre>
-<hr />
-<h2 id="-phase-5-the-generator"><a class="header" href="#-phase-5-the-generator">🚀 Phase 5: The Generator</a></h2>
-<p>The main entry point for the simulation.</p>
-<h3 id="8-generate"><a class="header" href="#8-generate">8. <code>generate</code></a></h3>
-<p>Loads all reference Parquet files and YAML configs to produce the final synthetic dataset.</p>
-<pre><code class="language-bash">cargo run --release --bin generate
-</code></pre>
-<ul>
-<li><strong>Output</strong>: <code>data/output/*.parquet</code></li>
-</ul>
+<h2 id="known-issues"><a class="header" href="#known-issues">Known Issues</a></h2>
+<p>Two separate binaries are currently maintained for reference handling (<code>prepare-refs</code> and <code>export-references</code>), which introduces friction in the developer workflow. Consolidation into a <strong>Unified "Refs" Command</strong> with subcommands for extraction, normalization, and export is planned.</p>
+<p>Furthermore, <strong>Duplicate Connection Logic</strong> exists across several utilities, with database URLs and file paths hardcoded in multiple binaries. Refactoring common CLI logic into a shared <code>riskfabric-cli-core</code> crate is required to ensure consistent handling of parameters like <code>--db-url</code> and <code>--output-dir</code>.</p>
 
                     </main>
 

@@ -1,0 +1,242 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Financial Entity Linking (account_gen.rs &amp; card_gen.rs) - RiskFabric Documentation</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../../index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="../style_guide.html"><strong aria-hidden="true">2.</strong> Documentation Style Guide</a></li><li class="chapter-item expanded affix "><li class="part-title">🎓 Tutorials</li><li class="chapter-item expanded "><a href="../tutorial_first_run.html"><strong aria-hidden="true">3.</strong> Your First Generation</a></li><li class="chapter-item expanded affix "><li class="part-title">🛠️ How-to Guides</li><li class="chapter-item expanded "><a href="../to-do.html"><strong aria-hidden="true">4.</strong> Project Roadmap</a></li><li class="chapter-item expanded "><a href="../how_to_add_fraud.html"><strong aria-hidden="true">5.</strong> Add a New Fraud Signature</a></li><li class="chapter-item expanded affix "><li class="part-title">🧩 Codebase Components</li><li class="chapter-item expanded "><a href="../components/generate_rs.html"><strong aria-hidden="true">6.</strong> Batch Generator (generate.rs)</a></li><li class="chapter-item expanded "><a href="../components/stream_rs.html"><strong aria-hidden="true">7.</strong> Streaming Generator (stream.rs)</a></li><li class="chapter-item expanded "><a href="../components/population_generator.html"><strong aria-hidden="true">8.</strong> Population Generator (customer_gen.rs)</a></li><li class="chapter-item expanded "><a href="../components/financial_entities.html" class="active"><strong aria-hidden="true">9.</strong> Financial Entity Linking (account_gen.rs & card_gen.rs)</a></li><li class="chapter-item expanded "><a href="../components/transaction_engine.html"><strong aria-hidden="true">10.</strong> Simulation Engine (transaction_gen.rs)</a></li><li class="chapter-item expanded "><a href="../components/adversary_logic.html"><strong aria-hidden="true">11.</strong> Adversary Logic Engine (fraud.rs)</a></li><li class="chapter-item expanded "><a href="../components/config_engine.html"><strong aria-hidden="true">12.</strong> Central Configuration Engine (config.rs)</a></li><li class="chapter-item expanded "><a href="../components/reference_preparator.html"><strong aria-hidden="true">13.</strong> Reference Data Preparator (prepare_refs.rs)</a></li><li class="chapter-item expanded "><a href="../components/reference_exporter.html"><strong aria-hidden="true">14.</strong> Reference Data Exporter (export_references.rs)</a></li><li class="chapter-item expanded "><a href="../components/dbt_models.html"><strong aria-hidden="true">15.</strong> Physical World Transformation (warehouse/)</a></li><li class="chapter-item expanded "><a href="../components/dlt_pipeline.html"><strong aria-hidden="true">16.</strong> Reference Data Pipeline (dlt/pipelines.py)</a></li><li class="chapter-item expanded "><a href="../components/etl_system.html"><strong aria-hidden="true">17.</strong> ETL Pipeline System (etl.rs)</a></li><li class="chapter-item expanded "><a href="../components/behavioral_features.html"><strong aria-hidden="true">18.</strong> Behavioral Feature Engineering (src/etl/features/)</a></li><li class="chapter-item expanded "><a href="../components/ingestor_rs.html"><strong aria-hidden="true">19.</strong> Data Warehouse Ingestor (ingest.rs)</a></li><li class="chapter-item expanded "><a href="../components/ml_training.html"><strong aria-hidden="true">20.</strong> Machine Learning Pipeline (train_xgboost.py)</a></li><li class="chapter-item expanded "><a href="../components/realtime_scorer.html"><strong aria-hidden="true">21.</strong> Real-Time Scoring Service (scorer.py)</a></li><li class="chapter-item expanded "><a href="../components/model_metadata.html"><strong aria-hidden="true">22.</strong> Model Metadata Utility (dump_model.py)</a></li><li class="chapter-item expanded "><a href="../components/redis_seeder.html"><strong aria-hidden="true">23.</strong> Redis Feature Seeder (seed_redis.py)</a></li><li class="chapter-item expanded "><a href="../components/infrastructure.html"><strong aria-hidden="true">24.</strong> Infrastructure & Local Stack (docker-compose.yml)</a></li><li class="chapter-item expanded affix "><li class="part-title">📋 Technical Reference</li><li class="chapter-item expanded "><a href="../data_schema.html"><strong aria-hidden="true">25.</strong> Synthetic Data Schema</a></li><li class="chapter-item expanded "><a href="../etl_schema.html"><strong aria-hidden="true">26.</strong> ETL & Feature Schema</a></li><li class="chapter-item expanded "><a href="../config_reference.html"><strong aria-hidden="true">27.</strong> Configuration Reference</a></li><li class="chapter-item expanded "><a href="../developer_utilities.html"><strong aria-hidden="true">28.</strong> Developer Utilities CLI CLIP</a></li><li class="chapter-item expanded "><a href="../machine_learning.html"><strong aria-hidden="true">29.</strong> Machine Learning Pipeline</a></li><li class="chapter-item expanded affix "><li class="part-title">🧠 Conceptual Explanations</li><li class="chapter-item expanded "><a href="../theory_of_operation.html"><strong aria-hidden="true">30.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="../fraud_signatures.html"><strong aria-hidden="true">31.</strong> Fraud Signatures & Attack Patterns</a></li><li class="chapter-item expanded "><a href="../data_warehouse.html"><strong aria-hidden="true">32.</strong> Data Warehouse & dbt Strategy</a></li><li class="chapter-item expanded "><a href="../objectives.html"><strong aria-hidden="true">33.</strong> Project Goals</a></li><li class="chapter-item expanded affix "><li class="part-title">📈 Results & Monitoring</li><li class="chapter-item expanded "><a href="../ml_metrics.html"><strong aria-hidden="true">34.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="../performance_benchmarks.html"><strong aria-hidden="true">35.</strong> Generation Performance</a></li><li class="chapter-item expanded affix "><li class="part-title">📚 Knowledge Base</li><li class="chapter-item expanded "><a href="../issues.html"><strong aria-hidden="true">36.</strong> Technical Issues & Resolutions</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">RiskFabric Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/harshafaik/riskfabric" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="financial-entity-linking-account_genrs--card_genrs"><a class="header" href="#financial-entity-linking-account_genrs--card_genrs">Financial Entity Linking (<code>account_gen.rs</code> &amp; <code>card_gen.rs</code>)</a></h1>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>The <code>account_gen.rs</code> and <code>card_gen.rs</code> modules are responsible for constructing the financial "graph" of the simulation. They define the hierarchical relationships between customers and their payment instruments, ensuring that every transaction is linked to a valid account and card entity. This layer establishes the structural foundation required for testing entity-linking models and cross-account fraud detection.</p>
+<h2 id="architectural-decisions"><a class="header" href="#architectural-decisions">Architectural Decisions</a></h2>
+<p>These generators prioritize <strong>Relational Consistency</strong>. Instead of generating accounts and cards in isolation, the system uses a top-down orchestration: Customers drive the creation of Accounts, which in turn drive the creation of Cards. This ensures that every card PAN is programmatically linked back to a specific customer ID, maintaining 100% referential integrity across the multi-million row dataset.</p>
+<p>For <strong>Entity Density</strong>, a probabilistic account ownership model is implemented in <code>account_gen.rs</code>. While every customer is guaranteed a primary account, there is a 50% chance for a customer to own a secondary account (e.g., a "Credit" account in addition to a "Savings" account). This architectural decision allows the simulation to model complex multi-entity behaviors, such as "Balance Transfers" or "Cross-Account Velocity," which are common signals in sophisticated fraud patterns.</p>
+<p>In <code>card_gen.rs</code>, an <strong>Account-Driven Mapping</strong> strategy is used. The card generator iterates over the accounts vector and issues a unique payment instrument for each. This one-to-one mapping simplifies the transaction generation logic while ensuring that the "issuing bank" metadata is correctly inherited from the parent account entity.</p>
+<h2 id="system-integration"><a class="header" href="#system-integration">System Integration</a></h2>
+<p>These modules are the primary components of the batch generation pipeline. They are invoked by <code>generate.rs</code> immediately after the population has been created. The resulting vectors of <code>Account</code> and <code>Card</code> structs are then materialized into Parquet files and passed downstream to the transaction engine.</p>
+<h2 id="known-issues"><a class="header" href="#known-issues">Known Issues</a></h2>
+<p>A hardcoded 50% probability for secondary account creation is currently used. This should be moved to <code>customer_config.yaml</code> to allow for more granular control over the "financial depth" of the population.</p>
+<p>Furthermore, <strong>Card Metadata</strong> (like <code>contactless_limit</code> and <code>online_limit</code>) is currently initialized as empty strings. This prevents the simulation from enforcing realistic "Limit Breaches" during transaction generation. A "Product Catalog" lookup in <code>card_gen.rs</code> is required to populate these fields with realistic values based on the account type, which will enable a new class of "Limit-Based" fraud detection features.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../components/population_generator.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../components/transaction_engine.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../components/population_generator.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../components/transaction_engine.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

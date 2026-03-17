@@ -21,14 +21,15 @@ def train_model():
     # 1. CLEANING & LEAKAGE REMOVAL
     target_col = 'is_fraud'
     
-    # Explicitly dropping features that cause leakage
+    # Explicitly dropping features that cause leakage or identifiers
     drop_cols = [
         'transaction_id', 't.transaction_id', 'timestamp', 'feature_calculated_at',
+        'customer_id', 'card_id', 'account_id', 'merchant_id', # IDs
         'is_fraud', 'fraud_target',
         'cf_fraud_rate', 'mf_fraud_rate', 
         'geo_anomaly', 'device_anomaly', 'ip_anomaly',
         'fraud_type', 'campaign_id', 
-        'amount' # Keep Z-Score, but drop absolute amount
+        'amount' # Keep Z-Score, drop absolute amount
     ]
     
     feature_cols = [c for c in df.columns if c not in drop_cols]
@@ -66,6 +67,10 @@ def train_model():
     )
 
     model.fit(X_train, y_train)
+    
+    print("💾 Saving Model...")
+    os.makedirs("models", exist_ok=True)
+    model.save_model("models/fraud_model_v1.json")
 
     # 4. Evaluation
     y_prob = model.predict_proba(X_test)[:, 1]

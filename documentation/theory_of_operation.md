@@ -14,7 +14,7 @@ Unlike statistical generators that sample from distributions to create flat tabl
 ---
 
 ## 2. The Deterministic Lifecycle
-To ensure consistency across 100M rows and all tables, RiskFabric follows a strict creation order:
+To ensure consistency across large datasets and all tables, RiskFabric follows a strict creation order:
 
 1.  **Customer Birth**: The generator assigns each customer a name, age, and a **Home Coordinate** based on real residential OSM nodes.
 2.  **Financial Anchoring**: The system assigns one or more `Accounts` to every customer.
@@ -24,20 +24,20 @@ To ensure consistency across 100M rows and all tables, RiskFabric follows a stri
 ---
 
 ## 3. The "One-Pass" Parallel Architecture
-Traditional simulators often use several passes (e.g., Pass 1: Generate legit data, Pass 2: Inject fraud). This approach increases latency and memory usage.
+Traditional simulators often use multiple passes (e.g., Pass 1: Generate legitimate data, Pass 2: Inject fraud). This approach increases latency and memory usage.
 
 RiskFabric uses a **One-Pass Architecture** in Rust:
 - **Parallelization**: The engine uses the `Rayon` library to process thousands of entities simultaneously across all CPU cores.
-- **Unified Logic**: Merchant selection, amount calculation, fraud injection, and campaign coordination all happen in a **single loop**.
-- **Memory Efficiency**: By using "Batched Generation" (5,000 entities per cycle), the engine maintains a constant memory footprint whether generating 1M or 100M rows.
+- **Unified Logic**: Merchant selection, amount calculation, fraud injection, and campaign coordination occur in a **single loop**.
+- **Memory Efficiency**: By using "Batched Generation" (5,000 entities per cycle), the engine maintains a constant memory footprint regardless of total row count.
 
 ---
 
 ## 4. Spatial Realism & H3 Indexing
-RiskFabric differentiates itself through geographic high-fidelity. 
+RiskFabric uses geographic high-fidelity. 
 
-- **H3 Hierarchies**: We use Uber’s H3 hexagonal grid. When a user spends, the engine first looks for merchants within the same **H3 Resolution 5** cell (neighborhood level) as their home.
-- **Local vs. Global Spend**: Legitimate transactions remain "local" (same H3 cell) 98% of the time. Fraud profiles (like UPI Scams) explicitly force "Remote" coordinates to simulate offshore or cross-state attacks.
+- **H3 Hierarchies**: The system uses Uber’s H3 hexagonal grid. When a user spends, the engine first looks for merchants within the same **H3 Resolution 5** cell (neighborhood level) as their home.
+- **Local vs. Global Spend**: Legitimate transactions remain "local" (same H3 cell) approximately 98% of the time. Fraud profiles (like UPI Scams) explicitly force "Remote" coordinates to simulate offshore or cross-state attacks.
 
 ---
 
@@ -48,13 +48,14 @@ Every card in the system has a **Deterministic Seed**.
 let mut card_rng = StdRng::seed_from_u64(global_seed + salt + card_id_hash);
 ```
 
-If you run the simulation with the same `global_seed`, every transaction for `Card_ABC` remains identical. This enables **Machine Learning reproducibility**, allowing data scientists to tweak features without the underlying ground-truth shifting.
+Running the simulation with the same `global_seed` ensures every transaction for a given card remains identical. This enables **Machine Learning reproducibility**, allowing for feature adjustments without the underlying ground-truth shifting.
 
 ---
 
-## 6. Simulated Imperfection (Label Noise)
-To mirror real-world banking challenges, RiskFabric implements **Noisy Labeling**:
-- **Ground Truth (`fraud_target`)**: The perfect indicator of whether the generator injected a fraud pattern.
-- **Noisy Label (`is_fraud`)**: The signal the "Bank" actually sees. It includes False Positives (legit txns flagged as fraud) and False Negatives (fraud txns that went undetected).
+## 7. Hybrid Streaming & Verification Architecture
+To support real-time fraud detection, RiskFabric includes a dedicated **Streaming Generator** that bridges the gap between static datasets and live production environments.
 
-This forces models to learn robustness rather than memorizing perfect patterns.
+- **One-Pass Consistency**: The streaming engine reuses the exact same logic as the batch pipeline but operates on a continuous loop, producing transactions at a configurable rate (default 100 tx/s).
+- **Type-Level Safety (Unlabeled Output)**: To prevent "label leakage" during live scoring, the system uses a specialized `UnlabeledTransaction` struct. This mirrors the standard transaction but programmatically omits all ground-truth and labeling fields (`is_fraud`, `chargeback`, etc.), ensuring the Kafka payload is consistent with a real production stream.
+- **Verification Mode**: While in verification mode, the generator writes the "Ground Truth" of every streaming transaction to `ground_truth.csv`. This allows for a post-hoc join against real-time model scores to measure precision and recall in a simulated production environment.
+- **Self-Correcting Rate Limiter**: The generator measures actual Kafka broker latency for every message sent. It dynamically adjusts its sleep interval to compensate for network jitter, ensuring steady, drift-free throughput over long durations.

@@ -1,6 +1,12 @@
 # Synthetic Data Schema
 
-RiskFabric generates a multi-table synthetic dataset mirroring professional financial environments. The entities link logically for scale and realism.
+## Summary
+The RiskFabric data schema is designed to mirror a professional financial environment while providing the "white-box" visibility required for advanced machine learning research. It consists of five core entities that represent the hierarchical relationship between a customer and their financial events.
+
+## Design Intent
+The schema is structured to prioritize **Relational Realism** over flat-file simplicity. By separating Customers, Accounts, and Cards into distinct tables, the simulation models complex many-to-one relationships (e.g., a single customer owning multiple accounts, each with different card instruments). This is essential for testing entity-linking models and network analysis in fraud detection.
+
+The inclusion of the **`FraudMetadata`** table is a critical architectural decision. It decouples the simulation ground truth (`fraud_target`) from the operational signal (`is_fraud`). This allows researchers to train on noisy, real-world signals while validating against the perfect, latent truth of the generator.
 
 ## Entity Relationship Overview
 
@@ -122,3 +128,10 @@ Internal ground-truth for debugging and advanced ML training. This table is **no
 | `campaign_type` | String | Coordination type (e.g., `coordinated_attack`). |
 | `campaign_phase` | String | Phase within the campaign (early, active, late). |
 | `campaign_day_number`| Int32 | Days since campaign start. |
+
+---
+
+## Known Issues
+UUID strings are currently used for all primary keys (`customer_id`, `card_id`, etc.). While ensuring global uniqueness, this increases storage overhead and join latency in ClickHouse compared to integer-based keys. Transitioning to a 64-bit integer ID system is under consideration for future versions. 
+
+Furthermore, a dedicated **Merchant Table** is not yet implemented in the output schema. Merchant attributes are currently denormalized directly into the transaction table, creating data redundancy and limiting merchant-level entity modeling. Breaking merchants into a separate `merchants.parquet` file is required to complete the star schema.

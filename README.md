@@ -4,7 +4,7 @@
 [![Polars](https://img.shields.io/badge/engine-Polars%200.51.0-blue.svg)](https://pola.rs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**RiskFabric** is a high-performance, agent-based synthetic fraud generator and Medallion ETL pipeline. Built in Rust and powered by Polars, it is designed to simulate realistic financial ecosystems at massive scale.
+RiskFabric is a fraud intelligence platform that generates synthetic Indian payment transaction data, processes it through a Medallion ETL pipeline, and produces trained fraud detection models.
 
 ## 🚀 The "North Star" Objective
 RiskFabric demonstrates that a modern, vertically-scaled Rust stack can generate, store, and process **100 Million high-fidelity transactions** on a single workstation, outperforming traditional distributed clusters for large-scale financial simulation and ML training.

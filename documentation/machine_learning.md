@@ -1,47 +1,24 @@
-# Machine Learning Pipeline
+# Machine Learning Strategy
 
-RiskFabric uses **XGBoost**, a high-performance gradient boosting framework, to train fraud detection models on the generated synthetic data. The pipeline is designed to simulate a real-world environment where labels are noisy and ground-truth metadata is unavailable at inference time.
+## Summary
+RiskFabric's machine learning strategy is built around the "Honest Model" philosophy. Instead of training on perfect, latent labels provided by the generator, the strategy forces models to learn from behavioral proxies in a multi-stage pipeline that mirrors real-world deployment challenges.
 
-## 🧠 Model Architecture
+## Design Intent
+The ML pipeline serves as a **Calibration Bench** for the generator. Achieving 100% recall on synthetic data indicates that the fraud signatures are insufficient in complexity. **Label Noise** (FP/FN) and **Sanitized Feature Sets** are explicitly introduced to create a realistic "Information Gap" between the generator and the learner. 
 
-- **Engine**: XGBoost (Binary Classifier)
-- **Frameworks**: Python, Polars, Scikit-Learn
-- **Input**: Gold Master Table (`fact_transactions_gold`)
-- **Target**: `is_fraud` (**Noisy Label**)
-
-## 🛡️ Leakage Prevention Strategy
-
-A critical part of the RiskFabric ML pipeline is ensuring the model does not "cheat" by using synthetic markers that would not exist in a real production system.
-
-### 1. The Sanitized Feature Vector
-We explicitly exclude ground-truth metadata from the training set:
-- **Excluded**: `geo_anomaly`, `device_anomaly`, `ip_anomaly`, `fraud_type`, `fraud_target`.
-- **Reasoning**: These are "generator flags." If included, the model achieves a ~0.99 AUC but fails to learn actual human behavior (amounts, locations, timing).
-
-### 2. Noisy Label Training
-Instead of training on the perfect `fraud_target` (ground truth), the model trains on `is_fraud`. This label incorporates simulated **label noise** (False Positives and False Negatives), forcing the model to be robust against real-world data imperfections.
+The architecture utilizes **XGBoost** as its primary classifier, leveraging its native categorical handling and gradient-boosting strengths for tabular financial data. This enables researchers to evaluate feature importance in an interpretable manner, identifying which synthetic signals (e.g., spatial velocity vs. amount deviation) are the most predictive.
 
 ---
 
-## 🚀 Training Workflow
+## 🏗️ The Training Pipeline
+1.  **Ingestion & ETL**: Data is extracted from the ClickHouse "Gold" layer via `train_xgboost.py`.
+2.  **Sanitization**: Internal generator flags (e.g., `fraud_type`, `geo_anomaly`) are dropped to prevent data leakage.
+3.  **Training**: XGBoost utilizes a `binary:logistic` objective with a 20% stratified test split.
+4.  **Verification**: Models are evaluated against both the noisy `is_fraud` label and the perfect `fraud_target`.
 
-The training script (`src/ml/train_xgboost.py`) performs the following steps:
+---
 
-1.  **Data Loading**: Connects to ClickHouse via `clickhouse_connect` and streams the Gold Master Table into a Polars DataFrame.
-2.  **Categorical Encoding**: Utilizes Polars' native `Categorical` type to handle high-cardinality features like `merchant_category` and `transaction_channel`.
-3.  **Stratified Split**: Performs an 80/20 train-test split, maintaining the low fraud prevalence ratio in both sets.
-4.  **Training**: Executes an XGBoost Classifier with `tree_method='hist'` and native categorical support enabled.
-5.  **Evaluation**: Calculates ROC AUC and generates a detailed classification report.
+## Known Issues
+The current use of **Random Stratified Splitting** for validation is an architectural limitation. In a financial stream, data is temporally ordered; random splitting allows for "look-ahead bias," where the model may be exposed to a customer's future patterns during training. Transitioning to **Out-of-Time (OOT) Validation**—training on the first nine months and testing exclusively on the final three—is necessary.
 
-## 📊 Feature Importance
-
-The model learns to identify fraud primarily through behavioral signals engineered in the Silver ETL layer:
-- **Transaction Amount**: The dominant predictor for UPI and high-value scams.
-- **Merchant Reputation**: Leverages the historical fraud rates of specific merchants.
-- **Entity sharing**: Identifies high-risk IP and Device clusters.
-
-## 📁 Model Artifacts
-Trained models are saved in JSON format in the `/models` directory for versioning and inference:
-```bash
-models/fraud_model_v1.json
-```
+Furthermore, the model is currently **static**, without a "Concept Drift" simulation to account for fraud signatures changing over time. This makes the accuracy metrics potentially misleading as they do not reflect adversarial evolution. Implementing a **Retraining Scheduler** is required to evaluate precision degradation as fraud profiles evolve.

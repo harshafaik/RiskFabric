@@ -1,62 +1,23 @@
-# Project Goals & North Star
+# Project Goals & Objectives
 
-RiskFabric aims to redefine the performance boundaries of synthetic data generation. This document outlines our strategic goals, the depth of our implementation, and the current progress toward the "North Star."
+## Summary
+The `objectives.md` document defines the high-level mission and technical milestones for the RiskFabric project. It outlines the strategic intent behind building a high-fidelity synthetic data generator and the specific problems it aims to solve for the financial technology community.
 
-## 📊 Goal Status Summary
+## Design Intent
+RiskFabric is designed to address the **"Data Paradox"** in fraud detection: researchers require large volumes of labeled data to develop effective models, but real-world financial data is sensitive and often inaccessible. By creating a high-fidelity, "white-box" alternative, the project provides a safe environment for testing machine learning algorithms and the operational infrastructure required for real-time fraud detection.
 
-| Goal | Status | Metric / Evidence |
-| :--- | :--- | :--- |
-| **100k+ TPS Throughput** | ✅ **Complete** | Achieved **182,000 TPS** in One-Pass mode. |
-| **Medallion Architecture** | ✅ **Complete** | Full Bronze -> Silver -> Gold pipeline in Rust. |
-| **Realistic Fraud Signals** | 🟡 **In-Progress** | 5 patterns implemented; Jittering pending. |
-| **XGBoost Training Flow** | ✅ **Complete** | Pipeline ready; 0.97 AUC achieved on noisy data. |
-| **100M-Row Milestone** | 🔵 **Planned** | Validated up to 17M; Streaming ETL pending. |
+A key strategic objective is the promotion of **Infrastructure-as-Code for Simulation**. Transitioning from static CSV datasets to dynamic, configuration-driven environments allows organizations to "stress-test" systems against hypothetical scenarios—such as doubling transaction volumes—without requiring production data.
 
 ---
 
-## 1. The 100-Million-Row Benchmark
-The "North Star" involves generating, storing, and processing **100,000,000** high-fidelity transactions on a single workstation. This benchmark proves that vertical scaling with Rust/Polars can outperform traditional horizontal scaling (Spark) for many financial use cases.
-
-### Performance Needs
-*   **Generation Speed**: Sustain >100,000 TPS using multi-threaded Rust.
-    *   **Implementation**: A "One-Pass" architecture that minimizes string allocations and context switching by handling fraud, campaigns, and generation in a single loop, processing the population in segments of 5,000 entities.
-*   **Storage Efficiency**: Keep 100M rows within optimized disk footprints using ClickHouse and Snappy-compressed Parquet.
-    *   **Target**: ~15GB-25GB for the full raw dataset.
-*   **ETL Latency**: Calculate complex behavioral features across 100M rows in under 15 minutes.
-    *   **Need**: Migration from Polars eager API to the **Streaming Lazy API** to handle datasets larger than available RAM.
+## 🎯 Key Milestones
+1.  **High-Fidelity Generation**: Reaching 180k+ TPS while maintaining spatial and temporal realism.
+2.  **Streaming Parity**: Ensuring models trained on batch data perform consistently in real-time Kafka environments.
+3.  **Adversarial Diversity**: Expanding the fraud library to include multi-stage attacks like money laundering and mule-account networks.
 
 ---
 
-## 2. Medallion Architecture Implementation
-RiskFabric mirrors professional financial technology environments with a strict three-tier data quality pipeline.
+## Known Issues
+Focus is currently placed on **Individual and Coordinated Fraud**, but **Macroeconomic Factors** remain unimplemented. The simulation assumes spending patterns are unaffected by external events such as inflation or holidays. Implementing a "Global Event Engine" is necessary to simulate seasonal surges and economic shifts, providing a more challenging baseline for detection models.
 
-*   **Bronze (Raw)**: Captures the raw output of the generator. It stores transactions exactly as the synthetic banking system "observed" them, including simulated transmission delays.
-*   **Silver (Features)**: The "Engine Room" where the pipeline calculates 22+ features. This layer performs windowed calculations (Time Since Last txn), entity reputations (Merchant Fraud Rate), and network linkage (IP Sharing).
-*   **Gold (Master)**: A flat table ready for Machine Learning. It joins the Bronze stream with Silver features and Customer/Card dimensions to provide a single source of truth for model training.
-
----
-
-## 3. High-Fidelity Fraud Simulation
-We generate data that mirrors real fraud through multi-layered mutation logic.
-
-### Behavioral Signatures
-The engine supports five core fraud profiles, each with distinct distributions for amount, time, and frequency:
-- **UPI Scam**: High-frequency, medium-amount transfers with high geographic anomalies.
-- **Account Takeover (ATO)**: Sudden shifts in Device ID and User Agent coupled with escalating amounts.
-- **Velocity Abuse**: "Testing" transactions characterized by round numbers or rapid-fire sequences.
-- **Card Not Present (CNP)**: Online-only channel bias using standard e-commerce amount distributions.
-- **Friendly Fraud**: Legitimate device and location signatures but with later chargeback events.
-
-### Spatial & Network Realism
-- **OSM Integration**: All transactions occur at real-world coordinates extracted from OpenStreetMap India nodes.
-- **H3 Grid**: We use Uber’s H3 hexagonal grid (Resolution 7) to simulate neighborhood clusters and calculate "Distance from Home" anomalies.
-- **Entity Sharing**: We simulate coordinated campaigns by forcing many synthetic customers to share the exact same IP Address and Device ID for a burst period.
-
----
-
-## 4. Machine Learning & Validation
-A primary goal ensures that the synthetic data remains "trainable" and representative of real-world challenges.
-
-*   **Leakage Prevention**: We strictly enforce a "Sanitized Feature Vector." The pipeline prevents models from seeing ground-truth metadata (e.g., `fraud_type`), forcing them to learn from raw behavioral signals.
-*   **Simulated Label Noise**: We inject 3% False Positives and 10% False Negatives into the `is_fraud` label to mirror the reality of imperfect human-labeled data in banking.
-*   **Validation Metrics**: An XGBoost baseline validates every generation pass to ensure the AUC remains within a realistic range (0.95 - 0.98).
+Furthermore, the project lacks **Multi-Currency Support**. The simulation is anchored to a single base currency, preventing the modeling of international fraud or cross-border remittance scams. Refactoring the transaction engine to handle dynamic currency conversion and exchange-rate fluctuations is required to support global fintech use cases.

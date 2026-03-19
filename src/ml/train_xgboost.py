@@ -8,7 +8,8 @@ import os
 def train_model():
     print("🚀 Connecting to ClickHouse...")
     client = clickhouse_connect.get_client(
-        host='riskfabric_clickhouse', 
+        host='localhost', 
+        port=8123,
         username='riskfabric_user',
         password='123',
         database='riskfabric'
@@ -18,21 +19,33 @@ def train_model():
     query = "SELECT * FROM fact_transactions_gold"
     df = pl.from_arrow(client.query_arrow(query))
     
-    # 1. CLEANING & LEAKAGE REMOVAL
+    # Target label
     target_col = 'is_fraud'
     
-    # Explicitly dropping features that cause leakage or identifiers
-    drop_cols = [
-        'transaction_id', 't.transaction_id', 'timestamp', 'feature_calculated_at',
-        'customer_id', 'card_id', 'account_id', 'merchant_id', # IDs
-        'is_fraud', 'fraud_target',
-        'cf_fraud_rate', 'mf_fraud_rate', 
-        'geo_anomaly', 'device_anomaly', 'ip_anomaly',
-        'fraud_type', 'campaign_id', 
-        'amount' # Keep Z-Score, drop absolute amount
+    # Clean feature list (No identifiers, No label-leakage, No low-signal stubs)
+    feature_cols = [
+        # Behavioral sequence
+        'time_since_last_transaction',
+        'transaction_sequence_number',
+        'spatial_velocity',
+        'hour_deviation_from_norm',
+        'amount_deviation_z_score',
+        'rapid_fire_transaction_flag',
+        'escalating_amounts_flag',
+        'merchant_category_switch_flag',
+        
+        # Transaction context
+        'transaction_channel',
+        'card_present',
+        'merchant_category',
+        
+        # Network structural (not label-derived)
+        'suspicious_cluster_member',
     ]
     
-    feature_cols = [c for c in df.columns if c not in drop_cols]
+    # Ensure columns exist and clean any naming artifacts (like 'g.' prefixes from SQL joins)
+    available_cols = df.columns
+    feature_cols = [c for c in feature_cols if c in available_cols]
     
     print(f"🧠 Training on {len(feature_cols)} HONEST features:")
     print(f"   {feature_cols}")

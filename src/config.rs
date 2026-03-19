@@ -18,9 +18,11 @@ pub struct FraudRules {
     pub fraud_patterns: HashMap<String, Vec<f64>>,
     pub device_patterns: DevicePatterns,
     pub fraud_injector: FraudInjectorConfig,
-    pub fraud_campaigns: HashMap<String, FraudCampaignConfig>,
+    pub fraud_campaigns: CampaignsConfig,
     pub temporal_patterns: HashMap<String, TemporalPatternConfig>,
     pub failure_reasons_by_type: HashMap<String, Vec<String>>,
+    #[serde(default)]
+    pub fraud_flags: HashMap<String, Vec<String>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -42,6 +44,8 @@ pub struct DevicePatterns {
     pub ip_prefixes: Vec<String>,
     pub bot_user_agent_prefix: String,
     pub known_bad_prefixes: HashMap<String, f64>,
+    #[serde(default)]
+    pub ato_ua_pool: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,12 +64,21 @@ pub struct FraudProfileConfig {
     pub amount_multiplier: Option<String>,
     pub channel_bias: HashMap<String, f64>,
     pub geo_anomaly_prob: f64,
+    pub temporal_anomaly_prob: Option<f64>,
+    pub merchant_bias: Option<HashMap<String, f64>>,
+    #[serde(default)]
+    pub behavioral_flags: Option<HashMap<String, f64>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CampaignsConfig {
+    pub target_campaign_share: f64,
+    pub profiles: HashMap<String, FraudCampaignConfig>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FraudCampaignConfig {
     pub frequency: f64,
-    pub target_campaign_share: Option<f64>,
     pub amount_escalation: Option<f64>,
 }
 
@@ -120,6 +133,31 @@ pub struct CustomerConfig {
     pub financials: FinancialsConfig,
     pub registration: RegistrationConfig,
     pub control: GenerationControl,
+    pub device_profiles: DeviceProfilesConfig,
+    pub isp_assignment: ISPAssignmentConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeviceProfilesConfig {
+    pub location_shares: HashMap<String, LocationSharesConfig>,
+    pub android_ua_pool: Vec<String>,
+    pub ios_ua_pool: Vec<String>,
+    pub upi_app_ua_pool: Vec<String>,
+    pub desktop_ua_pool: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocationSharesConfig {
+    pub android_share: f64,
+    pub ios_share: f64,
+    pub upi_app_share: f64,
+    pub desktop_share: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ISPAssignmentConfig {
+    pub shares: HashMap<String, HashMap<String, f64>>,
+    pub subnets: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

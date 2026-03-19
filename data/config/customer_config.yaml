@@ -109,10 +109,117 @@ registration:
 
 # Scale and Volume Controls
 control:
-  customer_count: 10000
+  customer_count: 1644
   transactions_per_customer:
-    min: 200
-    max: 600
+    min: 400
+    max: 800
   parallelism:
     customer_gen_threads: 8
     transaction_gen_threads: 32
+
+device_profiles:
+  location_shares:
+    Metro:
+      android_share: 0.65
+      ios_share: 0.20
+      upi_app_share: 0.10
+      desktop_share: 0.05
+    Urban:
+      android_share: 0.72
+      ios_share: 0.12
+      upi_app_share: 0.12
+      desktop_share: 0.04
+    Semi-Urban:
+      android_share: 0.82
+      ios_share: 0.04
+      upi_app_share: 0.12
+      desktop_share: 0.02
+    Rural:
+      android_share: 0.82
+      ios_share: 0.04
+      upi_app_share: 0.12
+      desktop_share: 0.02
+  android_ua_pool:
+    - "Mozilla/5.0 (Linux; Android 13; Redmi Note 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 12; Samsung Galaxy M33) AppleWebKit/537.36 Chrome/113.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 13; Realme 10 Pro) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 12; Poco X4 Pro) AppleWebKit/537.36 Chrome/112.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 13; OnePlus Nord CE3) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 11; Samsung Galaxy A52) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 13; Vivo V27) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 12; Oppo F21 Pro) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 13; Moto G73) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 12; Redmi 11 Prime) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 11; Samsung Galaxy M12) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 13; Realme C55) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 12; Poco M4 Pro) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 13; OnePlus 11R) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 11; Vivo Y33s) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 12; Oppo A78) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 13; Redmi Note 12 Pro+) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 12; Samsung Galaxy F23) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 13; iQOO Neo 7) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 11; Infinix Note 11) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+  ios_ua_pool:
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 Version/16.5 Mobile/15E148 Safari/604.1"
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15 Version/15.6 Mobile/15E148 Safari/604.1"
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 16_1 like Mac OS X) AppleWebKit/605.1.15 Version/16.1 Mobile/15E148 Safari/604.1"
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 14_8 like Mac OS X) AppleWebKit/605.1.15 Version/14.8 Mobile/15E148 Safari/604.1"
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 16_4 like Mac OS X) AppleWebKit/605.1.15 Version/16.4 Mobile/15E148 Safari/604.1"
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 Version/15.5 Mobile/15E148 Safari/604.1"
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 Version/16.3 Mobile/15E148 Safari/604.1"
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 15_2 like Mac OS X) AppleWebKit/605.1.15 Version/15.2 Mobile/15E148 Safari/604.1"
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 Version/16.0 Mobile/15E148 Safari/604.1"
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4 like Mac OS X) AppleWebKit/605.1.15 Version/14.4 Mobile/15E148 Safari/604.1"
+  upi_app_ua_pool:
+    - "PhonePe/4.5.2 (Android; Redmi Note 12; Android 13)"
+    - "GooglePay/144.0 (Android)"
+    - "Paytm/9.8.0 (Android)"
+    - "BHIM/2.0.1 (Android)"
+    - "PhonePe/4.4.1 (iOS; iPhone 13; iOS 16.5)"
+    - "GooglePay/143.2 (iOS)"
+    - "Paytm/9.7.5 (iOS)"
+    - "BHIM/2.0.0 (iOS)"
+    - "AmazonPay/2.1 (Android)"
+    - "MobiKwik/5.0 (Android)"
+    - "Freecharge/6.2 (Android)"
+    - "PhonePe/4.5.0 (Android; Samsung M33)"
+    - "GooglePay/144.1 (Android; OnePlus Nord)"
+    - "Paytm/9.8.1 (Android; Realme 10)"
+    - "BHIM/2.0.2 (Android; Poco X4)"
+  desktop_ua_pool:
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+    - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36"
+    - "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0"
+    - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/113.0"
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.43"
+    - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Safari/605.1.15"
+
+isp_assignment:
+  shares:
+    Metro:
+      Jio: 0.45
+      Airtel: 0.35
+      ACT: 0.15
+      Others: 0.05
+    Urban:
+      Jio: 0.50
+      Airtel: 0.30
+      BSNL: 0.15
+      Others: 0.05
+    Semi-Urban:
+      Jio: 0.50
+      BSNL: 0.35
+      Airtel: 0.15
+    Rural:
+      Jio: 0.50
+      BSNL: 0.35
+      Airtel: 0.15
+  subnets:
+    Jio: "49.36.x.x/16"
+    Airtel: "49.204.x.x/16"
+    BSNL: "117.192.x.x/16"
+    ACT: "49.206.x.x/16"
+    Others: "103.0.0.x/16"
+    Vodafone: "203.0.0.x/16"

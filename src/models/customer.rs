@@ -36,6 +36,12 @@ pub struct Customer {
     pub location: GeoLocation,
     pub financial: FinancialProfile,
 
+    // Device Profile
+    pub primary_ua: String,
+    pub secondary_ua: Option<String>,
+    pub isp: String,
+    pub ip_subnet: String,
+
     // --- Metadata ---
     pub registration_date: String, // "YYYY-MM-DD"
     pub registration_year: i32,
@@ -52,6 +58,10 @@ impl Customer {
         geo: GeoLocation,
         pincode: Option<String>,
         fin: FinancialProfile,
+        primary_ua: String,
+        secondary_ua: Option<String>,
+        isp: String,
+        ip_subnet: String,
     ) -> Self {
         let mut rng = rand::rng();
 
@@ -86,6 +96,10 @@ impl Customer {
             email,
             location: geo,
             financial: fin,
+            primary_ua,
+            secondary_ua,
+            isp,
+            ip_subnet,
             registration_date: reg_date.to_string(),
             registration_year: reg_date.year(),
             registration_month: reg_date.month(),

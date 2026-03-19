@@ -60,6 +60,27 @@ device_patterns:
     "182.72.0.0": 0.7
     "103.21.244": 0.8
     "139.59.0.0": 0.6
+  ato_ua_pool:
+    - "Mozilla/5.0 (Linux; Android 10; SM-G960F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 11; Pixel 4 XL) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 13_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.4 Mobile/15E148 Safari/604.1"
+    - "Mozilla/5.0 (Linux; Android 9; Redmi Note 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 10; ONEPLUS A6013) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 11; vivo 1906) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 10; OPPO CPH1907) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
+    - "Mozilla/5.0 (Linux; Android 11; realme RMX2001) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 9; SM-J600G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 10; POCO F1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 11; Moto G Power) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 12_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2 Mobile/15E148 Safari/604.1"
+    - "Mozilla/5.0 (Linux; Android 10; Mi A3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 11; ASUS_X00TD) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 9; Nokia 6.1 Plus) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (iPhone; CPU iPhone OS 13_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.2 Mobile/15E148 Safari/604.1"
+    - "Mozilla/5.0 (Linux; Android 10; LG-H930) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 11; Sony G8341) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Mobile Safari/537.36"
+    - "Mozilla/5.0 (Linux; Android 9; HTC U12+) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36"
 
 # High-Fidelity Fraud Profiles
 fraud_injector:
@@ -70,43 +91,60 @@ fraud_injector:
     upi_scam:
       frequency: 0.35
       amount_pattern: "upi_common_amounts"
-      channel_bias: { upi: 0.80 } # Was 0.95
-      geo_anomaly_prob: 0.95 # Sharpened geo-anomaly
+      amount_strategy: "customer_normal_range"
+      amount_multiplier: "1.5_to_4.0"
+      channel_bias: { upi: 0.80 }
+      geo_anomaly_prob: 0.95
+      temporal_anomaly_prob: 0.70
+      merchant_bias: { GENERAL_RETAIL: 0.40, SERVICES: 0.40 }
     account_takeover:
       frequency: 0.25
       amount_pattern: "high_value_amounts"
       amount_strategy: "customer_normal_range"
-      amount_multiplier: "0.8_to_1.5"
-      channel_bias: { mobile_banking: 0.40, upi: 0.30, online: 0.30 } # Was 0.70 mobile_banking
-      geo_anomaly_prob: 0.60 # Sharpened geo-anomaly
+      amount_multiplier: "0.95_to_1.05"
+      channel_bias: { mobile_banking: 0.40, upi: 0.30, online: 0.30 }
+      geo_anomaly_prob: 0.60
+      temporal_anomaly_prob: 0.90
+      merchant_bias: { LUXURY: 0.50, ELECTRONICS: 0.30 }
     velocity_abuse:
       frequency: 0.15
       amount_pattern: "velocity_test_amounts"
-      channel_bias: { upi: 0.70, online: 0.30 } # Was 0.90 upi
+      amount_strategy: "customer_normal_range"
+      amount_multiplier: "0.90_to_1.10"
+      channel_bias: { upi: 0.70, online: 0.30 }
       geo_anomaly_prob: 0.20
+      temporal_anomaly_prob: 0.40
+      merchant_bias: { GAMBLING: 0.60, ENTERTAINMENT: 0.20 }
     card_not_present:
       frequency: 0.15
       amount_pattern: "cnp_common_amounts"
-      channel_bias: { online: 0.70, cards: 0.30 } # Was 0.95 online
+      amount_strategy: "customer_normal_range"
+      amount_multiplier: "1.0_to_5.0"
+      channel_bias: { online: 0.70, cards: 0.30 }
       geo_anomaly_prob: 0.40
+      temporal_anomaly_prob: 0.50
+      merchant_bias: { ELECTRONICS: 0.50, LUXURY: 0.40 }
     friendly_fraud:
       frequency: 0.10
       amount_pattern: "round_amounts"
       amount_strategy: "customer_normal_range"
-      amount_multiplier: "0.5_to_1.1"
-      channel_bias: { upi: 0.40, cards: 0.60 } # Was 0.50 card (singular)
+      amount_multiplier: "0.5_to_1.5"
+      channel_bias: { upi: 0.40, cards: 0.60 }
       geo_anomaly_prob: 0.00
+      temporal_anomaly_prob: 0.10
+      merchant_bias: { TRAVEL: 0.40, FOOD_AND_DRINK: 0.30 }
 
 # Campaign Configurations
 fraud_campaigns:
-  coordinated_attack:
-    frequency: 0.4
-    target_campaign_share: 0.10
-  sequential_takeover:
-    frequency: 0.3
-    amount_escalation: 0.30
-  burst_campaign:
-    frequency: 0.3
+  target_campaign_share: 0.0
+  profiles:
+    coordinated_attack:
+      frequency: 0.4
+    sequential_takeover:
+      frequency: 0.3
+      amount_escalation: 0.30
+    burst_campaign:
+      frequency: 0.3
 
 # High-Fidelity Failure Reasons
 failure_reasons_by_type:
@@ -115,6 +153,14 @@ failure_reasons_by_type:
   velocity_abuse: ["Velocity limit exceeded", "Suspect IP address"]
   card_not_present: ["CVV mismatch", "3DS authentication failed"]
   friendly_fraud: ["Chargeback requested", "Transaction not recognized"]
+
+# Behavioral Fraud Flags
+fraud_flags:
+  upi_scam: ["social_engineering_detected", "urgent_payment_request", "money_mule_destination"]
+  account_takeover: ["proxy_detected", "credential_stuffing_attempt", "session_hijacking_risk", "new_device_on_old_account"]
+  velocity_abuse: ["automated_script_pattern", "device_id_rotation", "rapid_fire_attempt"]
+  card_not_present: ["headless_browser_detected", "virtual_card_usage", "high_risk_bin", "tor_exit_node"]
+  friendly_fraud: ["chargeback_history", "first_time_high_value_luxury"]
 
 # Temporal Patterns
 temporal_patterns:

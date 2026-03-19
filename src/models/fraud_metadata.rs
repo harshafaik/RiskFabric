@@ -10,6 +10,7 @@ pub struct FraudMetadata {
     pub geo_anomaly: bool,
     pub device_anomaly: bool,
     pub ip_anomaly: bool,
+    pub flags: Option<Vec<String>>,
     pub burst_session: bool,
     pub burst_seq: Option<i32>,
     pub campaign_id: Option<String>,

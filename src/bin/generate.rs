@@ -47,6 +47,10 @@ fn main() {
         "monthly_spend" => customers.iter().map(|c| c.financial.monthly_spend).collect::<Vec<_>>(),
         "customer_risk_score" => customers.iter().map(|c| c.financial.customer_risk_score as f64).collect::<Vec<_>>(),
         "is_fraud" => customers.iter().map(|c| c.financial.is_fraud).collect::<Vec<_>>(),
+        "primary_ua" => customers.iter().map(|c| c.primary_ua.clone()).collect::<Vec<_>>(),
+        "secondary_ua" => customers.iter().map(|c| c.secondary_ua.clone()).collect::<Vec<_>>(),
+        "isp" => customers.iter().map(|c| c.isp.clone()).collect::<Vec<_>>(),
+        "ip_subnet" => customers.iter().map(|c| c.ip_subnet.clone()).collect::<Vec<_>>(),
         "registration_date" => customers.iter().map(|c| c.registration_date.clone()).collect::<Vec<_>>()
     )
     .expect("Failed to create Customer DataFrame");
@@ -263,6 +267,7 @@ fn main() {
             "geo_anomaly" => meta.iter().map(|m| m.geo_anomaly).collect::<Vec<_>>(),
             "device_anomaly" => meta.iter().map(|m| m.device_anomaly).collect::<Vec<_>>(),
             "ip_anomaly" => meta.iter().map(|m| m.ip_anomaly).collect::<Vec<_>>(),
+            "flags" => meta.iter().map(|m| m.flags.as_ref().map(|f| f.join(","))).collect::<Vec<_>>(),
             "burst_session" => meta.iter().map(|m| m.burst_session).collect::<Vec<_>>(),
             "burst_seq" => meta.iter().map(|m| m.burst_seq).collect::<Vec<_>>(),
             "campaign_id" => meta.iter().map(|m| m.campaign_id.clone()).collect::<Vec<_>>(),

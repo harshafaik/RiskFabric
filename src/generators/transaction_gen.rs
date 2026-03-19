@@ -94,26 +94,7 @@ pub fn generate_transactions_chunk(
                 }
             }
 
-            let mut camp_id = None;
-            let mut camp_type = None;
-            let mut attacker_lat = None;
-            let mut attacker_lon = None;
-
-            let share = config
-                .rules
-                .fraud_campaigns
-                .values()
-                .filter_map(|c| c.target_campaign_share)
-                .next()
-                .unwrap_or(0.15);
-            if card_rng.random_bool(share) {
-                let campaigns: Vec<&String> = config.rules.fraud_campaigns.keys().collect();
-                let c_type = campaigns[card_rng.random_range(0..campaigns.len())].clone();
-                camp_id = Some(format!("camp_{}_{}", c_type, &card.card_id[..8]));
-                camp_type = Some(c_type);
-                attacker_lat = Some(card_rng.random_range(8.0..37.0));
-                attacker_lon = Some(card_rng.random_range(68.0..97.0));
-            }
+            let campaign_ctx = fraud::initialize_campaign(config, &mut card_rng, &card.card_id);
 
             let num_txns = card_rng.random_range(
                 config.customer.control.transactions_per_customer.min
@@ -186,25 +167,17 @@ pub fn generate_transactions_chunk(
                     card_rng.random_range(1000..9999)
                 );
 
-                let r_target: f64 = card_rng.random();
-                let fraud_target = r_target < config.rules.fraud_injector.target_share;
-
-                let r_fn: f64 = card_rng.random();
-                let r_fp: f64 = card_rng.random();
-                let mut is_fraud_label = fraud_target;
-                let mut label_noise = "none".to_string();
-
-                if fraud_target && r_fn < config.rules.fraud_injector.default_fn_rate {
-                    is_fraud_label = false;
-                    label_noise = "fn".to_string();
-                } else if !fraud_target && r_fp < config.rules.fraud_injector.default_fp_rate {
-                    is_fraud_label = true;
-                    label_noise = "fp".to_string();
-                }
+                let (fraud_target, is_fraud_label, label_noise) =
+                    fraud::determine_targeting(config, &mut card_rng);
 
                 // --- Step 2: Base Attribute Selection ---
                 let tx_date = timestamps[i];
-                let total_share: f64 = config.rules.payment_channels.values().map(|c| c.market_share).sum();
+                let total_share: f64 = config
+                    .rules
+                    .payment_channels
+                    .values()
+                    .map(|c| c.market_share)
+                    .sum();
                 let mut r_chan: f64 = card_rng.random_range(0.0..total_share);
                 let mut final_channel = "upi".to_string();
                 for (name, c_config) in &config.rules.payment_channels {
@@ -215,24 +188,66 @@ pub fn generate_transactions_chunk(
                     r_chan -= c_config.market_share;
                 }
 
-                let final_ua = device_map.get(&final_channel).cloned().unwrap_or_else(|| "Mozilla/5.0".to_string());
-                let mut final_ip = format!("103.21.{}.{}", card_rng.random_range(1..255), card_rng.random_range(1..255));
-                let mut final_amount = (avg_txn_amount * card_rng.random_range(0.4..1.6)).clamp(1.0, 500_000.0);
-                
+                let final_ua = {
+                    let ua_roll = card_rng.random_range(0.0..1.0);
+                    if ua_roll < 0.92 {
+                        customer.primary_ua.clone()
+                    } else if ua_roll < 0.98 {
+                        customer.secondary_ua.clone().unwrap_or_else(|| customer.primary_ua.clone())
+                    } else {
+                        // 2% different device
+                        let pools = [&config.customer.device_profiles.android_ua_pool, &config.customer.device_profiles.ios_ua_pool, &config.customer.device_profiles.upi_app_ua_pool];
+                        let pool = pools[card_rng.random_range(0..pools.len())];
+                        pool[card_rng.random_range(0..pool.len())].clone()
+                    }
+                };
+
+                let final_ip = {
+                    let ip_roll = card_rng.random_range(0.0..1.0);
+                    if ip_roll < 0.85 {
+                        // Home subnet, consistent host (simplified: fixed host per customer for now)
+                        customer.ip_subnet.replace("x.x/16", &format!("{}.{}", card_rng.random_range(1..255), card_rng.random_range(1..255)))
+                    } else if ip_roll < 0.95 {
+                        // Same ISP mobile range (different subnet)
+                        let isp_subnets: Vec<&String> = config.customer.isp_assignment.subnets.values().collect();
+                        let random_subnet = isp_subnets[card_rng.random_range(0..isp_subnets.len())];
+                        random_subnet.replace("x.x/16", &format!("{}.{}", card_rng.random_range(1..255), card_rng.random_range(1..255)))
+                    } else if ip_roll < 0.99 {
+                        // VPN range
+                        let vpn_prefixes = ["185.", "104."];
+                        format!("{}16.{}.{}", vpn_prefixes[card_rng.random_range(0..vpn_prefixes.len())], card_rng.random_range(1..255), card_rng.random_range(1..255))
+                    } else {
+                        // Foreign/anomalous
+                        format!("{}.{}.{}.{}", card_rng.random_range(1..255), card_rng.random_range(1..255), card_rng.random_range(1..255), card_rng.random_range(1..255))
+                    }
+                };
+                let mut final_amount =
+                    (avg_txn_amount * card_rng.random_range(0.4..1.6)).clamp(1.0, 500_000.0);
+
                 let jitter_lat = card_rng.random_range(-0.001..0.001);
                 let jitter_lon = card_rng.random_range(-0.001..0.001);
                 let final_lat = lats[idx] + jitter_lat;
                 let final_lon = lons[idx] + jitter_lon;
-                
-                let final_card_present = card_rng.random_bool(config.transactions.transactions.card_present_probability);
 
-                let mut geo_anomaly = false;
-                let mut device_anomaly = false;
-                let mut ip_anomaly = false;
-                let mut f_type = "none".to_string();
+                let final_card_present =
+                    card_rng.random_bool(config.transactions.transactions.card_present_probability);
 
                 // --- Step 3: Construct Temporary Transaction for Mutation ---
                 let cat_name = &categories[idx];
+
+                // Fat tail legitimate spending logic
+                if !fraud_target {
+                    let fat_tail_categories =
+                        ["ELECTRONICS", "TRAVEL", "MEDICAL", "JEWELLERY", "EDUCATION"];
+                    if fat_tail_categories.contains(&cat_name.as_str()) {
+                        if card_rng.random_bool(0.04) {
+                            // 4% probability (between 3-5%)
+                            final_amount = (avg_txn_amount * card_rng.random_range(2.0..8.0))
+                                .clamp(1.0, 500_000.0);
+                        }
+                    }
+                }
+
                 let mcc = mcc_map.get(cat_name).unwrap_or(&"5999".to_string()).clone();
                 let merchant = crate::models::transaction::MerchantInfo {
                     id: osm_ids[idx].to_string(),
@@ -262,69 +277,26 @@ pub fn generate_transactions_chunk(
                 );
 
                 // --- Step 5: Apply Sneaky Fraud Logic ---
-                if fraud_target {
-                    let profiles: Vec<&String> = config.rules.fraud_injector.profiles.keys().collect();
-                    f_type = profiles[card_rng.random_range(0..profiles.len())].clone();
-                    let profile = &config.rules.fraud_injector.profiles[&f_type];
-
-                    // 5a. Temporal Warping
-                    tx.timestamp = fraud::calculate_fraud_timestamp(&f_type, last_processed_date, tx_date, &mut card_rng).to_rfc3339();
-                    
-                    // 5b. Amount Mimicry
-                    tx.amount = fraud::calculate_fraud_amount(profile, avg_txn_amount, config, &mut card_rng);
-
-                    // 5c. Behavioral Mutations (UA, IP, Geo, Channel)
-                    let (geo, dev, ip) = fraud::apply_behavioral_mutations(&f_type, profile, &mut tx, config, &mut card_rng);
-                    geo_anomaly = geo;
-                    device_anomaly = dev;
-                    ip_anomaly = ip;
-
-                    // 5d. Campaign Coordination
-                    if let (Some(c_id), Some(c_type)) = (&camp_id, &camp_type) {
-                        let (c_geo, c_dev, c_ip) = fraud::apply_campaign_logic(c_type, c_id, &mut tx, (attacker_lat.unwrap_or(0.0), attacker_lon.unwrap_or(0.0)), config);
-                        if c_geo { geo_anomaly = true; }
-                        if c_dev { device_anomaly = true; }
-                        if c_ip { ip_anomaly = true; }
-                    }
-
-                    if !config.transactions.transactions.streaming_mode {
-                        local_meta.push(FraudMetadata {
-                            transaction_id: tx_id.clone(),
-                            fraud_target,
-                            fraud_type: f_type.clone(),
-                            label_noise: label_noise.clone(),
-                            injector_version: "v3_modular".to_string(),
-                            geo_anomaly,
-                            device_anomaly,
-                            ip_anomaly,
-                            burst_session: camp_type == Some("sequential_takeover".to_string()),
-                            burst_seq: Some(i as i32 + 1),
-                            campaign_id: camp_id.clone(),
-                            campaign_type: camp_type.clone(),
-                            campaign_phase: Some("active".to_string()),
-                            campaign_day_number: Some((i / 5) as i32 + 1),
-                        });
-                    }
-                } else if is_fraud_label && !config.transactions.transactions.streaming_mode {
-                    local_meta.push(FraudMetadata {
-                        transaction_id: tx_id.clone(),
-                        fraud_target: false,
-                        fraud_type: "none".to_string(),
-                        label_noise: "fp".to_string(),
-                        injector_version: "v3_modular".to_string(),
-                        geo_anomaly: false,
-                        device_anomaly: false,
-                        ip_anomaly: false,
-                        burst_session: false,
-                        burst_seq: None,
-                        campaign_id: None,
-                        campaign_type: None,
-                        campaign_phase: None,
-                        campaign_day_number: None,
-                    });
+                if let Some(meta) = fraud::inject_fraud(
+                    &mut tx,
+                    fraud_target,
+                    is_fraud_label,
+                    label_noise,
+                    &campaign_ctx,
+                    last_processed_date,
+                    avg_txn_amount,
+                    i,
+                    config,
+                    &mut card_rng,
+                ) {
+                    local_meta.push(meta);
                 }
 
-                last_processed_date = Some(chrono::DateTime::parse_from_rfc3339(&tx.timestamp).unwrap().with_timezone(&Utc));
+                last_processed_date = Some(
+                    chrono::DateTime::parse_from_rfc3339(&tx.timestamp)
+                        .unwrap()
+                        .with_timezone(&Utc),
+                );
                 local_txs.push(tx);
             }
 

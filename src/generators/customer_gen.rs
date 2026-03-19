@@ -88,8 +88,52 @@ pub fn generate_customers(count: usize) -> Vec<Customer> {
                 rng.random_range(0.01..0.6)
             } as f32;
 
-            
-            
+            // 6. Device Profile Generation
+            let shares = config.customer.device_profiles.location_shares.get(&location_type)
+                .or_else(|| config.customer.device_profiles.location_shares.get("Urban")) // Fallback
+                .expect("Missing device profile shares");
+
+            let ua_roll = rng.random_range(0.0..1.0);
+            let primary_ua = if ua_roll < shares.android_share {
+                config.customer.device_profiles.android_ua_pool[rng.random_range(0..config.customer.device_profiles.android_ua_pool.len())].clone()
+            } else if ua_roll < shares.android_share + shares.ios_share {
+                config.customer.device_profiles.ios_ua_pool[rng.random_range(0..config.customer.device_profiles.ios_ua_pool.len())].clone()
+            } else if ua_roll < shares.android_share + shares.ios_share + shares.upi_app_share {
+                config.customer.device_profiles.upi_app_ua_pool[rng.random_range(0..config.customer.device_profiles.upi_app_ua_pool.len())].clone()
+            } else {
+                config.customer.device_profiles.desktop_ua_pool[rng.random_range(0..config.customer.device_profiles.desktop_ua_pool.len())].clone()
+            };
+
+            let secondary_ua = if rng.random_bool(0.15) {
+                let ua_roll_sec = rng.random_range(0.0..1.0);
+                Some(if ua_roll_sec < 0.7 {
+                    config.customer.device_profiles.android_ua_pool[rng.random_range(0..config.customer.device_profiles.android_ua_pool.len())].clone()
+                } else {
+                    config.customer.device_profiles.upi_app_ua_pool[rng.random_range(0..config.customer.device_profiles.upi_app_ua_pool.len())].clone()
+                })
+            } else {
+                None
+            };
+
+            // 7. ISP and Subnet Assignment
+            let isp_shares = config.customer.isp_assignment.shares.get(&location_type)
+                .or_else(|| config.customer.isp_assignment.shares.get("Urban"))
+                .expect("Missing ISP shares");
+
+            let mut isp_roll = rng.random_range(0.0..1.0);
+            let mut selected_isp = "Others".to_string();
+            for (isp_name, share) in isp_shares {
+                if isp_roll < *share {
+                    selected_isp = isp_name.clone();
+                    break;
+                }
+                isp_roll -= share;
+            }
+
+            let ip_subnet = config.customer.isp_assignment.subnets.get(&selected_isp)
+                .cloned()
+                .unwrap_or_else(|| "103.0.0.x/16".to_string());
+
             Customer::new(
                 customer_id,
                 name,
@@ -112,6 +156,10 @@ pub fn generate_customers(count: usize) -> Vec<Customer> {
                     customer_risk_score,
                     is_fraud,
                 },
+                primary_ua,
+                secondary_ua,
+                selected_isp,
+                ip_subnet,
             )
         })
         .collect()

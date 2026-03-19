@@ -16,8 +16,8 @@ pub fn transform_customer_features(
         (col("ts").dt().hour().gt_eq(lit(22)).or(col("ts").dt().hour().lt(lit(6))))
             .cast(DataType::UInt32).alias("is_night"),
         
-        // Casting weekday to Int32 to avoid is_in panic on Int8
-        col("ts").dt().weekday().cast(DataType::Int32).is_in(lit(Series::new("wknd".into(), &[6i32, 7i32])), false)
+        // Detect weekend (Saturday=6, Sunday=7)
+        col("ts").dt().weekday().gt_eq(lit(6))
             .cast(DataType::UInt32).alias("is_weekend"),
     ]);
 

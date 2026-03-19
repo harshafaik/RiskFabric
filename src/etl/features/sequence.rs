@@ -37,12 +37,11 @@ pub fn transform_sequence_features(lf: LazyFrame, fraud_meta_lf: LazyFrame) -> L
         .alias("hours_since_midnight"),
         // transaction_hour (integer for deviation calc)
         col("timestamp").dt().hour().cast(DataType::Float64).alias("txn_hour"),
-        // is_weekend
+        // is_weekend (Saturday=6, Sunday=7)
         col("timestamp")
             .dt()
             .weekday()
-            .cast(DataType::Int32)
-            .is_in(lit(Series::new("wknd".into(), &[6i32, 7i32])), false)
+            .gt_eq(lit(6))
             .cast(DataType::UInt32)
             .alias("is_weekend"),
         // Prev Lat/Lon for Velocity
@@ -107,8 +106,18 @@ pub fn transform_sequence_features(lf: LazyFrame, fraud_meta_lf: LazyFrame) -> L
     // 6. Final Select
     lf.select([
         col("transaction_id"),
+        col("card_id"),
+        col("account_id"),
         col("customer_id"),
+        col("merchant_id"),
+        col("merchant_category"),
+        col("amount"),
         col("timestamp"),
+        col("transaction_channel"),
+        col("card_present"),
+        col("user_agent"),
+        col("ip_address"),
+        col("is_fraud"),
         (col("time_since_last_transaction").cast(DataType::Float64) / lit(1000.0))
             .alias("time_since_last_transaction"),
         col("transaction_sequence_number").cast(DataType::UInt64),

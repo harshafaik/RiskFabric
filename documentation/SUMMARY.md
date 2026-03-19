@@ -41,12 +41,14 @@
 # 🧠 Conceptual Explanations
 - [Theory of Operation](theory_of_operation.md)
 - [Fraud Signatures & Attack Patterns](fraud_signatures.md)
+- [Synthetic Fraud Profiles](fraud_profiles.md)
 - [Data Warehouse & dbt Strategy](data_warehouse.md)
 - [Project Goals](objectives.md)
 
 # 📈 Results & Monitoring
 - [Machine Learning Metrics](ml_metrics.md)
 - [Generation Performance](performance_benchmarks.md)
+- [ETL Performance Optimizations](optimizations.md)
 
 # 📚 Knowledge Base
 - [Technical Issues & Resolutions](issues.md)

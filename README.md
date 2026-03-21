@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.svg" alt="RiskFabric Logo" width="200">
+</p>
+
 # RiskFabric
 
 [![Rust](https://img.shields.io/badge/language-Rust-orange.svg)](https://www.rust-lang.org/)
@@ -5,9 +9,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 RiskFabric is a fraud intelligence platform that generates synthetic Indian payment transaction data, processes it through a Medallion ETL pipeline, and produces trained fraud detection models.
-
-## 🚀 The "North Star" Objective
-RiskFabric demonstrates that a modern, vertically-scaled Rust stack can generate, store, and process **100 Million high-fidelity transactions** on a single workstation, outperforming traditional distributed clusters for large-scale financial simulation and ML training.
 
 ## ✨ Key Features
 - **Extreme Throughput**: Achieves **~182,000 Transactions Per Second (TPS)** using a parallelized "One-Pass" architecture.
@@ -18,43 +19,37 @@ RiskFabric demonstrates that a modern, vertically-scaled Rust stack can generate
 - **ML Mastery**: Built-in leakage prevention and simulated label noise (False Positives/Negatives) to ensure models are robust and production-ready.
 
 ## 🛠️ Tech Stack
-- **Core Engine**: Rust (Rayon for parallelization, Rand for deterministic seeding).
-- **Data Processing**: Polars 0.51.0 (Lazy API & Streaming).
-- **Data Warehouse**: PostgreSQL (Spatial Reference) & dbt (Geographic Enrichment).
-- **Storage**: Snappy-compressed Parquet & ClickHouse.
-- **Machine Learning**: Python (XGBoost) with sanitized feature vectors.
+- **Core Engine**: Rust (Rayon for parallelization, Rand for deterministic simulation).
+- **Real-time Streaming**: Redpanda (Kafka-compatible), `rdkafka`, and Tokio async runtime.
+- **Data Processing**: Polars 0.51.0 (Lazy API & high-performance transformation).
+- **Data Warehouse**: PostgreSQL (Spatial/OSM staging), ClickHouse (High-volume transactions), and dbt (Analytical enrichment).
+- **Feature Store**: Redis (Low-latency state for real-time Z-scores and behavior).
+- **Data Ingestion**: `dlt` (Data Load Tool) for MDS integration.
+- **Machine Learning**: Python (XGBoost) with real-time inference via `scorer.py`.
+- **Infrastructure**: Docker/Podman orchestration with Prometheus and Grafana for observability.
 
 ## 📁 Project Structure
-- `src/generators/`: Core ABM logic and fraud mutation engine.
-- `src/etl/`: Polars-based feature engineering (Velocities, Reputations, Sequences).
-- `src/bin/`: CLI utilities for OSM extraction, data landing, and pipeline orchestration.
-- `warehouse/`: dbt project for geographic reference modeling.
-- `documentation/`: Detailed technical documentation (mdBook).
 
-## 🚀 Quick Start
+### 🧠 Core Simulation (`src/`)
+- `generators/`: Agent-Based Modeling (ABM) logic, entity creation, and fraud mutation engines.
+- `models/`: Rust structures for Customers, Accounts, Cards, and Transactions.
+- `bin/`: CLI binaries for data generation (`generate.rs`), streaming (`stream.rs`), and preparation.
+- `config.rs`: Centralized, type-safe configuration engine for simulation parameters.
 
-### 1. Prerequisites
-- Rust (Latest Stable)
-- PostgreSQL (Local instance for geographic references)
-- Python 3.10+ (For ML and dbt)
+### 🥈 ETL & Data Warehouse (`src/etl/` & `warehouse/`)
+- `etl/`: Multi-stage Polars transformation pipeline (Silver/Gold feature engineering).
+- `warehouse/`: dbt project for geographic enrichment and merchant risk profiling using PostGIS.
+- `dlt/`: MDS integration for automated data lake ingestion.
 
-### 2. Generate Data
-```bash
-# Generate the population and transaction stream
-cargo run --release --bin generate
-```
+### 🤖 Machine Learning (`src/ml/`)
+- `train_xgboost.py`: Training pipeline with Feature sanitization and OOT validation.
+- `scorer.py`: Real-time inference service consuming from Kafka and stateful Redis features.
+- `seed_redis.py`: Point-in-time state synchronization between the warehouse and feature store.
 
-### 3. Run ETL
-```bash
-# Process raw data into Silver and Gold layers
-cargo run --release --bin etl_gold_master
-```
-
-### 4. View Documentation
-Technical details, schemas, and theory of operation are available in the local mdBook:
-```bash
-mdbook serve --open
-```
+### 🛠️ Infrastructure & Docs
+- `docker-compose.yml`: Orchestrated local stack (ClickHouse, Postgres, Redpanda, Redis, Grafana).
+- `documentation/`: Arichitectural docs and theory of operation (mdBook).
+- `data/config/`: Behavioral rules and system tuning YAML configurations.
 
 ## 📈 Benchmarks (150k Txns)
 | Architecture | Throughput | Total Time | Speedup |

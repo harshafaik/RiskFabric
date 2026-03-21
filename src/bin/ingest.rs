@@ -7,7 +7,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧹 Cleaning up existing tables...");
     let cleanup = vec![
         "fact_transactions_bronze", "fact_transactions_bronze_raw", 
-        "dim_customers", "dim_accounts", "dim_cards"
+        "dim_customers", "dim_accounts", "dim_cards", "fact_fraud_metadata_bronze"
     ];
     for table in cleanup {
         Command::new("podman").args(["exec", "riskfabric_clickhouse", "clickhouse-client", "--database", db, "--query", &format!("DROP TABLE IF EXISTS {}", table)]).status()?;

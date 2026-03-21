@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     match cli.command {
         Commands::SilverAll => {
-            println!("⚡ Parallelizing Silver ETL stages...");
+            println!("⚡ Parallelizing stable Silver ETL stages...");
             use rayon::prelude::*;
             
             type EtlStage = fn() -> Result<(), Box<dyn Error + Send + Sync>>;
@@ -42,9 +42,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                 run_silver_customer,
                 run_silver_merchant,
                 run_silver_sequence,
-                run_silver_campaign,
-                run_silver_device_ip,
-                run_silver_network,
+                // These stages are currently excluded due to unresolved issues with signal reliability
+                // run_silver_campaign,
+                // run_silver_device_ip,
+                // run_silver_network,
             ];
 
             stages.into_par_iter()
@@ -52,14 +53,23 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .collect::<Result<Vec<_>, _>>()
                 .map_err(|e| format!("Parallel ETL failed: {}", e))?;
 
-            println!("✅ All Silver stages completed in parallel.");
+            println!("✅ Stable Silver stages completed in parallel.");
         }
         Commands::SilverCustomer => run_silver_customer().map_err(|e| e as Box<dyn Error>)?,
         Commands::SilverMerchant => run_silver_merchant().map_err(|e| e as Box<dyn Error>)?,
         Commands::SilverSequence => run_silver_sequence().map_err(|e| e as Box<dyn Error>)?,
-        Commands::SilverCampaign => run_silver_campaign().map_err(|e| e as Box<dyn Error>)?,
-        Commands::SilverDeviceIp => run_silver_device_ip().map_err(|e| e as Box<dyn Error>)?,
-        Commands::SilverNetwork => run_silver_network().map_err(|e| e as Box<dyn Error>)?,
+        Commands::SilverCampaign => {
+            println!("⚠️ Warning: Campaign signals currently have unresolved issues.");
+            run_silver_campaign().map_err(|e| e as Box<dyn Error>)?
+        },
+        Commands::SilverDeviceIp => {
+            println!("⚠️ Warning: Device/IP signals currently have unresolved issues.");
+            run_silver_device_ip().map_err(|e| e as Box<dyn Error>)?
+        },
+        Commands::SilverNetwork => {
+            println!("⚠️ Warning: Network features currently have unresolved issues.");
+            run_silver_network().map_err(|e| e as Box<dyn Error>)?
+        },
         Commands::GoldMaster => run_gold_master().map_err(|e| e as Box<dyn Error>)?,
     }
 
@@ -412,62 +422,53 @@ fn run_silver_network() -> Result<(), Box<dyn Error + Send + Sync>> {
 }
 
 fn run_gold_master() -> Result<(), Box<dyn Error + Send + Sync>> {
-    println!("🚀 Running Gold Master ETL (Staged Entity Joins)...");
+    println!("🚀 Running Gold Master ETL (Stable Staged Entity Joins)...");
     
+    // Explicitly clean up to prevent row accumulation
+    let _ = execute_clickhouse_query("DROP TABLE IF EXISTS gold_stage_1");
+    let _ = execute_clickhouse_query("DROP TABLE IF EXISTS fact_transactions_gold");
+
     // Stage 1: Initial Gold from Silver (Contains raw + sequence features)
-    println!("   [1/3] Materializing Base Gold from Silver...");
+    println!("   [1/2] Materializing Base Gold from Silver...");
     execute_clickhouse_query("
-        CREATE OR REPLACE TABLE gold_stage_1 ENGINE = MergeTree() ORDER BY timestamp AS
+        CREATE TABLE gold_stage_1 ENGINE = MergeTree() ORDER BY timestamp AS
         SELECT * FROM fact_transactions_silver
     ")?;
 
     // Stage 2: + Entity Reputations (Customer & Merchant)
-    println!("   [2/3] Joining Entity (Cust/Merch) features...");
+    println!("   [2/2] Joining Entity (Cust/Merch) features...");
     execute_clickhouse_query("
-        CREATE OR REPLACE TABLE gold_stage_2 ENGINE = MergeTree() ORDER BY timestamp AS
+        CREATE TABLE fact_transactions_gold ENGINE = MergeTree() ORDER BY timestamp AS
         SELECT g.*, 
                c.fraud_rate as cf_fraud_rate, c.night_transaction_ratio as cf_night_tx_ratio,
-               m.merchant_fraud_rate as mf_fraud_rate
-        FROM gold_stage_1 g
-        LEFT JOIN customer_features_silver c ON g.customer_id = c.customer_id
-        LEFT JOIN merchant_features_silver m ON g.merchant_id = m.merchant_id
-        SETTINGS join_algorithm = 'partial_merge', max_memory_usage = 10000000000
-    ")?;
-
-    // Stage 3: + Network Reputations (IP & Device)
-    println!("   [3/4] Joining Network reputations...");
-    execute_clickhouse_query("
-        CREATE OR REPLACE TABLE gold_stage_3 ENGINE = MergeTree() ORDER BY timestamp AS
-        SELECT g.*, 
-               assumeNotNull(ip.ip_fraud_rate) as ip_fraud_rate,
-               assumeNotNull(ip.ip_degree) as ip_degree,
-               assumeNotNull(dev.dev_fraud_rate) as dev_fraud_rate,
-               assumeNotNull(dev.dev_degree) as dev_degree,
-               toUInt32(ip.ip_degree > 1 OR dev.dev_degree > 1) as suspicious_cluster_member
-        FROM gold_stage_2 g
-        LEFT JOIN ip_features_silver ip ON g.ip_address = ip.ip_address
-        LEFT JOIN device_features_silver dev ON g.user_agent = dev.user_agent
-        SETTINGS join_algorithm = 'partial_merge', max_memory_usage = 10000000000
-    ")?;
-
-    // Stage 4: + Campaign (Final)
-    println!("   [4/4] Joining Campaign features & Finalizing...");
-    execute_clickhouse_query("
-        CREATE OR REPLACE TABLE fact_transactions_gold ENGINE = MergeTree() ORDER BY timestamp AS
-        SELECT g.*, 
-               assumeNotNull(cp.campaign_txn_count) as campaign_txn_count,
-               assumeNotNull(cp.campaign_total_amount) as campaign_total_amount,
-               assumeNotNull(cp.campaign_merchant_diversity) as campaign_merchant_diversity,
+               m.merchant_fraud_rate as mf_fraud_rate,
+               0.0 as ip_fraud_rate,
+               0 as ip_degree,
+               0.0 as dev_fraud_rate,
+               0 as dev_degree,
+               0 as suspicious_cluster_member,
+               0 as campaign_txn_count,
+               0.0 as campaign_total_amount,
+               0 as campaign_merchant_diversity,
                now() as feature_calculated_at
-        FROM gold_stage_3 g
-        LEFT JOIN campaign_features_silver cp ON g.transaction_id = cp.transaction_id
+        FROM gold_stage_1 g
+        LEFT JOIN (
+            SELECT customer_id, any(fraud_rate) as fraud_rate, any(night_transaction_ratio) as night_transaction_ratio
+            FROM customer_features_silver GROUP BY customer_id
+        ) c ON g.customer_id = c.customer_id
+        LEFT JOIN (
+            SELECT merchant_id, any(merchant_fraud_rate) as merchant_fraud_rate
+            FROM merchant_features_silver GROUP BY merchant_id
+        ) m ON g.merchant_id = m.merchant_id
         SETTINGS join_algorithm = 'partial_merge', max_memory_usage = 10000000000
     ")?;
+
+    // Note: Stages 3 (Network) and 4 (Campaign) are currently disabled due to 
+    // unresolved signal quality issues. We initialize them to 0 above to 
+    // maintain schema compatibility with downstream ML models.
 
     // Cleanup
     let _ = execute_clickhouse_query("DROP TABLE gold_stage_1");
-    let _ = execute_clickhouse_query("DROP TABLE gold_stage_2");
-    let _ = execute_clickhouse_query("DROP TABLE gold_stage_3");
 
     println!("🔍 Validating Gold Master integrity...");
     validate_gold_table()?;

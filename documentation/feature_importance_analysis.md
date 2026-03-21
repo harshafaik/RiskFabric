@@ -37,7 +37,7 @@ To test the strength of actual behavioral features, we performed a "Stress Test"
 - **Result**: AUC 0.87. `amount_bin` importance remained at **96.6%**. 
 - **Conclusion**: The distribution gap is so large that even coarse binning provides a near-perfect split.
 
-### Experiment 2: Amount Removal (The "Honest" Baseline)
+### Experiment 2: Amount Removal (The "Empirical" Baseline)
 - **Approach**: Removed all references to transaction value. Forced model to rely on `time_since_last_tx`, `rapid_fire_flag`, `merchant_category`, etc.
 - **Result**: **AUC 0.5868** (Slightly better than random).
 - **New Top Feature**: `escalating_amounts_flag` (**88.6%**).

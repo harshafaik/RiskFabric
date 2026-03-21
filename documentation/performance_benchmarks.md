@@ -75,5 +75,5 @@ This document tracks the evolution of `riskfabric` generation performance, focus
 
 ## Summary of Optimization Impact
 
-*   **Scale Testing**: Achieve similar linear scaling for 100,000,000 transactions (targeting completion in under 15 minutes).
+*   **Scale Testing**: Achieve similar linear scaling for 10,000,000 transactions.
 *   **I/O Optimization**: Investigate partitioned Parquet writes to further reduce the 2.6s write bottleneck.

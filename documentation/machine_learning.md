@@ -1,7 +1,7 @@
 # Machine Learning Strategy
 
 ## Summary
-RiskFabric's machine learning strategy is built around the "Honest Model" philosophy. Instead of training on perfect, latent labels provided by the generator, the strategy forces models to learn from behavioral proxies in a multi-stage pipeline that mirrors real-world deployment challenges.
+RiskFabric's machine learning strategy is built around the "Operational Model" philosophy. Instead of training on perfect, latent labels provided by the generator, the strategy forces models to learn from behavioral proxies in a multi-stage pipeline that mirrors real-world deployment challenges.
 
 ## Design Intent
 The ML pipeline serves as a **Calibration Bench** for the generator. Achieving 100% recall on synthetic data indicates that the fraud signatures are insufficient in complexity. **Label Noise** (FP/FN) and **Sanitized Feature Sets** are explicitly introduced to create a realistic "Information Gap" between the generator and the learner. 

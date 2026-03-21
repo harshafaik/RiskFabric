@@ -6,7 +6,7 @@ The `scorer.py` service is the production inference engine of RiskFabric. It con
 ## Architectural Decisions
 This service is designed around a **Stateful Micro-Batching Architecture**. To balance high throughput with low latency, feature engineering is performed for each transaction individually, but the final model predictions are grouped into batches of 50. This reduces the overhead of XGBoost inference and ClickHouse persistence while maintaining a P99 latency of approximately 12ms per transaction.
 
-For real-time feature engineering, **Welford’s Algorithm** is implemented to maintain running means and standard deviations within Redis. This allows for the calculation of an "Honest" `amount_deviation_z_score` for every transaction without needing to scan historical Parquet files or perform heavy SQL queries. This stateful approach is critical for simulating how behavioral anomalies are detected on a "live" stream.
+For real-time feature engineering, **Welford’s Algorithm** is implemented to maintain running means and standard deviations within Redis. This allows for the calculation of an "Operational" `amount_deviation_z_score` for every transaction without needing to scan historical Parquet files or perform heavy SQL queries. This stateful approach is critical for simulating how behavioral anomalies are detected on a "live" stream.
 
 The service maintains **Feature Alignment** with the training pipeline by dynamically reordering and casting incoming features to match the exact schema and types (categorical, float, int) exported from the `fraud_model_v1.json` booster. This prevents "training-serving skew," ensuring that the model's performance in production matches its performance during validation.
 

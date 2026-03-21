@@ -14,7 +14,7 @@ Unlike statistical generators that sample from distributions to create flat tabl
 ---
 
 ## 2. The Deterministic Lifecycle
-To ensure consistency across large datasets and all tables, RiskFabric follows a strict creation order:
+To ensure consistency across 10M rows and all tables, RiskFabric follows a strict creation order:
 
 1.  **Customer Birth**: The generator assigns each customer a name, age, and a **Home Coordinate** based on real residential OSM nodes.
 2.  **Financial Anchoring**: The system assigns one or more `Accounts` to every customer.
@@ -29,7 +29,7 @@ Traditional simulators often use multiple passes (e.g., Pass 1: Generate legitim
 RiskFabric uses a **One-Pass Architecture** in Rust:
 - **Parallelization**: The engine uses the `Rayon` library to process thousands of entities simultaneously across all CPU cores.
 - **Unified Logic**: Merchant selection, amount calculation, fraud injection, and campaign coordination occur in a **single loop**.
-- **Memory Efficiency**: By using "Batched Generation" (5,000 entities per cycle), the engine maintains a constant memory footprint regardless of total row count.
+- **Memory Efficiency**: By using "Batched Generation" (5,000 entities per cycle), the engine maintains a constant memory footprint whether generating 1M or 10M rows.
 
 ---
 
@@ -49,6 +49,15 @@ let mut card_rng = StdRng::seed_from_u64(global_seed + salt + card_id_hash);
 ```
 
 Running the simulation with the same `global_seed` ensures every transaction for a given card remains identical. This enables **Machine Learning reproducibility**, allowing for feature adjustments without the underlying ground-truth shifting.
+
+---
+
+## 6. Simulated Imperfection (Label Noise)
+To mirror real-world banking challenges, RiskFabric implements **Noisy Labeling**:
+- **Ground Truth (`fraud_target`)**: The latent indicator of whether the generator injected a specific fraud pattern.
+- **Noisy Label (`is_fraud`)**: The signal typically available to a bank's operational systems. It includes False Positives (legitimate transactions flagged as fraud) and False Negatives (undetected fraudulent transactions).
+
+This design forces models to learn robustness and generalizable patterns rather than memorizing perfect synthetic signatures.
 
 ---
 

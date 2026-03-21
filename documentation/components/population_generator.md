@@ -6,7 +6,7 @@ The `customer_gen.rs` module is responsible for the foundational entity creation
 ## Architectural Decisions
 This generator is designed around a **Constraint-Based Synthetic Model**. Instead of simple randomization, the engine enforces correlations across different entity domains. For example, it programmatically links Credit Score to Age (using an `age_weight` factor) and Monthly Spend to Location Type (Metro vs. Rural). This ensures that the resulting dataset possesses the structural patterns expected in real-world financial data.
 
-For geographic fidelity, a **Spatial Jittering** strategy is implemented. By adding a ~500m drift to the original OSM residential nodes, the "clumping" effect where many customers share identical coordinates is avoided. This jittering preserves the overall density of the reference data while providing unique home coordinates for every agent.
+For geographic fidelity, a **Spatial Jittering** strategy is implemented. By adding a ~500m drift (`0.005` degrees) to the original OSM residential nodes, the simulation avoids "clumping" effects where multiple customers would otherwise share identical coordinates. This jittering preserves the overall density of the reference data while providing unique home coordinates for every agent. Note that while transaction-level jitter is deterministic, the initial population jitter is currently stochastic.
 
 The generator uses **Probabilistic Location Typing** to classify customers into Metro, Urban, or Rural categories based on their proximity to city centers in the reference data. This classification serves as the primary driver for the financial heuristics used in the simulation.
 

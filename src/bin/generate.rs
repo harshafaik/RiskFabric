@@ -47,10 +47,10 @@ fn main() {
         "monthly_spend" => customers.iter().map(|c| c.financial.monthly_spend).collect::<Vec<_>>(),
         "customer_risk_score" => customers.iter().map(|c| c.financial.customer_risk_score as f64).collect::<Vec<_>>(),
         "is_fraud" => customers.iter().map(|c| c.financial.is_fraud).collect::<Vec<_>>(),
-        "primary_ua" => customers.iter().map(|c| c.primary_ua.clone()).collect::<Vec<_>>(),
-        "secondary_ua" => customers.iter().map(|c| c.secondary_ua.clone()).collect::<Vec<_>>(),
-        "isp" => customers.iter().map(|c| c.isp.clone()).collect::<Vec<_>>(),
-        "ip_subnet" => customers.iter().map(|c| c.ip_subnet.clone()).collect::<Vec<_>>(),
+        "primary_ua" => customers.iter().map(|c| c.device.primary_ua.clone()).collect::<Vec<_>>(),
+        "secondary_ua" => customers.iter().map(|c| c.device.secondary_ua.clone()).collect::<Vec<_>>(),
+        "isp" => customers.iter().map(|c| c.device.isp.clone()).collect::<Vec<_>>(),
+        "ip_subnet" => customers.iter().map(|c| c.device.ip_subnet.clone()).collect::<Vec<_>>(),
         "registration_date" => customers.iter().map(|c| c.registration_date.clone()).collect::<Vec<_>>()
     )
     .expect("Failed to create Customer DataFrame");
@@ -256,7 +256,9 @@ fn main() {
         ).expect("Failed to create Tx Chunk DataFrame");
 
         let file_tx = File::create(format!("data/output/tmp/tx_{}.parquet", chunk_count)).expect("Could not create tmp tx file");
-        ParquetWriter::new(file_tx).finish(&mut df_txs).expect("Write Failed");
+        ParquetWriter::new(file_tx)
+            .finish(&mut df_txs)
+            .expect("Write Failed");
 
         let mut df_meta = df!(
             "transaction_id" => meta.iter().map(|m| m.transaction_id.clone()).collect::<Vec<_>>(),
@@ -277,7 +279,9 @@ fn main() {
         ).expect("Failed to create Meta Chunk DataFrame");
 
         let file_meta = File::create(format!("data/output/tmp/meta_{}.parquet", chunk_count)).expect("Could not create tmp meta file");
-        ParquetWriter::new(file_meta).finish(&mut df_meta).expect("Write Failed");
+        ParquetWriter::new(file_meta)
+            .finish(&mut df_meta)
+            .expect("Write Failed");
 
         print!(".");
         use std::io::Write;
@@ -286,7 +290,7 @@ fn main() {
     println!("\n   -> Total Transactions generated: {}", total_tx_count);
 
     let start_write = Instant::now();
-    
+
     // Merge Transactions
     println!("   ... merging transaction chunks");
     let mut tx_lfs = Vec::new();
@@ -296,14 +300,17 @@ fn main() {
             .expect("Failed to scan tmp tx file");
         tx_lfs.push(lf);
     }
-    
+
     let mut df_final_txs = concat(tx_lfs, UnionArgs::default())
         .expect("Failed to concat tx lfs")
         .collect()
         .expect("Failed to merge tx files");
 
-    let file_txn = File::create("data/output/transactions.parquet").expect("Could not create final transaction file");
-    ParquetWriter::new(file_txn).finish(&mut df_final_txs).expect("Write Failed");
+    let file_txn = File::create("data/output/transactions.parquet")
+        .expect("Could not create final transaction file");
+    ParquetWriter::new(file_txn)
+        .finish(&mut df_final_txs)
+        .expect("Write Failed");
 
     // Merge Metadata
     println!("   ... merging metadata chunks");
@@ -314,14 +321,17 @@ fn main() {
             .expect("Failed to scan tmp meta file");
         meta_lfs.push(lf);
     }
-    
+
     let mut df_final_meta = concat(meta_lfs, UnionArgs::default())
         .expect("Failed to concat meta lfs")
         .collect()
         .expect("Failed to merge meta files");
 
-    let file_meta = File::create("data/output/fraud_metadata.parquet").expect("Could not create final metadata file");
-    ParquetWriter::new(file_meta).finish(&mut df_final_meta).expect("Write Failed");
+    let file_meta = File::create("data/output/fraud_metadata.parquet")
+        .expect("Could not create final metadata file");
+    ParquetWriter::new(file_meta)
+        .finish(&mut df_final_meta)
+        .expect("Write Failed");
 
     // Clean up tmp directory
     fs::remove_dir_all("data/output/tmp").expect("Could not remove tmp directory");

@@ -11,6 +11,7 @@ pub struct GeoLocation {
     pub city: Option<String>,
     pub state: String,
     pub location_type: String,
+    pub postcode: Option<String>,
     pub home_latitude: f64,
     pub home_longitude: f64,
     pub home_h3r5: String,
@@ -26,6 +27,14 @@ pub struct FinancialProfile {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeviceProfile {
+    pub primary_ua: String,
+    pub secondary_ua: Option<String>,
+    pub isp: String,
+    pub ip_subnet: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Customer {
     // Keys
     pub customer_id: String,
@@ -37,10 +46,7 @@ pub struct Customer {
     pub financial: FinancialProfile,
 
     // Device Profile
-    pub primary_ua: String,
-    pub secondary_ua: Option<String>,
-    pub isp: String,
-    pub ip_subnet: String,
+    pub device: DeviceProfile,
 
     // --- Metadata ---
     pub registration_date: String, // "YYYY-MM-DD"
@@ -56,12 +62,8 @@ impl Customer {
         age: u8,
         email: String,
         geo: GeoLocation,
-        pincode: Option<String>,
         fin: FinancialProfile,
-        primary_ua: String,
-        secondary_ua: Option<String>,
-        isp: String,
-        ip_subnet: String,
+        device: DeviceProfile,
     ) -> Self {
         let mut rng = rand::rng();
 
@@ -73,7 +75,11 @@ impl Customer {
             .clone()
             .unwrap_or_else(|| format!("{} Region", geo.state));
 
-        let pin_str = pincode.map(|p| format!(" - {}", p)).unwrap_or_default();
+        let pin_str = geo
+            .postcode
+            .as_ref()
+            .map(|p| format!(" - {}", p))
+            .unwrap_or_default();
 
         let mut geo = geo;
         geo.location = format!("No. {}, {}, {}{}", house_no, street, city_str, pin_str);
@@ -96,10 +102,7 @@ impl Customer {
             email,
             location: geo,
             financial: fin,
-            primary_ua,
-            secondary_ua,
-            isp,
-            ip_subnet,
+            device,
             registration_date: reg_date.to_string(),
             registration_year: reg_date.year(),
             registration_month: reg_date.month(),

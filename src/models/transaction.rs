@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::config::AppConfig;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MerchantInfo {
@@ -30,15 +30,15 @@ pub struct Transaction {
     pub timestamp: String,
     pub transaction_channel: String,
     pub card_present: bool,
-    
+
     pub user_agent: String,
     pub ip_address: String,
-    
+
     pub status: String,
     pub auth_status: String,
     pub failure_reason: Option<String>,
     pub is_fraud: bool,
-    
+
     pub chargeback: bool,
     pub chargeback_days: Option<i32>,
 

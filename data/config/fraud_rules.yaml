@@ -1,6 +1,6 @@
 # Global Generation Settings
 global:
-  seed: 42
+  seed: 5555
   base_currency: "INR"
   default_country: "IN"
 
@@ -84,8 +84,8 @@ device_patterns:
 
 # High-Fidelity Fraud Profiles
 fraud_injector:
-  target_share: 0.10 # Increased slightly for better signal coverage
-  default_fp_rate: 0.03
+  target_share: 0.01 # 1% intentional fraud
+  default_fp_rate: 0.005 # 0.5% baseline "noise" fraud
   default_fn_rate: 0.08
   profiles:
     upi_scam:
@@ -96,7 +96,7 @@ fraud_injector:
       channel_bias: { upi: 0.80 }
       geo_anomaly_prob: 0.95
       temporal_anomaly_prob: 0.70
-      merchant_bias: { GENERAL_RETAIL: 0.40, SERVICES: 0.40 }
+      merchant_bias: { GENERAL_RETAIL: 0.25, SERVICES: 0.25, FOOD_AND_DRINK: 0.20, RETAIL: 0.15, GROCERY: 0.15 }
     account_takeover:
       frequency: 0.25
       amount_pattern: "high_value_amounts"
@@ -105,7 +105,7 @@ fraud_injector:
       channel_bias: { mobile_banking: 0.40, upi: 0.30, online: 0.30 }
       geo_anomaly_prob: 0.60
       temporal_anomaly_prob: 0.90
-      merchant_bias: { LUXURY: 0.50, ELECTRONICS: 0.30 }
+      merchant_bias: { ELECTRONICS: 0.20, LUXURY: 0.20, TRAVEL: 0.20, ENTERTAINMENT: 0.20, GENERAL_RETAIL: 0.20 }
     velocity_abuse:
       frequency: 0.15
       amount_pattern: "velocity_test_amounts"
@@ -114,7 +114,7 @@ fraud_injector:
       channel_bias: { upi: 0.70, online: 0.30 }
       geo_anomaly_prob: 0.20
       temporal_anomaly_prob: 0.40
-      merchant_bias: { GAMBLING: 0.60, ENTERTAINMENT: 0.20 }
+      merchant_bias: { ENTERTAINMENT: 0.20, FOOD_AND_DRINK: 0.20, SERVICES: 0.20, TRAVEL: 0.20, GAMBLING: 0.05 }
     card_not_present:
       frequency: 0.15
       amount_pattern: "cnp_common_amounts"
@@ -123,7 +123,7 @@ fraud_injector:
       channel_bias: { online: 0.70, cards: 0.30 }
       geo_anomaly_prob: 0.40
       temporal_anomaly_prob: 0.50
-      merchant_bias: { ELECTRONICS: 0.50, LUXURY: 0.40 }
+      merchant_bias: { ELECTRONICS: 0.20, RETAIL: 0.20, LUXURY: 0.20, TRAVEL: 0.20, ENTERTAINMENT: 0.20 }
     friendly_fraud:
       frequency: 0.10
       amount_pattern: "round_amounts"
@@ -132,7 +132,7 @@ fraud_injector:
       channel_bias: { upi: 0.40, cards: 0.60 }
       geo_anomaly_prob: 0.00
       temporal_anomaly_prob: 0.10
-      merchant_bias: { TRAVEL: 0.40, FOOD_AND_DRINK: 0.30 }
+      merchant_bias: { TRAVEL: 0.20, FOOD_AND_DRINK: 0.20, SERVICES: 0.20, RETAIL: 0.20, GENERAL_RETAIL: 0.20 }
 
 # Campaign Configurations
 fraud_campaigns:

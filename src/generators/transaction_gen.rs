@@ -191,9 +191,9 @@ pub fn generate_transactions_chunk(
                 let final_ua = {
                     let ua_roll = card_rng.random_range(0.0..1.0);
                     if ua_roll < 0.92 {
-                        customer.primary_ua.clone()
+                        customer.device.primary_ua.clone()
                     } else if ua_roll < 0.98 {
-                        customer.secondary_ua.clone().unwrap_or_else(|| customer.primary_ua.clone())
+                        customer.device.secondary_ua.clone().unwrap_or_else(|| customer.device.primary_ua.clone())
                     } else {
                         // 2% different device
                         let pools = [&config.customer.device_profiles.android_ua_pool, &config.customer.device_profiles.ios_ua_pool, &config.customer.device_profiles.upi_app_ua_pool];
@@ -206,7 +206,7 @@ pub fn generate_transactions_chunk(
                     let ip_roll = card_rng.random_range(0.0..1.0);
                     if ip_roll < 0.85 {
                         // Home subnet, consistent host (simplified: fixed host per customer for now)
-                        customer.ip_subnet.replace("x.x/16", &format!("{}.{}", card_rng.random_range(1..255), card_rng.random_range(1..255)))
+                        customer.device.ip_subnet.replace("x.x/16", &format!("{}.{}", card_rng.random_range(1..255), card_rng.random_range(1..255)))
                     } else if ip_roll < 0.95 {
                         // Same ISP mobile range (different subnet)
                         let isp_subnets: Vec<&String> = config.customer.isp_assignment.subnets.values().collect();

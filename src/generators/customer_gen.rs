@@ -1,4 +1,4 @@
-use crate::models::customer::{Customer, GeoLocation, FinancialProfile};
+use crate::models::customer::{Customer, GeoLocation, FinancialProfile, DeviceProfile};
 use crate::config::AppConfig;
 use polars::prelude::*;
 use rand::Rng;
@@ -144,22 +144,24 @@ pub fn generate_customers(count: usize) -> Vec<Customer> {
                     city: cities[idx].clone(),
                     state: states[idx].clone(),
                     location_type,
+                    postcode: postcodes[idx].clone(),
                     home_latitude: final_lat,
                     home_longitude: final_lon,
                     home_h3r5: "".to_string(), // Built inside constructor
                     home_h3r7: h3_indices[idx].clone(),
                 },
-                postcodes[idx].clone(),
                 FinancialProfile {
                     credit_score,
                     monthly_spend,
                     customer_risk_score,
                     is_fraud,
                 },
-                primary_ua,
-                secondary_ua,
-                selected_isp,
-                ip_subnet,
+                DeviceProfile {
+                    primary_ua,
+                    secondary_ua,
+                    isp: selected_isp,
+                    ip_subnet,
+                },
             )
         })
         .collect()

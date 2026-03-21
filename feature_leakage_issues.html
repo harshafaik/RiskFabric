@@ -176,7 +176,8 @@
 
                 <div id="content" class="content">
                     <main>
-                        <p>While designing a fraud detection model for flagging potentially fraudulent transactions using XGBoost, some problems were discovered that made it unsuitable for being used in real-time scoring. The issue revolves around an individual feature primarily deciding the model's decision making.</p>
+                        <h1 id="feature-leakage-case-study"><a class="header" href="#feature-leakage-case-study">Feature Leakage Case Study</a></h1>
+<p>While designing a fraud detection model for flagging potentially fraudulent transactions using XGBoost, some problems were discovered that made it unsuitable for being used in real-time scoring. The issue revolves around an individual feature primarily deciding the model's decision making.</p>
 <p>Transactions were synthetically generated for 10,000 customers with a total figure being around 6M transactions. After feature engineering and interpolating them into a gold_master_table which is used by XGBoost for training. An AUC score of 0.9079 was achieved which felt more realistic than the previous test which ran on a smaller dataset (4.3M transactions and achieved an AUC score of 0.97). However, the crux of the issue became apparent when the top features by importance were checked:</p>
 <div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.9079</th></tr></thead><tbody>
 <tr><td>amount</td><td>0.9632</td></tr>
@@ -189,9 +190,10 @@
 <tr><td>merchant_category_switch_flag</td><td>0.0027</td></tr>
 <tr><td>t.merchant_category</td><td>0.0021</td></tr>
 <tr><td>card_present</td><td>0</td></tr>
-<tr><td>What this means here is that if this model looks at a transaction and sees that the amount seems fishy, there's a very high chance that it'll flag this transaction as fraud, without even considering the other characteristics of it. This isn't optimal since the model is supposed to take all the constraints into consideration such as temporal factors, geographic behavior and many more. As of now, the model is solely relying on amount as the primary classifier for deciding whether to flag a transaction or not. To combat this, we can use two strategies, one we could remove amount as a training flag to see how the model performs when forced to rely solely on behavioral flags. The other option is that we use feature binning, which lets us reduce the model's reliance on exact values. After testing option 2 and seeing negligible difference in terms of feature importance, option 1 was evaluated, which revealed the underlying issue within the system. After removing amount as a feature and executing the training script again, a ROC score of 0.5868 was achieved—a significant decrease from the previous result. However, the resulting feature importance distribution was more revealing:</td><td></td></tr>
 </tbody></table>
-</div><div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.5868</th></tr></thead><tbody>
+</div>
+<p>What this means is that if this model identifies a suspicious transaction amount, there is a high probability it will flag the transaction as fraud without considering other characteristics. This is sub-optimal, as the model should evaluate multiple constraints such as temporal factors and geographic behavior. To address this, two strategies can be evaluated: the removal of amount as a training feature to test performance on purely behavioral flags, or the use of feature binning to reduce reliance on exact values. After testing the second option and seeing negligible difference in feature importance, the first option was evaluated, which revealed the underlying issue within the system. After removing amount as a feature and executing the training script again, a ROC score of 0.5868 was achieved—a significant decrease from the previous result—but the resulting feature importance distribution was more revealing:</p>
+<div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.5868</th></tr></thead><tbody>
 <tr><td>escalating_amounts_flag</td><td>0.8865</td></tr>
 <tr><td>transaction_channel</td><td>0.0227</td></tr>
 <tr><td>time_since_last_transaction</td><td>0.0208</td></tr>
@@ -200,17 +202,17 @@
 <tr><td>rapid_fire_escalation_flag</td><td>0.0172</td></tr>
 <tr><td>t.merchant_category</td><td>0.0076</td></tr>
 <tr><td>merchant_category_switch_flag</td><td>0.0057</td></tr>
-<tr><td>This indicates that the behavioral features designed have very little predictive power to be captured by the model. Essentially, the model can't distinguish them from normal variation. Re-tuning the fraud generator is required to create distinctive behavioral signals and ensure those features are engineered effectively and processed through to the gold table. This ensures each fraud signature has its distinctive characteristics so that it can be captured by the model.</td><td></td></tr>
 </tbody></table>
 </div>
-<p>Analysis of the pipeline identified a significant gap: The behavioral features engineered in Rust were being dropped before reaching the XGBoost model:</p>
+<p>This indicates that the behavioral features designed have very little predictive power to be captured by the model. Essentially, the model can't distinguish them from normal variation. Re-tuning the fraud generator is required to create distinctive behavioral signals and ensure those features are engineered effectively and processed through to the gold table. This ensures each fraud signature has its distinctive characteristics so that it can be captured by the model.</p>
+<p>Analysis of the pipeline identified a significant gap: The behavioral features engineered in Rust were being dropped before reaching the XGBoost:</p>
 <ol>
 <li>
 <p>The "Silently Dropped" Features In src/etl/features/sequence.rs, high-value signals are calculated that would likely address the 0.58 AUC problem, but they are missing from the ClickHouse tables:</p>
 <ul>
 <li>amount_deviation_z_score: This measures if ₹5,000 is "normal" for that specific customer. Without this, the model only sees the absolute ₹5,000 and assumes it's fraud because the average transaction is ₹500.</li>
 <li>fraud_type &amp; campaign_id: These are currently calculated but not stored in the Silver layer.</li>
-<li>Granular Anomalies: geo_anomaly, device_anomaly, and ip_anomaly are being calculated in the transformation but are not being selected in the final Gold table join.</li>
+<li>Granular Anomalies: geo_anomaly, device_anomaly, and ip_anomaly are being calculated in the transformation but aren't being selected in the final Gold table join.</li>
 </ul>
 </li>
 <li>
@@ -223,7 +225,7 @@
 <li>Update the run_gold_master query to pull these features into the final training set.</li>
 <li>Outcome: The model will finally "see" the Z-Score and the behavioral context.</li>
 </ul>
-<p>Step 2: Re-tune the Generator (The "Signal" fix) * The <code>fraud_rules.yaml</code> configuration is modified to ensure fraudulent transaction amounts overlap with legitimate amounts. * Outcome: The model is forced to stop using "High Amount" as a shortcut and instead utilize the "Z-Score" and "Velocity" features fixed in Step 1.</p>
+<p>Step 2: Re-tune the Generator (The "Signal" fix) * The <code>fraud_rules.yaml</code> configuration is modified to ensure fraudulent transaction amounts overlap with legitimate amounts. * Outcome: The model will be forced to stop using "High Amount" as a shortcut and start using the "Z-Score" and "Velocity" features fixed in Step 1.</p>
 <div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.8246</th></tr></thead><tbody>
 <tr><td>amount_deviation_z_score</td><td>0.9069</td></tr>
 <tr><td>escalating_amounts_flag</td><td>0.0468</td></tr>
@@ -235,9 +237,9 @@
 <tr><td>merchant_category_switch_flag</td><td>0.0033</td></tr>
 <tr><td>t.merchant_category</td><td>0.0033</td></tr>
 <tr><td>card_present</td><td>0.0000</td></tr>
-<tr><td>The score improved to 0.8246 just by fixing the plumbing. No new features, no generator retuning, no architectural changes. The signals were there the whole time. However, <code>amount_deviation_z_score</code> at 90% is the new dominant feature. It is better than raw <code>amount</code> — customer-relative making it more meaningful but still a single feature carrying almost everything.</td><td></td></tr>
 </tbody></table>
 </div>
+<p>The score improved to 0.8246 just by fixing the plumbing. No new features, no generator retuning, no architectural changes. The signals were there the whole time. However, <code>amount_deviation_z_score</code> at 90% is the new dominant feature. It is better than raw <code>amount</code> — customer-relative making it more meaningful but still a single feature carrying almost everything.</p>
 <p>The generator needs to be retuned to overlap fraud and legitimate amount distributions. Force fraudsters to transact at amounts that are normal for that customer — the Z-score becomes less dominant, behavioral features have to carry more weight.</p>
 <p>When fraud amounts overlap with legitimate amounts, the model must rely on:</p>
 <ul>
@@ -261,12 +263,12 @@
 </div>
 <p>After retuning the generator to create more overlap and amplify behavioral signals, the score dropped slightly to 0.7960, fraud amounts now blend into legitimate ranges, so <code>amount_deviation_z_score</code> has less to work with. The model is being forced away from the amount shortcut. AUC dropped because the problem genuinely got harder.</p>
 <p>However, <code>amount_deviation_z_score</code> is still at 93% despite the overlap. This means the Z-score is still capturing enough separation between fraud and legitimate amounts to dominate. The overlap wasn't aggressive enough. The problem appears to be fraud amounts as they are mostly specific values — ₹5000, ₹8500, ₹12000. Legitimate transactions cluster around ₹660. Due to this, the Z-score still sees as "this customer normally spends ₹660, this transaction is ₹8500 — suspicious." The relative deviation is still huge.</p>
-<p>The Z-score will only become less dominant when fraudsters transact at amounts that are normal <em>for that specific customer</em>. That requires the generator to look up the customer's <code>monthly_spend</code> and generate fraud amounts within their normal range:</p>
+<p>The Z-score only becomes less dominant when fraudsters transact at amounts that are normal <em>for that specific customer</em>. This requires the generator to look up the customer's <code>monthly_spend</code> and generate fraud amounts within their normal range:</p>
 <pre><code>account_takeover:
 amount_strategy: "customer_normal_range"  # instead of fixed high_value_amounts
 amount_multiplier: 0.8_to_1.2  # within customer's normal band
 </code></pre>
-<p>This makes fraud amounts become customer-relative rather than absolute. In this iteration, the Z-score was removed and the model was trained without <code>amount_deviation_z_score</code> and <code>escalating_amounts_flag</code> to evaluate the strength of the pure behavioral signals.</p>
+<p>This makes fraud amounts become customer-relative rather than absolute. In this iteration, the Z-score was removed and the model was trained without <code>amount_deviation_z_score</code> and <code>escalating_amounts_flag</code> to evaluate the strength of the behavioral signals.</p>
 <div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.6704</th></tr></thead><tbody>
 <tr><td>amount_deviation_z_score</td><td>0.9101</td></tr>
 <tr><td>transaction_sequence_number</td><td>0.0188</td></tr>
@@ -280,9 +282,9 @@ amount_multiplier: 0.8_to_1.2  # within customer's normal band
 <tr><td>card_present</td><td>0.0000</td></tr>
 </tbody></table>
 </div>
-<p>Removing <code>escalating_amounts_flag</code> dropped AUC to 0.6704 but <code>amount_deviation_z_score</code> is still at 91%.</p>
-<p>Every amount-derived feature you removed makes Z-score more dominant. The model is completely anchored to amount-relative signals. The behavioral features — <code>cf_night_tx_ratio</code>, <code>rapid_fire_transaction_flag</code>, <code>merchant_category_switch_flag</code> — are collectively contributing maybe 5-6% of decisions.</p>
-<p>Removing the Z-score and running it once more would be the definitive test. Whatever AUC comes back is the pure behavioral signal floor — no amount, no Z-score, no escalating amounts. Just time, velocity, channel, merchant, sequence.</p>
+<p>Removing <code>escalating_amounts_flag</code> dropped AUC to 0.6704 but <code>amount_deviation_z_score</code> remains at 91%.</p>
+<p>Every amount-derived feature removed makes the Z-score more dominant. The model is completely anchored to amount-relative signals. The behavioral features — <code>cf_night_tx_ratio</code>, <code>rapid_fire_transaction_flag</code>, <code>merchant_category_switch_flag</code> — collectively contribute approximately 5-6% of decisions.</p>
+<p>Removing the Z-score and executing the training once more provides the definitive test. The resulting AUC represents the pure behavioral signal floor — no amount, no Z-score, no escalating amounts. Just time, velocity, channel, merchant, sequence.</p>
 <div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.5572</th></tr></thead><tbody>
 <tr><td>transaction_channel</td><td>0.1691</td></tr>
 <tr><td>escalating_amounts_flag</td><td>0.1677</td></tr>
@@ -294,18 +296,18 @@ amount_multiplier: 0.8_to_1.2  # within customer's normal band
 <tr><td>merchant_category_switch_flag</td><td>0.0325</td></tr>
 </tbody></table>
 </div>
-<p>The score dropped to 0.5572, and for the first time, feature importance is evenly distributed. No single feature above 17%. Every behavioral signal contributing meaningfully. This is what a healthy feature set looks like structurally.</p>
-<p>So the problem isn't with the features, it's that none of them have enough signal strength to detect fraud reliably. The model is genuinely confused because fraudsters in the simulation behave too similarly to legitimate customers. For instance:</p>
+<p>The score dropped to 0.5572, and for the first time, feature importance is evenly distributed. No single feature exceeds 17%, with every behavioral signal contributing. This structure represents a balanced feature set.</p>
+<p>The challenge is that none of these features possess sufficient signal strength to detect fraud reliably. The model is unable to distinguish fraud because fraudsters in the simulation behave too similarly to legitimate customers. For instance:</p>
 <ul>
-<li><code>transaction_channel</code> at 17% — channel bias exists but weak. Fraudsters use online/UPI slightly more but not enough to be distinctive.</li>
-<li><code>cf_night_tx_ratio</code> at 15% — night patterns exist but fraud isn't concentrated enough at night to stand out.</li>
-<li><code>rapid_fire_transaction_flag</code> at 8.5% — velocity fraud is happening but not firing consistently enough.</li>
-<li><code>merchant_category_switch_flag</code> at 3.25% — almost no signal. Fraudsters are shopping at similar merchants as legitimate customers.</li>
+<li><code>transaction_channel</code> at 17% — channel bias exists but is weak.</li>
+<li><code>cf_night_tx_ratio</code> at 15% — night patterns exist but fraud is not concentrated enough at night to be distinctive.</li>
+<li><code>rapid_fire_transaction_flag</code> at 8.5% — velocity fraud occurs but not with sufficient frequency.</li>
+<li><code>merchant_category_switch_flag</code> at 3.25% — almost no signal. Fraudsters shop at similar merchants as legitimate customers.</li>
 </ul>
-<p>To fix this at the root level, the code responsible for injecting the fraudulent signatures and behaviors needs to be looked into, so that their signal strength could be increased for training genuinely honest, behaviorally-driven fraud model.</p>
-<p>In this project, fraud.rs is primarily responsible for injecting fraud labels as well as altering the fraudulent transactions' behavior according to the fraud signature. There are two configs present for driving different behavior for the transactions, <code>geo_anomaly_prob</code> and <code>device_anomaly_prob</code>. Inspecting <code>geo_anomaly_prob</code> showed some significant limitations:</p>
-<p>As of now, if a transaction had the bool flag <code>geo_anomaly</code> as true, the transaction's latitude and longitude with completely random coordinates from the global range. While this creates an anomaly, it doesn't provide a behavioral signal that the model can learn unless the model has access to the user's "Home" coordinates or a feature like "Distance from Home." Due to this, the model only sees final_lat and final_lon. Since legitimate transactions are also spread across India (just clustered around their specific home), a random coordinate in India looks "normal" to a model that doesn't know where the customer lives.</p>
-<p>To fix this, a new feature, Spatial Velocity is introduced in the ETL layer. This would measure: distance(txn_N, txn_N-1) / time(txn_N, txn_N-1). This will help the model catch instances of high-velocity spatial anomalies, such as someone transacting in Delhi and then 10 minutes later in Bangalore for example.</p>
+<p>To address this at the root level, the logic responsible for injecting fraudulent signatures and behaviors requires refinement to increase signal strength for training a behaviorally-driven fraud model.</p>
+<p>In the RiskFabric project, <code>fraud.rs</code> is primarily responsible for injecting fraud labels and altering transaction behavior according to the fraud signature. Two configurations drive transaction behavior: <code>geo_anomaly_prob</code> and <code>device_anomaly_prob</code>. Inspection of <code>geo_anomaly_prob</code> identified significant limitations:</p>
+<p>If a transaction has the <code>geo_anomaly</code> flag set to true, its coordinates are randomized from the global range. While this creates an anomaly, it does not provide a behavioral signal that the model can learn without access to the customer's "Home" coordinates or a feature like "Distance from Home." Consequently, the model only evaluates <code>final_lat</code> and <code>final_lon</code>. Since legitimate transactions are also distributed across India (clustered around specific homes), a random coordinate appears normal to a model lacking home location context.</p>
+<p>To resolve this, a new feature, <strong>Spatial Velocity</strong>, was introduced in the ETL layer. This measures: <code>distance(txn_N, txn_N-1) / time(txn_N, txn_N-1)</code>, enabling the model to identify high-velocity spatial anomalies, such as transactions occurring in distant cities within short time intervals.</p>
 <div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.6868</th></tr></thead><tbody>
 <tr><td>spatial_velocity</td><td>0.6126</td></tr>
 <tr><td>escalating_amounts_flag</td><td>0.1847</td></tr>
@@ -319,25 +321,19 @@ amount_multiplier: 0.8_to_1.2  # within customer's normal band
 <tr><td>card_present</td><td>0.0000</td></tr>
 </tbody></table>
 </div>
-<p>The AOC jumps to 0.6868 from a single feature addition. <code>spatial_velocity</code> at 61% is now the dominant behavioral feature — and unlike amount, this is a genuinely behavioral signal. A transaction physically impossible to make given travel time is real fraud evidence, not a shortcut. This also had a cascading effect on other features:</p>
+<p>The AUC increased to 0.6868 from a single feature addition. <code>spatial_velocity</code> at 61% became the dominant behavioral feature—a genuine behavioral signal. This also had a cascading effect on other features:</p>
 <ul>
-<li><code>merchant_category_switch_flag</code> jumped from 3.25% → 6.43%</li>
-<li><code>time_since_last_transaction</code> from 16% → 6.52%</li>
+<li><code>merchant_category_switch_flag</code> increased from 3.25% → 6.43%</li>
+<li><code>time_since_last_transaction</code> changed from 16% → 6.52%</li>
 </ul>
-<p>There are problems that still needed to be addressed:</p>
+<p>Several issues still required attention:</p>
 <ul>
-<li><code>spatial_velocity</code> at 61% is still too dominant. It's capturing almost all the geo_anomaly fraud signal in one feature. The current <code>geo_anomaly</code> implementation currently teleports fraudsters to random India coordinates — every ATO transaction fires the impossible travel flag almost guaranteed.</li>
-<li><code>cf_night_tx_ratio</code> dropped to 1.28% — nearly invisible. Night behavior is not distinctive enough in your generator.</li>
-<li><code>card_present</code> still at 0% — CNP fraud isn't being captured at all.</li>
+<li><code>spatial_velocity</code> at 61% was too dominant, capturing almost the entire <code>geo_anomaly</code> fraud signal. The implementation at the time teleported fraudsters to random coordinates, almost guaranteed to trigger the impossible travel flag.</li>
+<li><code>cf_night_tx_ratio</code> decreased to 1.28%, as night behavior was not sufficiently distinctive in the generator.</li>
+<li><code>card_present</code> remained at 0%, indicating CNP fraud was not being captured.</li>
 </ul>
-<p>Seeing <code>cf_night_tx_ratio</code> at 1.28% led to checking the hourly distribution of transactions and more specifically under Account Takeover (ATO) fraud, which showed that the <code>hourly_weights</code> currently peak in the very early morning (00:00 - 04:00) and again late in the evening (18:00 - 23:00). This realistically simulates when attackers are most active or when victims are less likely to notice alerts.</p>
-<p>However, seeing the low percentage suggests that the "Night Ratio" isn't a strong enough signal, likely because either:</p>
-<ol>
-<li>Legitimate users also spend at night (e.g., late-night food or online orders).</li>
-<li>The ATO peak isn't "sharp" enough compared to the legitimate baseline.</li>
-</ol>
-<p>This was addressed by updating the <code>account_takeover</code> hourly weights to concentrate 70%+ of transactions between 00:00 and 04:00, creating a sharp contrast with the peak legitimate spending period (10:00 - 22:00). A new feature named <code>hour_deviation_from_norm</code> was added in the ETL layer to capture this anomaly at the transaction level.</p>
-<p>One more feature was implemented named <code>hour_deviation_from_norm</code>. This calculated each customer's average transaction hour and then determining the absolute deviation for each specific transaction, providing a strong per-transaction signal for temporal anomalies.</p>
+<p>Analysis of the low <code>cf_night_tx_ratio</code> (1.28%) led to an audit of the hourly distribution, particularly under Account Takeover (ATO) fraud. While <code>hourly_weights</code> peaked in the early morning and late evening to simulate attacker activity, the "Night Ratio" was not a strong signal due to legitimate late-night spending and a lack of sharpness in the ATO peak.</p>
+<p>This was addressed by updating <code>account_takeover</code> hourly weights to concentrate over 70% of transactions between 00:00 and 04:00. Additionally, the <code>hour_deviation_from_norm</code> feature was introduced in the ETL layer to capture temporal anomalies at the transaction level by determining the absolute deviation from a customer's average transaction hour.</p>
 <div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.7005</th></tr></thead><tbody>
 <tr><td>spatial_velocity</td><td>0.6439</td></tr>
 <tr><td>escalating_amounts_flag</td><td>0.1450</td></tr>
@@ -351,9 +347,9 @@ amount_multiplier: 0.8_to_1.2  # within customer's normal band
 <tr><td>transaction_sequence_number</td><td>0.0122</td></tr>
 </tbody></table>
 </div>
-<p>AOC up to 0.7005. A small but consistent improvement. <code>hour_deviation_from_norm</code> appeared at 1.3% — it's registered as a signal. <code>cf_night_tx_ratio</code> is still at 1.24%, basically unchanged and <code>escalating_amounts_flag</code> dropped from 18% → 14.5% which means behavioral features are slowly taking share.</p>
-<p>However, night-based features are contributing ~2.5% combined which is still weak. The sharpened hourly weights helped marginally but the <code>cf_night_tx_ratio</code> dilution identified is real — 10 ATO transactions out of 400 don't move a customer-level ratio enough.</p>
-<p>A bigger impact fix would be <code>card_present</code> which is currently at 0%. The 'wiring' for this feature isn't working correctly and fixing it would be comparatively easier and high impacting. This is because CNP transactions are always card_not_present by definition.</p>
+<p>AUC increased to 0.7005—a small but consistent improvement. <code>hour_deviation_from_norm</code> appeared at 1.3%, registering as a signal. <code>cf_night_tx_ratio</code> remained at 1.24%, and <code>escalating_amounts_flag</code> decreased from 18% → 14.5%, indicating behavioral features were gradually gaining influence.</p>
+<p>Despite this, night-based features contributed only ~2.5% combined. The sharpened hourly weights provided marginal benefit, but <code>cf_night_tx_ratio</code> dilution persisted—a small number of ATO transactions does not significantly shift a customer-level ratio.</p>
+<p>A higher impact correction involved <code>card_present</code>, which was at 0%. Correcting the 'wiring' for this feature was identified as a high-impact fix, as CNP transactions are by definition not <code>card_present</code>.</p>
 <div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.7500</th></tr></thead><tbody>
 <tr><td>amount_deviation_z_score</td><td>0.4973</td></tr>
 <tr><td>spatial_velocity</td><td>0.3402</td></tr>
@@ -367,7 +363,7 @@ amount_multiplier: 0.8_to_1.2  # within customer's normal band
 <tr><td>hour_deviation_from_norm</td><td>0.0073</td></tr>
 </tbody></table>
 </div>
-<p>After restoring z-score as a feature, it is seen that despite it still having a strong dominance across the model, it is comparatively lower than previous instances and backed up by spatial_velocity as well.</p>
+<p>After restoring the Z-score as a feature, its dominance remained strong but was lower than in previous instances, supplemented by <code>spatial_velocity</code>.</p>
 <div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.7491</th></tr></thead><tbody>
 <tr><td>amount_deviation_z_score</td><td>0.5038</td></tr>
 <tr><td>spatial_velocity</td><td>0.3026</td></tr>
@@ -381,9 +377,8 @@ amount_multiplier: 0.8_to_1.2  # within customer's normal band
 <tr><td>t.merchant_category</td><td>0.0083</td></tr>
 </tbody></table>
 </div>
-<p>After wiring 'CNP' back, it jumped to 5%. However, rapid_fire_transaction_flag disappeared from the top 10. Velocity abuse fraud should be firing this heavily. If it's gone it means either velocity fraud isn't clustered tightly enough or the flag threshold is too high.</p>
-<p>Looking at the code, this particular flag currently uses a threshold of 300 seconds (5 minutes). Also, the problem extended with max_interval_seconds for velocity_abuse set to a random minute (0-59) within a selected hour. For fraud signatures that depend on seconds-level timing — velocity abuse especially — this is too coarse.</p>
-<p>A more realistic temporal pattern, especially for fraud bursts was implemented ensuring that transactions occur in much tighter sequences (e.g., seconds apart) when a burst or velocity abuse is triggered. max_burst_interval_seconds is used control this behavior. Moreover, if a transaction is part of a "burst" (like sequential_takeover or coordinated_attack), its timestamp will be just seconds away from the previous one, rather than a random minute within the hour. This will create a much sharper behavioral signal for the rapid_fire_transaction_flag to capture. A new feature named hour_deviation_from_norm was added as well.</p>
+<p>After correcting the 'CNP' wiring, it increased to 5%. However, <code>rapid_fire_transaction_flag</code> disappeared from the top 10 features. Analysis of the code revealed that this flag utilized a 300-second (5-minute) threshold, and <code>max_interval_seconds</code> for velocity abuse was set to a random minute within an hour, which was too coarse for signatures depending on second-level timing.</p>
+<p>A more realistic temporal pattern for fraud bursts was implemented, ensuring transactions occur in tighter sequences (e.g., seconds apart) via <code>max_burst_interval_seconds</code>. This creates a sharper behavioral signal for the <code>rapid_fire_transaction_flag</code> to capture.</p>
 <div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.8085</th></tr></thead><tbody>
 <tr><td>time_since_last_transaction</td><td>0.3280</td></tr>
 <tr><td>rapid_fire_transaction_flag</td><td>0.2707</td></tr>
@@ -397,8 +392,8 @@ amount_multiplier: 0.8_to_1.2  # within customer's normal band
 <tr><td>transaction_channel</td><td>0.0042</td></tr>
 </tbody></table>
 </div>
-<p>Amount-based features are now third place at 21%. Temporal behavioral signals — time_since_last_transaction and rapid_fire_transaction_flag — together carry 60% of the model's decisions. This model can detect fraud based on how transactions <em>behave</em> — not just how much they cost. That's deployable logic. A real-time scorer built on this would catch velocity abuse, ATO, and CNP fraud without flagging every high-value legitimate transaction.</p>
-<p>merchant_category_switch_flag at 2.1% and hour_deviation_from_norm at 0.45% both have room to grow with the cross-card coordination work.</p>
+<p>Amount-based features are now in third place at 21%. Temporal behavioral signals—<code>time_since_last_transaction</code> and <code>rapid_fire_transaction_flag</code>—together drive 60% of model decisions. This allows for fraud detection based on behavioral patterns rather than absolute cost, providing logic suitable for real-time scoring of velocity abuse, ATO, and CNP fraud without flagging high-value legitimate transactions.</p>
+<p><code>merchant_category_switch_flag</code> at 2.1% and <code>hour_deviation_from_norm</code> at 0.45% both have potential for growth through future cross-card coordination work.</p>
 
                     </main>
 

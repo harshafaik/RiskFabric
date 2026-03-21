@@ -1,7 +1,6 @@
 # Summary
 
 - [Welcome](index.md)
-- [Documentation Style Guide](style_guide.md)
 
 - [Tutorials](tutorial_first_run.md)
 

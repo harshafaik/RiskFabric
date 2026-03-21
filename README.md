@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="logo.svg" alt="RiskFabric Logo" width="200">
-</p>
-
 # RiskFabric
 
 [![Rust](https://img.shields.io/badge/language-Rust-orange.svg)](https://www.rust-lang.org/)

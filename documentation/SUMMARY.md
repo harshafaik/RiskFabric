@@ -51,6 +51,7 @@
 
 - [Results & Monitoring](results_index.md)
     - [Machine Learning Metrics](ml_metrics.md)
+    - [Feature Leakage Case Study](feature_leakage_issues.md)
     - [Generation Performance](performance_benchmarks.md)
     - [ETL Performance Optimizations](optimizations.md)
 

@@ -5,6 +5,30 @@ This document explains the underlying philosophy, architecture, and logic of the
 ## 1. Agent-Based Simulation (ABM) Philosophy
 RiskFabric functions as an **Agent-Based Simulator** rather than a simple random data generator. 
 
+```mermaid
+graph TD
+    subgraph "World Building"
+        OSM[OpenStreetMap Data] --> Prepare[prepare_refs.rs]
+        Prepare --> PG[(Postgres / PostGIS)]
+        PG --> Parquet[Reference Parquet Files]
+    end
+
+    subgraph "Simulation Engine"
+        Parquet --> Gen[generate.rs / stream.rs]
+        Config[YAML Configs] --> Gen
+        Gen --> Trans[Transactions]
+    end
+
+    subgraph "Detection Pipeline"
+        Trans --> CH[(ClickHouse)]
+        CH --> ETL[etl.rs]
+        ETL --> Train[train_xgboost.py]
+        Train --> Scorer[scorer.py]
+        Gen --> Kafka[Redpanda]
+        Kafka --> Scorer
+    end
+```
+
 - **The Agent**: The primary agent, the `Customer`, drives the logic.
 - **The World**: **OpenStreetMap (OSM)** reference nodes (Residential and Merchant points) across India define the physical world.
 - **The Rules**: Agents follow deterministic rules defined in `fraud_rules.yaml` and `transaction_config.yaml`.
@@ -15,6 +39,14 @@ Unlike statistical generators that sample from distributions to create flat tabl
 
 ## 2. The Deterministic Lifecycle
 To ensure consistency across 10M rows and all tables, RiskFabric follows a strict creation order:
+
+```mermaid
+graph LR
+    Cust[Customer] -->|1:N| Acc[Account]
+    Acc -->|1:N| Card[Card]
+    Card -->|1:N| Tx[Transaction]
+    Tx -->|linked| Merch[Merchant]
+```
 
 1.  **Customer Birth**: The generator assigns each customer a name, age, and a **Home Coordinate** based on real residential OSM nodes.
 2.  **Financial Anchoring**: The system assigns one or more `Accounts` to every customer.

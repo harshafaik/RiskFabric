@@ -4,5 +4,10 @@ language = "en"
 src = "documentation"
 title = "RiskFabric Documentation"
 
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
+optional = true
+
 [output.html]
 git-repository-url = "https://github.com/harshafaik/riskfabric"
+additional-js = ["documentation/mermaid-init.js"]

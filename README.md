@@ -1,8 +1,14 @@
 # RiskFabric
 
 [![Rust](https://img.shields.io/badge/language-Rust-orange.svg)](https://www.rust-lang.org/)
+[![Python](https://img.shields.io/badge/language-Python-blue.svg)](https://www.python.org/)
 [![Polars](https://img.shields.io/badge/engine-Polars%200.51.0-blue.svg)](https://pola.rs/)
+[![ClickHouse](https://img.shields.io/badge/warehouse-ClickHouse-yellow.svg)](https://clickhouse.com/)
+[![Redpanda](https://img.shields.io/badge/streaming-Redpanda-red.svg)](https://redpanda.com/)
+[![Redis](https://img.shields.io/badge/cache-Redis-red.svg)](https://redis.io/)
+[![Docker](https://img.shields.io/badge/orchestration-Docker-blue.svg)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Deploy mdBook](https://github.com/harshafaik/riskfabric/actions/workflows/deploy_book.yml/badge.svg)](https://github.com/harshafaik/riskfabric/actions/workflows/deploy_book.yml)
 
 RiskFabric is a fraud intelligence platform that generates synthetic Indian payment transaction data, processes it through a Medallion ETL pipeline, and produces trained fraud detection models.
 

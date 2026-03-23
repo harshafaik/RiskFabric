@@ -179,8 +179,14 @@
                     <main>
                         <h1 id="riskfabric"><a class="header" href="#riskfabric">RiskFabric</a></h1>
 <p><a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/language-Rust-orange.svg" alt="Rust" /></a>
+<a href="https://www.python.org/"><img src="https://img.shields.io/badge/language-Python-blue.svg" alt="Python" /></a>
 <a href="https://pola.rs/"><img src="https://img.shields.io/badge/engine-Polars%200.51.0-blue.svg" alt="Polars" /></a>
-<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a></p>
+<a href="https://clickhouse.com/"><img src="https://img.shields.io/badge/warehouse-ClickHouse-yellow.svg" alt="ClickHouse" /></a>
+<a href="https://redpanda.com/"><img src="https://img.shields.io/badge/streaming-Redpanda-red.svg" alt="Redpanda" /></a>
+<a href="https://redis.io/"><img src="https://img.shields.io/badge/cache-Redis-red.svg" alt="Redis" /></a>
+<a href="https://www.docker.com/"><img src="https://img.shields.io/badge/orchestration-Docker-blue.svg" alt="Docker" /></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+<a href="https://github.com/harshafaik/riskfabric/actions/workflows/deploy_book.yml"><img src="https://github.com/harshafaik/riskfabric/actions/workflows/deploy_book.yml/badge.svg" alt="Deploy mdBook" /></a></p>
 <p>RiskFabric is a fraud intelligence platform that generates synthetic Indian payment transaction data, processes it through a Medallion ETL pipeline, and produces trained fraud detection models.</p>
 <h2 id="-key-features"><a class="header" href="#-key-features">✨ Key Features</a></h2>
 <ul>
@@ -292,8 +298,6 @@ cargo run --bin stream
 <div style="break-before: page; page-break-before: always;"></div><h1 id="project-roadmap--backlog"><a class="header" href="#project-roadmap--backlog">Project Roadmap &amp; Backlog</a></h1>
 <h2 id="summary-1"><a class="header" href="#summary-1">Summary</a></h2>
 <p>The <code>to-do.md</code> document serves as the tactical roadmap for RiskFabric. It details the completed milestones and upcoming engineering tasks required to evolve the simulation from a prototype into a production-grade synthetic data platform.</p>
-<h2 id="design-intent-1"><a class="header" href="#design-intent-1">Design Intent</a></h2>
-<p>The roadmap is designed to be <strong>Value-Driven</strong>, with tasks prioritized by their impact on the fidelity and utility of the simulation. Maintaining a public backlog provides a signal regarding critical system gaps, such as geographic realism, adversarial diversity, or operational performance.</p>
 <hr />
 <h2 id="-customer-generation"><a class="header" href="#-customer-generation">👥 Customer Generation</a></h2>
 <ul>
@@ -311,6 +315,10 @@ cargo run --bin stream
 <strong>Feature Correlation</strong>: Enforcing structural relationships between Age, Credit Score, and Monthly Spend to ensure dataset realism.</li>
 <li><input disabled="" type="checkbox"/>
 <strong>Simulation Scalability</strong>: Transitioning to a streaming Parquet reader for residential reference data to support multi-million agent populations without memory exhaustion.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Demographic Realism Tuning</strong>: Implement Name-Gender-State correlation for first names and surnames.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Email Distribution Tuning</strong>: Align email domain distributions with actual Indian market shares.</li>
 </ul>
 <h2 id="-transaction--merchant-logic"><a class="header" href="#-transaction--merchant-logic">💸 Transaction &amp; Merchant Logic</a></h2>
 <ul>
@@ -330,6 +338,12 @@ cargo run --bin stream
 <strong>Amount Distribution Tuning</strong>: Remediation of the "Amount Shortcut" by ensuring fraudulent amounts significantly overlap with legitimate spending distributions.</li>
 <li><input disabled="" type="checkbox"/>
 <strong>Geographic Precision</strong>: Implementing the Haversine formula for all spatial velocity and distance calculations to replace Euclidean approximations.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Jitter Normalization</strong>: Ensure consistent ~100m spatial jittering across all geographic profiles.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Rayon Chunk Size Optimization</strong>: Explicitly tune <code>chunk_size</code> for parallel generation to optimize throughput.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>H3 Resolution Consistency</strong>: Enforce consistent H3 resolution usage across all spatial calculation layers.</li>
 </ul>
 <h2 id="-etl--infrastructure"><a class="header" href="#-etl--infrastructure">🥈 ETL &amp; Infrastructure</a></h2>
 <ul>
@@ -347,6 +361,14 @@ cargo run --bin stream
 <strong>Streaming ETL Implementation</strong>: Refactoring of runners to use <code>.scan_parquet()</code> and <code>.sink_parquet()</code> to support 10M+ row benchmarks without memory exhaustion.</li>
 <li><input disabled="" type="checkbox"/>
 <strong>Infrastructure Hardening</strong>: Transitioning from hardcoded credentials to an <code>.env</code> and Docker Secrets management system.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Docker Healthcheck Synchronization</strong>: Refine <code>depends_on</code> to use <code>service_healthy</code> conditions in <code>docker-compose.yml</code>.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Polars Type Consistency</strong>: Systematically cast boolean flags and small counters to <code>UInt32</code> to prevent ClickHouse ingestion panics.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>ETL Signal Reliability</strong>: Re-enable commented-out Silver ETL stages (Campaign, Device IP, Network).</li>
+<li><input disabled="" type="checkbox"/>
+<strong>ClickHouse Ingestion Stability</strong>: Transition to a native driver/HTTP client to replace <code>podman exec</code> dependencies.</li>
 </ul>
 <h2 id="-machine-learning--model-training"><a class="header" href="#-machine-learning--model-training">🤖 Machine Learning &amp; Model Training</a></h2>
 <ul>
@@ -362,6 +384,14 @@ cargo run --bin stream
 <strong>GNN-based Campaign Detection</strong>: Transitioning to Graph Neural Networks (GNNs) for coordinated multi-entity attacks, as traditional classifier-based models (e.g., XGBoost) are inherently unsuited for capturing non-local relational patterns.</li>
 <li><input disabled="" type="checkbox"/>
 <strong>OOT Validation &amp; Drift</strong>: Transitioning to Out-of-Time validation and implementing a retraining scheduler to simulate model performance under adversarial concept drift.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Seed Redis Robustness</strong>: Add existence checks for <code>fact_transactions_gold</code>.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Label Noise Calibration</strong>: Fine-tune FP/FN rates in <code>fraud.rs</code> for better model convergence.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Class Weight Balancing</strong>: Implement <code>scale_pos_weight</code> or sampling strategy in XGBoost pipeline.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Strict ID Sanitization</strong>: Explicitly drop all internal IDs (card_id, customer_id) during training feature engineering.</li>
 </ul>
 <h2 id="-configuration--tuning"><a class="header" href="#-configuration--tuning">⚙️ Configuration &amp; Tuning</a></h2>
 <ul>
@@ -372,13 +402,31 @@ cargo run --bin stream
 <li><input disabled="" type="checkbox" checked=""/>
 <strong>Product Catalog Centralization</strong>: Consolidation of card types, networks, and limits in <code>product_catalog.yaml</code>.</li>
 <li><input disabled="" type="checkbox"/>
-<strong>Configuration Robustness</strong>: Refactoring the configuration loader to provide graceful error handling and support for relative path resolution across different execution environments.</li>
+<strong>Configuration Robustness</strong>: Refactoring the configuration loader to provide graceful error handling and support for descriptive error messages.</li>
 <li><input disabled="" type="checkbox"/>
 <strong>Campaign Attack Implementation</strong>: Finalization of coordinated adversarial logic (currently disabled in configuration pending GNN-ready data structures).</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Dependency &amp; Code Hygiene</strong>: Perform security audit of Rust crates and remove deprecated "legacy" code blocks.</li>
 </ul>
-<hr />
-<h2 id="known-issues-1"><a class="header" href="#known-issues-1">Known Issues</a></h2>
-<p>The roadmap is currently maintained as a flat list, which does not effectively communicate dependencies between complex tasks. Transitioning to a milestone-based roadmap is necessary to clarify the sequence of required changes. Furthermore, the reliance on XGBoost for all fraud types represents a known limitation; campaign detection requires a fundamental shift to graph-based modeling. Progress tracking remains a manual process; integration with automated source control status is needed to ensure the backlog reflects the true state of the codebase.</p>
+<h2 id="-observability--dashboards"><a class="header" href="#-observability--dashboards">📊 Observability &amp; Dashboards</a></h2>
+<ul>
+<li><input disabled="" type="checkbox"/>
+<strong>Rust Metric Exporter</strong>: Integrate <code>prometheus</code> crate into the simulation engine to track TPS/performance.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Geographic Visualization</strong>: Implement a H3 Geomap panel for fraud hotspot visualization.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Materialized View Optimization</strong>: Pre-calculate dashboard metrics in ClickHouse to improve query performance.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Infrastructure Alerting</strong>: Define Prometheus alert rules for critical service failures.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Grafana Secret Externalization</strong>: Use GF_ environment variables instead of hardcoded creds in datasources.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>ClickHouse Metrics Activation</strong>: Enable the port 9363 Prometheus endpoint in ClickHouse's <code>config.xml</code>.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>DataSource UID Fixing</strong>: Explicitly set UIDs (ClickHouse, Prometheus) in <code>datasources.yaml</code> to prevent panel breakage.</li>
+<li><input disabled="" type="checkbox"/>
+<strong>Geomap Plugin Cleanup</strong>: Remove the deprecated 'worldmap-panel' and ensure the native 'geomap' panel is used for hotspot visualization.</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="how-to-add-a-new-fraud-signature"><a class="header" href="#how-to-add-a-new-fraud-signature">How-to: Add a New Fraud Signature</a></h1>
 <p>This guide provides a task-oriented path for developers to inject new fraud behaviors into the RiskFabric engine.</p>
 <h2 id="1-define-the-profile"><a class="header" href="#1-define-the-profile">1. Define the Profile</a></h2>
@@ -411,7 +459,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>The choice of <strong>Apache Parquet</strong> as the output format ensures that multi-million row datasets remain compressed and performant for the downstream Python-based ML pipeline and Polars-based ETL.</p>
 <h2 id="system-integration"><a class="header" href="#system-integration">System Integration</a></h2>
 <p><code>generate.rs</code> sits at the start of the RiskFabric lifecycle. It consumes reference Parquet files for merchants and residential locations and produces the four core tables: <code>customers.parquet</code>, <code>accounts.parquet</code>, <code>cards.parquet</code>, and <code>transactions.parquet</code> (including its accompanying <code>fraud_metadata.parquet</code>).</p>
-<h2 id="known-issues-2"><a class="header" href="#known-issues-2">Known Issues</a></h2>
+<h2 id="known-issues-1"><a class="header" href="#known-issues-1">Known Issues</a></h2>
 <p>The final merge phase is implemented by writing temporary Parquet chunks to disk and then re-scanning them with the Polars lazy API. While this prevents memory exhaustion during the final join, it introduces disk I/O overhead that affects the "cleanup" phase of generation. Additionally, the 5,000-card chunk size is currently hardcoded; moving this to <code>customer_config.yaml</code> would allow performance tuning based on available RAM capacity.</p>
 <div style="break-before: page; page-break-before: always;"></div><p>Language: Rust</p>
 <p>The streaming generator produces unlabeled transactions at a configurable rate and publishes them to the <code>raw_transactions</code> Kafka topic for real-time scoring.</p>
@@ -433,7 +481,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>The generator uses <strong>Probabilistic Location Typing</strong> to classify customers into Metro, Urban, or Rural categories based on their proximity to city centers in the reference data. This classification serves as the primary driver for the financial heuristics used in the simulation.</p>
 <h2 id="system-integration-1"><a class="header" href="#system-integration-1">System Integration</a></h2>
 <p><code>customer_gen.rs</code> acts as the first stage of the generation pipeline. It consumes the <code>ref_residential.parquet</code> file and the <code>customer_config.yaml</code> configuration to produce a vector of <code>Customer</code> structs. This vector is passed downstream to the account and card generators to complete the entity hierarchy.</p>
-<h2 id="known-issues-3"><a class="header" href="#known-issues-3">Known Issues</a></h2>
+<h2 id="known-issues-2"><a class="header" href="#known-issues-2">Known Issues</a></h2>
 <p>The entire residential reference dataset is currently loaded into memory using Polars' <code>ParquetReader</code> for every generation run. While efficient for populations up to 100,000 customers, this creates a significant memory bottleneck when scaling to millions of agents. Moving to a chunked or streaming approach for reading reference data is required. Additionally, the jitter range (0.005) is currently hardcoded in the source code; moving this to the configuration would allow for different levels of spatial precision.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="financial-entity-linking-account_genrs--card_genrs"><a class="header" href="#financial-entity-linking-account_genrs--card_genrs">Financial Entity Linking (<code>account_gen.rs</code> &amp; <code>card_gen.rs</code>)</a></h1>
 <h2 id="summary-4"><a class="header" href="#summary-4">Summary</a></h2>
@@ -444,7 +492,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>In <code>card_gen.rs</code>, an <strong>Account-Driven Mapping</strong> strategy is used. The card generator iterates over the accounts vector and issues a unique payment instrument for each. This one-to-one mapping simplifies the transaction generation logic while ensuring that the "issuing bank" metadata is correctly inherited from the parent account entity.</p>
 <h2 id="system-integration-2"><a class="header" href="#system-integration-2">System Integration</a></h2>
 <p>These modules are the primary components of the batch generation pipeline. They are invoked by <code>generate.rs</code> immediately after the population has been created. The resulting vectors of <code>Account</code> and <code>Card</code> structs are then materialized into Parquet files and passed downstream to the transaction engine.</p>
-<h2 id="known-issues-4"><a class="header" href="#known-issues-4">Known Issues</a></h2>
+<h2 id="known-issues-3"><a class="header" href="#known-issues-3">Known Issues</a></h2>
 <p>A hardcoded 50% probability for secondary account creation is currently used. This should be moved to <code>customer_config.yaml</code> to allow for more granular control over the "financial depth" of the population.</p>
 <p>Furthermore, <strong>Card Metadata</strong> (like <code>contactless_limit</code> and <code>online_limit</code>) is currently initialized as empty strings. This prevents the simulation from enforcing realistic "Limit Breaches" during transaction generation. A "Product Catalog" lookup in <code>card_gen.rs</code> is required to populate these fields with realistic values based on the account type, which will enable a new class of "Limit-Based" fraud detection features.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="core-simulation-engine-transaction_genrs"><a class="header" href="#core-simulation-engine-transaction_genrs">Core Simulation Engine (<code>transaction_gen.rs</code>)</a></h1>
@@ -456,7 +504,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>To ensure reproducibility, <strong>Deterministic Seeding</strong> is used at the card level. Every card's random number generator is seeded with a combination of the global seed, a salt, and a hash of the card ID. This ensures that a specific card will always generate the exact same transaction history across different runs, provided the global configuration remains unchanged.</p>
 <h2 id="system-integration-3"><a class="header" href="#system-integration-3">System Integration</a></h2>
 <p>This engine is the central utility consumed by both the <strong>Batch Generator</strong> (<code>generate.rs</code>) and the <strong>Streaming Generator</strong> (<code>stream.rs</code>). It acts as a pure function that takes configuration, spatial indices, and entity maps as input and produces vectors of <code>Transaction</code> and <code>FraudMetadata</code> as output.</p>
-<h2 id="known-issues-5"><a class="header" href="#known-issues-5">Known Issues</a></h2>
+<h2 id="known-issues-4"><a class="header" href="#known-issues-4">Known Issues</a></h2>
 <p>Timestamp generation is implemented by sorting a local vector of dates for each card. While this ensures that transactions are chronologically ordered <em>per card</em>, it does not guarantee a global chronological order across the entire dataset during batch generation. ClickHouse is currently used to perform the final global sort.</p>
 <p>Additionally, the spatial distribution weights (80/15/3/2) are hardcoded directly into the logic. Moving these to <code>transaction_config.yaml</code> would allow users to simulate different mobility profiles—for example, a "commuter" population would require a higher Res 4 weight compared to a "rural" population.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="adversary-logic-engine-fraudrs"><a class="header" href="#adversary-logic-engine-fraudrs">Adversary Logic Engine (<code>fraud.rs</code>)</a></h1>
@@ -468,7 +516,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>To simulate <strong>Stateful Attacks</strong>, the <code>apply_campaign_logic</code> function is used. This allows the generator to override standard spatial and device signals with persistent attacker metadata (e.g., a shared IP or fixed coordinates). This architectural decision is critical for generating the clustered signals that modern graph-based fraud models are designed to identify.</p>
 <h2 id="system-integration-4"><a class="header" href="#system-integration-4">System Integration</a></h2>
 <p><code>fraud.rs</code> is a stateless logic provider consumed by the <code>transaction_gen.rs</code> module. It acts as a specialized "mutation filter" that takes a completed transaction and a fraud profile and returns a set of behavioral anomalies.</p>
-<h2 id="known-issues-6"><a class="header" href="#known-issues-6">Known Issues</a></h2>
+<h2 id="known-issues-5"><a class="header" href="#known-issues-5">Known Issues</a></h2>
 <p>String-based matching (e.g., <code>f_type == "account_takeover"</code>) is currently used to determine which mutation logic to apply. This is a fragile pattern that could lead to silent failures if a typo is introduced in the YAML configuration. Refactoring these into a proper <code>Enum</code> would ensure compile-time safety and better performance. Additionally, the <code>calculate_fraud_timestamp</code> logic is currently limited to two specific fraud types; generalizing this to support a wider range of temporal attack patterns is needed.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="central-configuration-engine-configrs"><a class="header" href="#central-configuration-engine-configrs">Central Configuration Engine (<code>config.rs</code>)</a></h1>
 <h2 id="summary-7"><a class="header" href="#summary-7">Summary</a></h2>
@@ -479,7 +527,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p><strong>Safety Defaults</strong> are also implemented using <code>serde</code> macros. This ensures that the simulation remains resilient even if the underlying YAML files are missing non-essential keys, providing sensible fallbacks for parameters like the <code>streaming_rate</code>.</p>
 <h2 id="system-integration-5"><a class="header" href="#system-integration-5">System Integration</a></h2>
 <p><code>config.rs</code> is widely consumed across the codebase. It is initialized at the entry point of every binary (<code>generate</code>, <code>stream</code>, <code>etl</code>, <code>ingest</code>) and is passed down into the generators as a shared reference. This ensures that the "rules of the world" are identical across the batch, streaming, and ETL layers.</p>
-<h2 id="known-issues-7"><a class="header" href="#known-issues-7">Known Issues</a></h2>
+<h2 id="known-issues-6"><a class="header" href="#known-issues-6">Known Issues</a></h2>
 <p><code>fs::read_to_string</code> and <code>expect</code> calls are currently used in the <code>load()</code> method. This causes the application to panic immediately if a config file is missing or contains a syntax error. While acceptable for a CLI tool, refactoring to return a <code>Result</code> type is required to allow for more graceful error handling and reporting. Additionally, the file paths for the YAML configs are currently hardcoded relative to the project root; a more flexible path resolution strategy is needed to allow RiskFabric to be executed from different directories.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="data-engineering--warehouse"><a class="header" href="#data-engineering--warehouse">Data Engineering &amp; Warehouse</a></h1>
 <p>This section documents the ETL pipelines, warehouse ingestion utilities, and geographic reference preparation tools used to build the RiskFabric environment.</p>
@@ -496,7 +544,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>A key design choice is the <strong>Hybrid Execution Model</strong>. While the feature logic is implemented in Rust using Polars, the pipeline orchestrates data movement between ClickHouse (the primary warehouse) and local memory via Parquet. This allows complex, stateful calculations in Rust (like Welford's algorithm for running variance) that are difficult to express in pure SQL, while still using ClickHouse for efficient storage and final broad joins.</p>
 <h2 id="system-integration-6"><a class="header" href="#system-integration-6">System Integration</a></h2>
 <p>The ETL system acts as the connective tissue between the <strong>Data Generation layer</strong> and the <strong>Machine Learning layer</strong>. It reads from ClickHouse tables (populated via <code>ingest.rs</code>), performs transformations, and writes the results back to ClickHouse. The final <code>fact_transactions_gold</code> table is the direct source for the Python-based training pipeline.</p>
-<h2 id="known-issues-8"><a class="header" href="#known-issues-8">Known Issues</a></h2>
+<h2 id="known-issues-7"><a class="header" href="#known-issues-7">Known Issues</a></h2>
 <p>The system currently uses <code>podman exec</code> calls to interact with ClickHouse from within the Rust binary. This approach depends on the local environment's container runtime and shell availability. Transitioning to a proper ClickHouse client library (like <code>clickhouse-rs</code>) will make the pipeline more portable and robust. Additionally, the <code>GoldMaster</code> stage is currently implemented as a raw SQL join in ClickHouse, which duplicates some of the logic found in <code>gold_master.rs</code>. Unifying these two approaches will ensure the batch and streaming feature definitions remain consistent.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="behavioral-feature-engineering-srcetlfeatures"><a class="header" href="#behavioral-feature-engineering-srcetlfeatures">Behavioral Feature Engineering (<code>src/etl/features/</code>)</a></h1>
 <h2 id="summary-9"><a class="header" href="#summary-9">Summary</a></h2>
@@ -507,7 +555,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>In the <strong>Network Intelligence</strong> module, a "Proxy Entity" strategy is used. Instead of building a full N:N customer relationship graph (which is memory-intensive), the risk reputation of shared entities like IP addresses and User Agents is calculated. This allows the system to identify "Suspicious Clusters" where multiple customers share a single high-fraud entity, capturing coordinated attack signals with high computational efficiency.</p>
 <h2 id="system-integration-7"><a class="header" href="#system-integration-7">System Integration</a></h2>
 <p>These modules are the primary transformation components of the <code>etl.rs</code> binary. They consume "Bronze" tables from ClickHouse and produce "Silver" feature tables. The logic defined here is also mirrored in the <code>scorer.py</code> service to ensure training-serving parity during real-time inference.</p>
-<h2 id="known-issues-9"><a class="header" href="#known-issues-9">Known Issues</a></h2>
+<h2 id="known-issues-8"><a class="header" href="#known-issues-8">Known Issues</a></h2>
 <p>A simple Euclidean distance formula is currently used for <strong>Spatial Velocity</strong> calculations. As noted in the <code>etl_schema.md</code>, this approximation becomes inaccurate over large distances. Implementation of the Haversine formula within the Polars transformation is required to ensure geographic precision.</p>
 <p>Furthermore, the <strong>Campaign Detection</strong> logic in <code>campaign.rs</code> is currently based on a fixed 48-hour time gap. This is a heuristic that may fail to capture long-running, low-frequency attack campaigns. This threshold should be moved to the configuration or a more dynamic "Sessionization" strategy implemented to account for different adversarial behaviors.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="physical-world-transformation-warehouse"><a class="header" href="#physical-world-transformation-warehouse">Physical World Transformation (<code>warehouse/</code>)</a></h1>
@@ -518,7 +566,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>For <strong>Merchant Risk Profiles</strong>, a categorical mapping strategy is implemented in the <code>stg_merchants</code> model. By mapping raw OSM sub-categories (like <code>jewelry</code> or <code>electronics</code>) to standardized RiskFabric categories and risk levels (LOW, MEDIUM, HIGH), the "Adversarial Ground Truth" is established for the simulation. This architectural decision allows the fraud engine to select high-risk merchants for specific attack profiles without needing to embed merchant-level risk logic into the Rust binaries.</p>
 <h2 id="system-integration-8"><a class="header" href="#system-integration-8">System Integration</a></h2>
 <p>The dbt layer acts as the "Level 0" enrichment engine. It consumes the raw tables populated by <code>prepare_refs.rs</code> and produces the <code>mart_residential</code> and <code>mart_merchants</code> models. These models are then exported to Parquet via <code>export_references.rs</code> or <code>dlt/pipelines.py</code> to be used as the primary lookup data for the simulation generators.</p>
-<h2 id="known-issues-10"><a class="header" href="#known-issues-10">Known Issues</a></h2>
+<h2 id="known-issues-9"><a class="header" href="#known-issues-9">Known Issues</a></h2>
 <p><strong>Spatial Joins are performed on every run</strong> for the mart models. While this ensures data quality, it is computationally expensive and slow when processing millions of Indian OSM nodes. A "Spatial Indexing" strategy should be implemented or the boundary results materialized into a lookup table to reduce the processing time.</p>
 <p>Furthermore, the <strong>City Normalization</strong> logic is currently based on a simple regex-based macro. This fails to handle the wide variety of spelling variations and transliteration errors found in raw Indian OSM data. A fuzzy-matching strategy or integration of a dedicated geographic gazetteer is needed to ensure more robust city-level clustering in the simulation.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="data-warehouse-ingestor-ingestrs"><a class="header" href="#data-warehouse-ingestor-ingestrs">Data Warehouse Ingestor (<code>ingest.rs</code>)</a></h1>
@@ -529,7 +577,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>The utility is <strong>idempotent</strong>, automatically dropping and recreating tables on every run. This simplifies the development lifecycle by ensuring the warehouse reflects the latest state of the synthetic generation configuration.</p>
 <h2 id="system-integration-9"><a class="header" href="#system-integration-9">System Integration</a></h2>
 <p><code>ingest.rs</code> acts as the bridge between the <strong>File System layer</strong> and the <strong>Warehouse layer</strong>. It interacts directly with the <code>podman</code> container runtime to execute commands against the <code>riskfabric_clickhouse</code> instance. It is the prerequisite for the <code>etl.rs</code> pipeline, which expects the tables defined here to be present and populated.</p>
-<h2 id="known-issues-11"><a class="header" href="#known-issues-11">Known Issues</a></h2>
+<h2 id="known-issues-10"><a class="header" href="#known-issues-10">Known Issues</a></h2>
 <p>Data is currently piped into the warehouse using shell-based <code>cat</code> and <code>podman exec</code> commands. This is inefficient for large datasets and introduces a dependency on the host's shell environment. Refactoring this to use the ClickHouse HTTP interface or a native Rust client will allow for more reliable bulk inserts.</p>
 <p>Furthermore, the warehouse schema in <code>ingest.rs</code> has drifted from the Rust model definitions in <code>src/models/</code>. For example:</p>
 <ul>
@@ -547,7 +595,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>A <strong>Postgres-Based Staging Layer</strong> is also integrated for the extraction process. By using the <code>BinaryCopyInWriter</code> for bulk insertion, the preparator moves millions of extracted nodes into a structured database with minimal overhead. This staging layer allows for complex SQL-based cleaning and verification before the final reference Parquet files are exported.</p>
 <h2 id="system-integration-10"><a class="header" href="#system-integration-10">System Integration</a></h2>
 <p><code>prepare_refs.rs</code> is a standalone "Level 0" utility that must be run before synthetic data generation. It populates the <code>data/references/</code> directory with <code>ref_merchants.parquet</code>, <code>ref_residential.parquet</code>, and other critical lookup tables. These files are then consumed by <code>generate.rs</code>, <code>stream.rs</code>, and <code>customer_gen.rs</code>.</p>
-<h2 id="known-issues-12"><a class="header" href="#known-issues-12">Known Issues</a></h2>
+<h2 id="known-issues-11"><a class="header" href="#known-issues-11">Known Issues</a></h2>
 <p>A hardcoded Postgres connection string (<code>postgres://harshafaik:123@localhost:5432/riskfabric</code>) is currently used within the CLI defaults. This is a security and portability issue; it should be moved to an environment variable or a configuration file. Additionally, the utility lacks a unified "Export to Parquet" command—it populates Postgres, but the final conversion to Parquet is often handled by separate, manual scripts. Consolidating the end-to-end pipeline (OSM → Postgres → Parquet) into this single binary would improve the developer experience.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="reference-data-exporter-export_referencesrs"><a class="header" href="#reference-data-exporter-export_referencesrs">Reference Data Exporter (<code>export_references.rs</code>)</a></h1>
 <h2 id="summary-13"><a class="header" href="#summary-13">Summary</a></h2>
@@ -557,7 +605,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>A key architectural choice is the <strong>Database-to-Parquet decoupling</strong>. By exporting processed staging tables into standalone Parquet files, the simulation environment becomes portable. This allows the core RiskFabric generators to run without a live Postgres connection, simplifying the deployment and execution of the simulation on local workstations or in CI/CD pipelines.</p>
 <h2 id="system-integration-11"><a class="header" href="#system-integration-11">System Integration</a></h2>
 <p><code>export_references.rs</code> is a "Level 0" utility that bridges the <strong>Staging layer</strong> (Postgres) and the <strong>Generation layer</strong> (Parquet). It is typically run after <code>prepare_refs.rs</code> and any subsequent SQL-based cleaning has been performed on the staging tables. The resulting Parquet files in <code>data/references/</code> are the direct input for <code>generate.rs</code>, <code>stream.rs</code>, and the various generator modules.</p>
-<h2 id="known-issues-13"><a class="header" href="#known-issues-13">Known Issues</a></h2>
+<h2 id="known-issues-12"><a class="header" href="#known-issues-12">Known Issues</a></h2>
 <p>A hardcoded Postgres connection string (<code>postgres://harshafaik:123@localhost:5432/riskfabric</code>) is currently used directly in the source code. This is a duplicate of the issue in <code>prepare_refs.rs</code> and should be unified into a shared configuration or environment variable. Additionally, the exporter manually maps Postgres rows into local vectors before creating the Polars DataFrame. This is inefficient for extremely large datasets; refactoring to use a streaming connector or a more direct Polars-Postgres integration is needed to reduce the memory overhead of the export process.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="reference-data-pipeline-dltpipelinespy"><a class="header" href="#reference-data-pipeline-dltpipelinespy">Reference Data Pipeline (<code>dlt/pipelines.py</code>)</a></h1>
 <h2 id="summary-14"><a class="header" href="#summary-14">Summary</a></h2>
@@ -567,7 +615,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>A key architectural choice was the use of <strong><code>write_disposition="replace"</code></strong>. Since the reference data (merchants and residential nodes) represents a "static" world that is fully rebuilt after every OSM extraction, this strategy ensures that the <code>data/references/</code> directory always contains a clean snapshot of the environment without manual cleanup.</p>
 <h2 id="system-integration-12"><a class="header" href="#system-integration-12">System Integration</a></h2>
 <p><code>dlt/pipelines.py</code> acts as an alternative or supplementary utility to <code>export_references.rs</code>. It bridges the <strong>Staging layer</strong> (Postgres) and the <strong>Local File System layer</strong>. It is typically run as part of the "Level 0" world-building phase, specifically after dbt has transformed the raw OSM nodes into the <code>mart_residential</code> and <code>mart_merchants</code> models.</p>
-<h2 id="known-issues-14"><a class="header" href="#known-issues-14">Known Issues</a></h2>
+<h2 id="known-issues-13"><a class="header" href="#known-issues-13">Known Issues</a></h2>
 <p>Environment variables (e.g., <code>DESTINATION__FILESYSTEM__BUCKET_URL</code>) are currently used to configure the DLT pipeline directly within the Python script. This approach is fragile and makes it difficult to change the reference directory without modifying the code. These should be moved into a dedicated <code>dlt_config.toml</code> file to align with the library’s best practices. Additionally, the pipeline currently lacks <strong>Data Validation tests</strong>; dlt "checks" should be implemented to ensure that the exported Parquet files contain the expected number of rows and non-null H3 indices before they are handed off to the generation engine.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="machine-learning-systems"><a class="header" href="#machine-learning-systems">Machine Learning Systems</a></h1>
 <p>This section documents the model training pipelines, real-time inference services, and metadata utilities required for detecting synthetic fraud patterns.</p>
@@ -579,7 +627,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>The choice of <strong>XGBoost with Native Categorical Support</strong> allows the model to process high-cardinality fields like <code>merchant_category</code> and <code>transaction_channel</code> directly, without the memory overhead of one-hot encoding. This maintains performance as the synthetic merchant population scales.</p>
 <h2 id="system-integration-13"><a class="header" href="#system-integration-13">System Integration</a></h2>
 <p>The training pipeline is the final "offline" consumer of the <strong>Data Warehouse layer</strong>. It uses the <code>clickhouse-connect</code> library to pull data directly into Polars DataFrames for training. The resulting model is serialized to <code>models/fraud_model_v1.json</code>, which is consumed by the <code>scorer.py</code> service for real-time inference in the streaming pipeline.</p>
-<h2 id="known-issues-15"><a class="header" href="#known-issues-15">Known Issues</a></h2>
+<h2 id="known-issues-14"><a class="header" href="#known-issues-14">Known Issues</a></h2>
 <p>A simple 80/20 train/test split with stratification is currently used, but <strong>time-series validation</strong> is missing. Since fraud patterns evolve over time, a random split can lead to optimistic performance estimates by allowing the model to see future patterns during training. A walk-forward validation strategy is required to better simulate real production deployments. Additionally, XGBoost hyperparameters (like <code>max_depth=6</code>) are currently hardcoded; these should be moved to a <code>ml_tuning.yaml</code> configuration file to allow for automated hyperparameter optimization.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="real-time-scoring-service-scorerpy"><a class="header" href="#real-time-scoring-service-scorerpy">Real-Time Scoring Service (<code>scorer.py</code>)</a></h1>
 <h2 id="summary-16"><a class="header" href="#summary-16">Summary</a></h2>
@@ -590,7 +638,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>The service maintains <strong>Feature Alignment</strong> with the training pipeline by dynamically reordering and casting incoming features to match the exact schema and types (categorical, float, int) exported from the <code>fraud_model_v1.json</code> booster. This prevents "training-serving skew," ensuring that the model's performance in production matches its performance during validation.</p>
 <h2 id="system-integration-14"><a class="header" href="#system-integration-14">System Integration</a></h2>
 <p><code>scorer.py</code> sits at the exit point of the <strong>Streaming layer</strong>. It consumes from the <code>raw_transactions</code> Kafka topic (populated by <code>stream.rs</code>) and writes its decisions to both the <code>fraud_scores</code> ClickHouse table and a downstream Kafka topic for automated blocking. It depends on <strong>Redis</strong> for its behavioral context and <strong>ClickHouse</strong> for long-term audit logging and performance monitoring.</p>
-<h2 id="known-issues-16"><a class="header" href="#known-issues-16">Known Issues</a></h2>
+<h2 id="known-issues-15"><a class="header" href="#known-issues-15">Known Issues</a></h2>
 <p>A hardcoded <code>THRESHOLD = 0.85</code> is currently used for flagging transactions as fraud. This should be moved to a configuration file (or a dynamic service) to allow for easier tuning of the precision-recall trade-off. Furthermore, the <code>hour_deviation_from_norm</code> feature is currently a placeholder (0.0). Implementation of the temporal aggregation logic in <code>seed_redis.py</code> and fetching it from Redis is required to ensure the model has access to its full set of behavioral signals during real-time inference.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="model-metadata-utility-dump_modelpy"><a class="header" href="#model-metadata-utility-dump_modelpy">Model Metadata Utility (<code>dump_model.py</code>)</a></h1>
 <h2 id="summary-17"><a class="header" href="#summary-17">Summary</a></h2>
@@ -600,7 +648,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>The implementation of <strong>JSON-Path Extraction</strong> for categorical features is a critical design choice. Since XGBoost's native categorical encoding is serialized within the <code>learner</code> block of the JSON file, this utility parses those internal dictionaries. This architectural safety measure ensures verification of the categorical "levels" (e.g., specific merchant categories) the model was exposed to during training, preventing "Unknown Category" errors during real-time scoring.</p>
 <h2 id="system-integration-15"><a class="header" href="#system-integration-15">System Integration</a></h2>
 <p><code>dump_model.py</code> is an auxiliary utility in the <strong>Machine Learning layer</strong>. It is typically run after <code>train_xgboost.py</code> to verify the model artifact before it is deployed to the scoring service. It acts as a manual "Gatekeeper" for ensuring feature consistency across the pipeline.</p>
-<h2 id="known-issues-17"><a class="header" href="#known-issues-17">Known Issues</a></h2>
+<h2 id="known-issues-16"><a class="header" href="#known-issues-16">Known Issues</a></h2>
 <p>A fragile, regex-based approach (<code>re.findall</code>) is currently used to extract categorical strings from the XGBoost JSON. This is an unreliable method that depends on the specific serialization format of the XGBoost version being used. A more robust parser that follows the official XGBoost JSON schema is required. Additionally, the utility currently only prints the metadata to the console; refactoring is needed to export a structured <code>schema.yaml</code> file that the <code>scorer.py</code> can load automatically to configure its inference pipeline.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="infrastructure--operations"><a class="header" href="#infrastructure--operations">Infrastructure &amp; Operations</a></h1>
 <p>This section documents the local service stack, orchestration configuration, and state synchronization utilities used to operate the RiskFabric environment.</p>
@@ -613,7 +661,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>The use of <strong>Healthchecks</strong> across all critical services ensures that the generation binaries (<code>ingest.rs</code>, <code>etl.rs</code>) only attempt to connect when the infrastructure is ready. This improves the developer experience by reducing connection-refused errors during the initial cold-start of the simulation environment.</p>
 <h2 id="system-integration-16"><a class="header" href="#system-integration-16">System Integration</a></h2>
 <p>The infrastructure is the foundation upon which all RiskFabric binaries execute. The Rust-based generators and Python-based ML services connect to these containers via standardized ports and internal networks. The <code>scorer</code> service is configured to run as a long-lived container, automatically subscribing to the Kafka stream as soon as the stack is up.</p>
-<h2 id="known-issues-18"><a class="header" href="#known-issues-18">Known Issues</a></h2>
+<h2 id="known-issues-17"><a class="header" href="#known-issues-17">Known Issues</a></h2>
 <p>A <strong>Single-Node Redpanda</strong> instance without persistence is currently used. While this is sufficient for local development, it does not support testing "Consumer Group Rebalancing" or "Partition-Level Parallelism," which are common challenges in production streaming systems. A multi-node Redpanda cluster configuration is required to support high-availability testing scenarios.</p>
 <p>Furthermore, <strong>Postgres and ClickHouse credentials</strong> are currently hardcoded as <code>harshafaik:123</code> across the <code>docker-compose.yml</code>. This security vulnerability prevents the stack from being used in shared or public environments. These credentials must be moved to an <code>.env</code> file and Docker Secrets used to manage sensitive information more securely.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="redis-feature-seeder-seed_redispy"><a class="header" href="#redis-feature-seeder-seed_redispy">Redis Feature Seeder (<code>seed_redis.py</code>)</a></h1>
@@ -624,14 +672,14 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>A key architectural choice is the <strong>Redis Hash/List strategy</strong>. Redis Lists (<code>RPUSH</code>) are used to store chronological card history and Hashes (<code>HSET</code>) to store aggregate statistics. This allows <code>scorer.py</code> to perform O(1) lookups for behavioral context, maintaining the strict latency requirements of real-time fraud detection. Furthermore, the seeder explicitly calculates the initial Welford state (Mean and M2) from the warehouse, enabling the online scorer to continue updating statistical variance incrementally without a full history scan.</p>
 <h2 id="system-integration-17"><a class="header" href="#system-integration-17">System Integration</a></h2>
 <p><code>seed_redis.py</code> acts as a synchronization service between the <strong>Warehouse layer</strong> (ClickHouse) and the <strong>Scoring layer</strong> (Redis/Kafka). It must be executed after <code>etl.rs</code> completes (to ensure the "Gold" table is populated) and before <code>stream.rs</code> and <code>scorer.py</code> are started.</p>
-<h2 id="known-issues-19"><a class="header" href="#known-issues-19">Known Issues</a></h2>
+<h2 id="known-issues-18"><a class="header" href="#known-issues-18">Known Issues</a></h2>
 <p>The entire feature initialization set is currently pulled into local Python memory before pushing to Redis. For datasets with millions of cards, this may lead to a <strong>memory-exhaustion failure</strong>. The ClickHouse queries should be refactored to use chunked fetching (cursors) or a parallelized worker pool implemented to stream data from the warehouse to Redis in batches. Additionally, a hardcoded password for ClickHouse is currently used; this should be moved to an environment variable to align with project security standards.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="technical-reference"><a class="header" href="#technical-reference">Technical Reference</a></h1>
 <p>Exhaustive documentation of the schemas, configurations, and developer utilities used to build and manage the RiskFabric simulation.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="synthetic-data-schema"><a class="header" href="#synthetic-data-schema">Synthetic Data Schema</a></h1>
 <h2 id="summary-20"><a class="header" href="#summary-20">Summary</a></h2>
 <p>The RiskFabric data schema is designed to mirror a professional financial environment while providing the "white-box" visibility required for advanced machine learning research. It consists of five core entities that represent the hierarchical relationship between a customer and their financial events.</p>
-<h2 id="design-intent-2"><a class="header" href="#design-intent-2">Design Intent</a></h2>
+<h2 id="design-intent-1"><a class="header" href="#design-intent-1">Design Intent</a></h2>
 <p>The schema is structured to prioritize <strong>Relational Realism</strong> over flat-file simplicity. By separating Customers, Accounts, and Cards into distinct tables, the simulation models complex many-to-one relationships (e.g., a single customer owning multiple accounts, each with different card instruments). This is essential for testing entity-linking models and network analysis in fraud detection.</p>
 <p>The inclusion of the <strong><code>FraudMetadata</code></strong> table is a critical architectural decision. It decouples the simulation ground truth (<code>fraud_target</code>) from the operational signal (<code>is_fraud</code>). This allows researchers to train on noisy, real-world signals while validating against the perfect, latent truth of the generator.</p>
 <h2 id="entity-relationship-overview"><a class="header" href="#entity-relationship-overview">Entity Relationship Overview</a></h2>
@@ -746,13 +794,13 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 </tbody></table>
 </div>
 <hr />
-<h2 id="known-issues-20"><a class="header" href="#known-issues-20">Known Issues</a></h2>
+<h2 id="known-issues-19"><a class="header" href="#known-issues-19">Known Issues</a></h2>
 <p>UUID strings are currently used for all primary keys (<code>customer_id</code>, <code>card_id</code>, etc.). While ensuring global uniqueness, this increases storage overhead and join latency in ClickHouse compared to integer-based keys. Transitioning to a 64-bit integer ID system is under consideration for future versions.</p>
 <p>Furthermore, a dedicated <strong>Merchant Table</strong> is not yet implemented in the output schema. Merchant attributes are currently denormalized directly into the transaction table, creating data redundancy and limiting merchant-level entity modeling. Breaking merchants into a separate <code>merchants.parquet</code> file is required to complete the star schema.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="etl--feature-schema"><a class="header" href="#etl--feature-schema">ETL &amp; Feature Schema</a></h1>
 <h2 id="summary-21"><a class="header" href="#summary-21">Summary</a></h2>
 <p>The <code>etl_schema.md</code> document defines the behavioral features and data transformations performed by the RiskFabric ETL pipeline (<code>etl.rs</code>). It acts as the technical contract for the "Silver" and "Gold" layers, detailing how raw synthetic events are transformed into the high-dimensional vectors used for model training and real-time inference.</p>
-<h2 id="design-intent-3"><a class="header" href="#design-intent-3">Design Intent</a></h2>
+<h2 id="design-intent-2"><a class="header" href="#design-intent-2">Design Intent</a></h2>
 <p>The feature schema represents a <strong>Hybrid Behavioral State</strong>, intended to provide models with a multi-domain view of financial events across customer history, merchant risk, and temporal sequences. This approach facilitates sophisticated behavioral modeling, such as Z-scores and velocity-based indicators, similar to production fraud detection systems.</p>
 <p>A critical design choice was the use of <strong>Welford's Algorithm</strong> for statistical aggregates. Calculating running means and variances locally in Rust (and Redis) ensures that features are numerically stable and computationally efficient for both batch processing and low-latency streaming. This architectural decision is intended to eliminate training-serving skew.</p>
 <hr />
@@ -777,13 +825,13 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <h2 id="-gold-layer-the-master-table"><a class="header" href="#-gold-layer-the-master-table">🥇 Gold Layer: The Master Table</a></h2>
 <p>The final flattened table used for model training, joining all Silver behavioral features with the original Bronze transactions.</p>
 <hr />
-<h2 id="known-issues-21"><a class="header" href="#known-issues-21">Known Issues</a></h2>
+<h2 id="known-issues-20"><a class="header" href="#known-issues-20">Known Issues</a></h2>
 <p><strong>Spatial Velocity</strong> is currently calculated using a Euclidean distance approximation. While computationally efficient, this is inaccurate over long distances. Implementation of the <strong>Haversine formula</strong> is required to ensure geographic precision for cross-state and international fraud simulations.</p>
 <p>Furthermore, <strong>Feature Freshness</strong> is limited to the last 10 transactions in Redis. This prevents the modeling of long-term behavioral baselines for infrequent spenders. Implementing "Stateful Cold Storage" in the ETL pipeline is necessary to retrieve historical data without exceeding real-time feature store capacity.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="configuration-reference"><a class="header" href="#configuration-reference">Configuration Reference</a></h1>
 <h2 id="summary-22"><a class="header" href="#summary-22">Summary</a></h2>
 <p>The <code>config_reference.md</code> document provide a catalog of the behavioral parameters and system-wide settings available in RiskFabric. It details the schema of the YAML configuration files that define the simulation's behavioral rules, ranging from geographic boundaries to fraud injection rates.</p>
-<h2 id="design-intent-4"><a class="header" href="#design-intent-4">Design Intent</a></h2>
+<h2 id="design-intent-3"><a class="header" href="#design-intent-3">Design Intent</a></h2>
 <p>The configuration system is designed to be <strong>Hierarchical and Domain-Specific</strong>. By splitting settings into five distinct YAML files, researchers can perform comparative testing on simulation behaviors (e.g., comparing different fraud population densities) by swapping configuration files. This decoupling ensures the generator can be tuned without recompiling the Rust binaries.</p>
 <p>A critical design choice was the use of <strong>Semantic Weights</strong>. For parameters such as <code>hourly_weights</code> and <code>daily_weights</code>, relative values are used rather than absolute probabilities. This allows the generator to maintain consistent behavioral ratios (e.g., temporal activity peaks) regardless of the total volume of generated data.</p>
 <hr />
@@ -807,13 +855,13 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <li><strong><code>temporal_patterns</code></strong>: The weighted distribution of activity across the 24-hour day and 7-day week.</li>
 </ul>
 <hr />
-<h2 id="known-issues-22"><a class="header" href="#known-issues-22">Known Issues</a></h2>
+<h2 id="known-issues-21"><a class="header" href="#known-issues-21">Known Issues</a></h2>
 <p>The <strong>Lookback Period</strong> (<code>lookback_days</code>) can currently be set independently of the customer registration window. This allows for temporal inconsistencies where transaction history precedes a customer's registration date. Implementing cross-configuration validation is necessary to ensure temporal consistency.</p>
 <p>Furthermore, the <strong>Streaming Rate</strong> (<code>streaming_rate</code>) is a global setting. "Dynamic Throughput," which would allow the generator to simulate peak activity hours (e.g., varying tx/s by time of day), is not yet implemented. Modifying the streaming engine to respect the temporal weights defined in <code>transaction_config.yaml</code> is required to create more realistic real-time traffic patterns.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="developer-utilities-cli"><a class="header" href="#developer-utilities-cli">Developer Utilities CLI</a></h1>
 <h2 id="summary-23"><a class="header" href="#summary-23">Summary</a></h2>
 <p>The <code>developer_utilities.md</code> document details specialized binaries and tools designed to support the RiskFabric development lifecycle. These utilities automate auxiliary tasks surrounding synthetic data generation, such as geographic preprocessing, reference data export, and model metadata inspection.</p>
-<h2 id="design-intent-5"><a class="header" href="#design-intent-5">Design Intent</a></h2>
+<h2 id="design-intent-4"><a class="header" href="#design-intent-4">Design Intent</a></h2>
 <p>These utilities function as a <strong>Developer's Toolkit</strong> for the simulation. By decomposing complex tasks—such as OSM node extraction and Parquet serialization—into dedicated CLI binaries, the core generation engine remains focused. This modular approach allows the synthetic environment to be rebuilt independently of the transaction simulation, enabling iteration on geographic density and merchant risk profiles.</p>
 <p>A critical design choice was the use of <strong>Strongly-Typed Subcommands</strong> via the <code>clap</code> library. This provides a consistent, self-documenting interface for every utility, reducing cognitive load and ensuring operational errors are caught during argument parsing.</p>
 <hr />
@@ -835,13 +883,13 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <li><strong>Function</strong>: Handles schema creation and bulk loading of generated transactions.</li>
 </ul>
 <hr />
-<h2 id="known-issues-23"><a class="header" href="#known-issues-23">Known Issues</a></h2>
+<h2 id="known-issues-22"><a class="header" href="#known-issues-22">Known Issues</a></h2>
 <p>Two separate binaries are currently maintained for reference handling (<code>prepare-refs</code> and <code>export-references</code>), which introduces friction in the developer workflow. Consolidation into a <strong>Unified "Refs" Command</strong> with subcommands for extraction, normalization, and export is planned.</p>
 <p>Furthermore, <strong>Duplicate Connection Logic</strong> exists across several utilities, with database URLs and file paths hardcoded in multiple binaries. Refactoring common CLI logic into a shared <code>riskfabric-cli-core</code> crate is required to ensure consistent handling of parameters like <code>--db-url</code> and <code>--output-dir</code>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="machine-learning-strategy"><a class="header" href="#machine-learning-strategy">Machine Learning Strategy</a></h1>
 <h2 id="summary-24"><a class="header" href="#summary-24">Summary</a></h2>
 <p>RiskFabric's machine learning strategy is built around the "Operational Model" philosophy. Instead of training on perfect, latent labels provided by the generator, the strategy forces models to learn from behavioral proxies in a multi-stage pipeline that mirrors real-world deployment challenges.</p>
-<h2 id="design-intent-6"><a class="header" href="#design-intent-6">Design Intent</a></h2>
+<h2 id="design-intent-5"><a class="header" href="#design-intent-5">Design Intent</a></h2>
 <p>The ML pipeline serves as a <strong>Calibration Bench</strong> for the generator. Achieving 100% recall on synthetic data indicates that the fraud signatures are insufficient in complexity. <strong>Label Noise</strong> (FP/FN) and <strong>Sanitized Feature Sets</strong> are explicitly introduced to create a realistic "Information Gap" between the generator and the learner.</p>
 <p>The architecture utilizes <strong>XGBoost</strong> as its primary classifier, leveraging its native categorical handling and gradient-boosting strengths for tabular financial data. This enables researchers to evaluate feature importance in an interpretable manner, identifying which synthetic signals (e.g., spatial velocity vs. amount deviation) are the most predictive.</p>
 <hr />
@@ -853,7 +901,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <li><strong>Verification</strong>: Models are evaluated against both the noisy <code>is_fraud</code> label and the perfect <code>fraud_target</code>.</li>
 </ol>
 <hr />
-<h2 id="known-issues-24"><a class="header" href="#known-issues-24">Known Issues</a></h2>
+<h2 id="known-issues-23"><a class="header" href="#known-issues-23">Known Issues</a></h2>
 <p>The current use of <strong>Random Stratified Splitting</strong> for validation is an architectural limitation. In a financial stream, data is temporally ordered; random splitting allows for "look-ahead bias," where the model may be exposed to a customer's future patterns during training. Transitioning to <strong>Out-of-Time (OOT) Validation</strong>—training on the first nine months and testing exclusively on the final three—is necessary.</p>
 <p>Furthermore, the model is currently <strong>static</strong>, without a "Concept Drift" simulation to account for fraud signatures changing over time. This makes the accuracy metrics potentially misleading as they do not reflect adversarial evolution. Implementing a <strong>Retraining Scheduler</strong> is required to evaluate precision degradation as fraud profiles evolve.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="conceptual-explanations"><a class="header" href="#conceptual-explanations">Conceptual Explanations</a></h1>
@@ -862,6 +910,28 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <p>This document explains the underlying philosophy, architecture, and logic of the RiskFabric simulation. It answers the question: "How does the engine actually think?"</p>
 <h2 id="1-agent-based-simulation-abm-philosophy"><a class="header" href="#1-agent-based-simulation-abm-philosophy">1. Agent-Based Simulation (ABM) Philosophy</a></h2>
 <p>RiskFabric functions as an <strong>Agent-Based Simulator</strong> rather than a simple random data generator.</p>
+<pre><code class="language-mermaid">graph TD
+    subgraph "World Building"
+        OSM[OpenStreetMap Data] --&gt; Prepare[prepare_refs.rs]
+        Prepare --&gt; PG[(Postgres / PostGIS)]
+        PG --&gt; Parquet[Reference Parquet Files]
+    end
+
+    subgraph "Simulation Engine"
+        Parquet --&gt; Gen[generate.rs / stream.rs]
+        Config[YAML Configs] --&gt; Gen
+        Gen --&gt; Trans[Transactions]
+    end
+
+    subgraph "Detection Pipeline"
+        Trans --&gt; CH[(ClickHouse)]
+        CH --&gt; ETL[etl.rs]
+        ETL --&gt; Train[train_xgboost.py]
+        Train --&gt; Scorer[scorer.py]
+        Gen --&gt; Kafka[Redpanda]
+        Kafka --&gt; Scorer
+    end
+</code></pre>
 <ul>
 <li><strong>The Agent</strong>: The primary agent, the <code>Customer</code>, drives the logic.</li>
 <li><strong>The World</strong>: <strong>OpenStreetMap (OSM)</strong> reference nodes (Residential and Merchant points) across India define the physical world.</li>
@@ -871,6 +941,12 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <hr />
 <h2 id="2-the-deterministic-lifecycle"><a class="header" href="#2-the-deterministic-lifecycle">2. The Deterministic Lifecycle</a></h2>
 <p>To ensure consistency across 10M rows and all tables, RiskFabric follows a strict creation order:</p>
+<pre><code class="language-mermaid">graph LR
+    Cust[Customer] --&gt;|1:N| Acc[Account]
+    Acc --&gt;|1:N| Card[Card]
+    Card --&gt;|1:N| Tx[Transaction]
+    Tx --&gt;|linked| Merch[Merchant]
+</code></pre>
 <ol>
 <li><strong>Customer Birth</strong>: The generator assigns each customer a name, age, and a <strong>Home Coordinate</strong> based on real residential OSM nodes.</li>
 <li><strong>Financial Anchoring</strong>: The system assigns one or more <code>Accounts</code> to every customer.</li>
@@ -921,7 +997,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <div style="break-before: page; page-break-before: always;"></div><h1 id="fraud-signatures--attack-patterns"><a class="header" href="#fraud-signatures--attack-patterns">Fraud Signatures &amp; Attack Patterns</a></h1>
 <h2 id="summary-25"><a class="header" href="#summary-25">Summary</a></h2>
 <p>The <code>fraud_signatures.md</code> document serves as the high-level behavioral specification for the simulation's adversary. It defines both individual fraud profiles and coordinated multi-entity campaigns, providing the theoretical basis for the synthetic anomalies generated by the engine.</p>
-<h2 id="design-intent-7"><a class="header" href="#design-intent-7">Design Intent</a></h2>
+<h2 id="design-intent-6"><a class="header" href="#design-intent-6">Design Intent</a></h2>
 <p>I designed these signatures to move beyond "random noise" and toward <strong>Structured Adversarial Intelligence</strong>. Each profile (e.g., <code>UPI Scam</code>, <code>Account Takeover</code>) is anchored in a specific real-world financial threat observed in the Indian market. By layering <strong>Campaign Logic</strong> on top of individual profiles, I allow the simulation to model the "clustered" signals that are the hallmark of professional criminal organizations.</p>
 <p>A critical design choice was the implementation of <strong>Probabilistic Mutation</strong>. Instead of every fraudulent transaction being an obvious outlier, I use configuration-driven probabilities to ensure that some fraud looks "legitimate" (e.g., Friendly Fraud). This forces ML models to learn subtle, high-dimensional boundaries rather than simple, hard-coded thresholds.</p>
 <hr />
@@ -949,13 +1025,13 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <li><strong>Persistent Location</strong>: Once the takeover begins, the geographic coordinate "sticks" to the attacker's location for the remainder of the sequence.</li>
 </ul>
 <hr />
-<h2 id="known-issues-25"><a class="header" href="#known-issues-25">Known Issues</a></h2>
+<h2 id="known-issues-24"><a class="header" href="#known-issues-24">Known Issues</a></h2>
 <p>I have currently implemented the "Spatial Signature" for fraud as a simple latitude/longitude jump. While this creates a clear anomaly, it doesn't account for <strong>Traveling Legitimate Customers</strong>. This leads to a higher-than-normal false positive rate in models that rely too heavily on distance-from-home. I need to implement a "Travel Profile" for legitimate customers to introduce more realistic noise.</p>
 <p>Furthermore, my campaign logic is currently limited to "Shared IP" and "Shared Coordinate." I haven't yet implemented <strong>Account-to-Account (A2A) graph signals</strong>, where stolen funds are moved through a chain of "mule" accounts. This is a significant gap in the simulation's "Money Laundering" fidelity that I need to address in the next version of the <code>fraud.rs</code> engine.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="synthetic-fraud-profiles"><a class="header" href="#synthetic-fraud-profiles">Synthetic Fraud Profiles</a></h1>
 <h2 id="summary-26"><a class="header" href="#summary-26">Summary</a></h2>
 <p>The <code>fraud_profiles.md</code> document provides a detailed behavioral and statistical breakdown of the five core adversarial signatures simulated by RiskFabric. It explains the contextual logic used by the generator to mimic real-world financial crimes and provides examples of how these patterns manifest in the synthetic data stream.</p>
-<h2 id="design-intent-8"><a class="header" href="#design-intent-8">Design Intent</a></h2>
+<h2 id="design-intent-7"><a class="header" href="#design-intent-7">Design Intent</a></h2>
 <p>These profiles are designed to challenge machine learning models by mirroring the statistical "noise" and multi-dimensional anomalies of modern fraud. By shifting from simple "hardcoded amount" rules to <strong>Behavioral Multipliers</strong> and <strong>Contextual Biases</strong>, the generator forces downstream models to evaluate combinations of spatial velocity, merchant categories, and temporal deviations.</p>
 <hr />
 <h2 id="1-velocity-abuse"><a class="header" href="#1-velocity-abuse">1. Velocity Abuse</a></h2>
@@ -1015,7 +1091,7 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <div style="break-before: page; page-break-before: always;"></div><h1 id="data-warehouse--dbt-strategy"><a class="header" href="#data-warehouse--dbt-strategy">Data Warehouse &amp; dbt Strategy</a></h1>
 <h2 id="summary-27"><a class="header" href="#summary-27">Summary</a></h2>
 <p>The <code>data_warehouse.md</code> document outlines the architectural strategy for RiskFabric's analytical layer. It explains how raw synthetic data is transformed into high-fidelity behavioral entities using a Modern Data Stack (MDS) approach, specifically leveraging ClickHouse for high-volume transactions and Postgres/dbt for geographic enrichment.</p>
-<h2 id="design-intent-9"><a class="header" href="#design-intent-9">Design Intent</a></h2>
+<h2 id="design-intent-8"><a class="header" href="#design-intent-8">Design Intent</a></h2>
 <p>The warehouse functions as a <strong>Medallion Data Lakehouse</strong>, intended to demonstrate how synthetic data can be used to test both machine learning models and the data engineering lifecycle. By using <strong>dbt (data build tool)</strong>, complex geographic filtering and merchant risk assignment are implemented in SQL, allowing for a clear separation between the simulation engine (Rust) and the analytical environment (SQL).</p>
 <p>A critical architectural decision was the adoption of a <strong>Dual-Warehouse Model</strong>. ClickHouse serves as the primary engine for transaction data due to its performance with columnar storage and large-scale joins. Conversely, Postgres is used for "Level 0" geographic preparation (OSM extraction), as it provides mature support for spatial extensions like PostGIS. This approach ensures each part of the simulation utilizes the tool best suited for its specific data type.</p>
 <hr />
@@ -1026,13 +1102,13 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <li><strong>Gold (Master)</strong>: The flattened, model-ready <code>fact_transactions_gold</code>.</li>
 </ol>
 <hr />
-<h2 id="known-issues-26"><a class="header" href="#known-issues-26">Known Issues</a></h2>
+<h2 id="known-issues-25"><a class="header" href="#known-issues-25">Known Issues</a></h2>
 <p>The system currently utilizes <strong>Podman-based container execution</strong> to interact with the warehouse from the Rust binaries. This introduces environment-level fragility and limits the simulation's scalability in distributed cloud environments. Transitioning to native ClickHouse and Postgres client libraries is necessary to improve the reliability of the ingestion and transformation stages.</p>
 <p>Furthermore, <strong>dbt models</strong> are split between two different databases (Postgres for references, ClickHouse for transactions). This prevents cross-warehouse joins and requires moving data via Parquet files. Unifying the transformation layer—specifically by moving all "Level 0" geography data into ClickHouse—is required to eliminate manual data-movement steps and simplify dbt pipeline orchestration.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="project-goals--objectives"><a class="header" href="#project-goals--objectives">Project Goals &amp; Objectives</a></h1>
 <h2 id="summary-28"><a class="header" href="#summary-28">Summary</a></h2>
 <p>The <code>objectives.md</code> document defines the high-level mission and technical milestones for the RiskFabric project. It outlines the strategic intent behind building a high-fidelity synthetic data generator and the specific problems it aims to solve for the financial technology community.</p>
-<h2 id="design-intent-10"><a class="header" href="#design-intent-10">Design Intent</a></h2>
+<h2 id="design-intent-9"><a class="header" href="#design-intent-9">Design Intent</a></h2>
 <p>RiskFabric is designed to address the <strong>"Data Paradox"</strong> in fraud detection: researchers require large volumes of labeled data to develop effective models, but real-world financial data is sensitive and often inaccessible. By creating a high-fidelity, "white-box" alternative, the project provides a safe environment for testing machine learning algorithms and the operational infrastructure required for real-time fraud detection.</p>
 <p>A key strategic objective is the promotion of <strong>Infrastructure-as-Code for Simulation</strong>. Transitioning from static CSV datasets to dynamic, configuration-driven environments allows organizations to "stress-test" systems against hypothetical scenarios—such as doubling transaction volumes—without requiring production data.</p>
 <hr />
@@ -1043,94 +1119,108 @@ fn mutate_upi_scam(txn: &amp;mut Transaction) {
 <li><strong>Adversarial Diversity</strong>: Expanding the fraud library to include multi-stage attacks like money laundering and mule-account networks.</li>
 </ol>
 <hr />
-<h2 id="known-issues-27"><a class="header" href="#known-issues-27">Known Issues</a></h2>
+<h2 id="known-issues-26"><a class="header" href="#known-issues-26">Known Issues</a></h2>
 <p>Focus is currently placed on <strong>Individual and Coordinated Fraud</strong>, but <strong>Macroeconomic Factors</strong> remain unimplemented. The simulation assumes spending patterns are unaffected by external events such as inflation or holidays. Implementing a "Global Event Engine" is necessary to simulate seasonal surges and economic shifts, providing a more challenging baseline for detection models.</p>
 <p>Furthermore, the project lacks <strong>Multi-Currency Support</strong>. The simulation is anchored to a single base currency, preventing the modeling of international fraud or cross-border remittance scams. Refactoring the transaction engine to handle dynamic currency conversion and exchange-rate fluctuations is required to support global fintech use cases.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="results--monitoring"><a class="header" href="#results--monitoring">Results &amp; Monitoring</a></h1>
 <p>Tracking the evolution of model performance, generation throughput, and ETL efficiency benchmarks.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="machine-learning-model-metrics"><a class="header" href="#machine-learning-model-metrics">Machine Learning Model Metrics</a></h1>
-<p>This document tracks the performance and evolution of the fraud detection models trained on RiskFabric synthetic data.</p>
-<h2 id="v1-iteration-dry-run"><a class="header" href="#v1-iteration-dry-run">v1 Iteration (Dry Run)</a></h2>
-<p><strong>Date</strong>: February 15, 2026<br />
-<strong>Model Type</strong>: XGBoost (Binary Classifier)<br />
-<strong>Dataset Size</strong>: 358,830 rows (Gold Master Table)<br />
-<strong>Training Target</strong>: <code>fraud_target</code> (Ground Truth)</p>
-<h3 id="performance-results"><a class="header" href="#performance-results">Performance Results</a></h3>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="machine-learning-metrics--model-progression"><a class="header" href="#machine-learning-metrics--model-progression">Machine Learning Metrics &amp; Model Progression</a></h1>
+<p>This document tracks the performance and evolution of the fraud detection models trained on RiskFabric synthetic data, progressing from initial leakage-prone baselines to a robust, behavioral production configuration.</p>
+<hr />
+<h2 id="section-1-early-iterations"><a class="header" href="#section-1-early-iterations">Section 1: Early Iterations</a></h2>
+<p>The development process began with basic feature sets to establish a baseline for fraud detection performance.</p>
+<h3 id="v1-iteration-baseline"><a class="header" href="#v1-iteration-baseline">v1 Iteration (Baseline)</a></h3>
+<p>The initial model established core feature sets including amount deviations and spatial velocity on a sample population.</p>
 <ul>
 <li><strong>Accuracy</strong>: 0.95</li>
 <li><strong>ROC AUC Score</strong>: 0.9782</li>
+<li><strong>Recall (Fraud)</strong>: 0.30 (Identified significant "Recall Gap")</li>
 </ul>
-<h4 id="classification-report-test-set"><a class="header" href="#classification-report-test-set">Classification Report (Test Set)</a></h4>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Class</th><th style="text-align: left">Precision</th><th style="text-align: left">Recall</th><th style="text-align: left">F1-Score</th><th style="text-align: left">Support</th></tr></thead><tbody>
-<tr><td style="text-align: left">0 (Legit)</td><td style="text-align: left">0.96</td><td style="text-align: left">1.00</td><td style="text-align: left">0.98</td><td style="text-align: left">67,426</td></tr>
-<tr><td style="text-align: left">1 (Fraud)</td><td style="text-align: left">0.85</td><td style="text-align: left">0.30</td><td style="text-align: left">0.44</td><td style="text-align: left">4,340</td></tr>
-</tbody></table>
-</div>
-<h3 id="observations"><a class="header" href="#observations">Observations</a></h3>
+<h3 id="v2-high-fidelity-leakage-detected"><a class="header" href="#v2-high-fidelity-leakage-detected">v2 High-Fidelity (Leakage Detected)</a></h3>
+<p>Scaling to larger datasets revealed massive performance inflation due to generator artifacts in metadata fields.</p>
 <ul>
-<li><strong>Recall Gap</strong>: Low recall (0.30) for fraud suggests the model misses significant synthetic patterns.</li>
-<li><strong>Top Signals</strong>: Merchant-level fraud rates and anomaly flags are dominant predictors.</li>
-</ul>
-<hr />
-<h2 id="v2-high-fidelity-iteration-leakage-detected"><a class="header" href="#v2-high-fidelity-iteration-leakage-detected">v2 High-Fidelity Iteration (Leakage Detected)</a></h2>
-<p><strong>Date</strong>: February 13, 2026 (Full 100k run)<br />
-<strong>Model Type</strong>: XGBoost (Binary Classifier)<br />
-<strong>Dataset Size</strong>: 4,391,523 rows (Gold Master Table)<br />
-<strong>Training Target</strong>: <code>fraud_target</code> (Ground Truth)</p>
-<h3 id="performance-results-1"><a class="header" href="#performance-results-1">Performance Results</a></h3>
-<ul>
-<li><strong>Accuracy</strong>: 0.99</li>
 <li><strong>ROC AUC Score</strong>: 0.9993</li>
+<li><strong>Leakage Identified</strong>: Synthetic metadata fields (<code>fraud_target</code>, <code>burst_seq</code>) were providing a "static bypass" for the model.</li>
 </ul>
-<h4 id="classification-report-test-set-1"><a class="header" href="#classification-report-test-set-1">Classification Report (Test Set)</a></h4>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Class</th><th style="text-align: left">Precision</th><th style="text-align: left">Recall</th><th style="text-align: left">F1-Score</th><th style="text-align: left">Support</th></tr></thead><tbody>
-<tr><td style="text-align: left">0 (Legit)</td><td style="text-align: left">0.99</td><td style="text-align: left">1.00</td><td style="text-align: left">1.00</td><td style="text-align: left">807,054</td></tr>
-<tr><td style="text-align: left">1 (Fraud)</td><td style="text-align: left">0.97</td><td style="text-align: left">0.93</td><td style="text-align: left">0.95</td><td style="text-align: left">71,251</td></tr>
-</tbody></table>
-</div>
-<hr />
-<h2 id="v2-iteration-leakage-prevention"><a class="header" href="#v2-iteration-leakage-prevention">v2 Iteration (Leakage Prevention)</a></h2>
-<p><strong>Date</strong>: February 13, 2026<br />
-<strong>Model Type</strong>: XGBoost (Binary Classifier)<br />
-<strong>Dataset Size</strong>: 4,391,523 rows (Gold Master Table)<br />
-<strong>Training Target</strong>: <code>is_fraud</code> (Noisy Label)</p>
-<h3 id="performance-results-2"><a class="header" href="#performance-results-2">Performance Results</a></h3>
+<h3 id="v2-iteration-leakage-prevention"><a class="header" href="#v2-iteration-leakage-prevention">v2 Iteration (Leakage Prevention)</a></h3>
+<p>The feature vector was sanitized to exclude metadata, shifting the focus to behavioral signals.</p>
 <ul>
-<li><strong>Accuracy</strong>: 0.97</li>
 <li><strong>ROC AUC Score</strong>: 0.9746</li>
+<li><strong>Recall (Noisy Labels)</strong>: 0.72</li>
+<li><strong>Sanitization</strong>: Transitioned from <code>fraud_target</code> to the noisy <code>is_fraud</code> label.</li>
 </ul>
-<h4 id="classification-report-noisy-labels"><a class="header" href="#classification-report-noisy-labels">Classification Report (Noisy Labels)</a></h4>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Class</th><th style="text-align: left">Precision</th><th style="text-align: left">Recall</th><th style="text-align: left">F1-Score</th><th style="text-align: left">Support</th></tr></thead><tbody>
-<tr><td style="text-align: left">0 (Legit)</td><td style="text-align: left">0.97</td><td style="text-align: left">0.99</td><td style="text-align: left">0.98</td><td style="text-align: left">795,892</td></tr>
-<tr><td style="text-align: left">1 (Fraud)</td><td style="text-align: left">0.92</td><td style="text-align: left">0.72</td><td style="text-align: left">0.81</td><td style="text-align: left">82,413</td></tr>
-</tbody></table>
-</div>
-<h3 id="observations-how-leakage-was-prevented"><a class="header" href="#observations-how-leakage-was-prevented">Observations: How Leakage was Prevented</a></h3>
-<ol>
-<li><strong>Sanitized Feature Vector</strong>: Explicitly excluded synthetic metadata fields (<code>geo_anomaly</code>, <code>device_anomaly</code>, <code>ip_anomaly</code>, <code>label_noise</code>, <code>fraud_type</code>, <code>fraud_target</code>, <code>burst_session</code>, <code>burst_seq</code>) from the training set.</li>
-<li><strong>Noisy Target Shift</strong>: Shifted the training target from the perfect <code>fraud_target</code> to the noisy <code>is_fraud</code> label.</li>
-<li><strong>Behavioral Validation</strong>: The model now identifies fraud based on behavioral signals like <code>amount</code> (36% importance), <code>mf_fraud_rate</code> (33%), and <code>df_fraud_rate</code> (16%).</li>
-</ol>
-<hr />
-<h2 id="v3-streaming-verification-real-time-performance"><a class="header" href="#v3-streaming-verification-real-time-performance">v3 Streaming Verification (Real-Time Performance)</a></h2>
-<p><strong>Date</strong>: March 15, 2026<br />
-<strong>Inference Engine</strong>: <code>scorer.py</code> (Real-time scoring via Kafka)<br />
-<strong>Throughput</strong>: 100 tx/s (Rate-limited)<br />
-<strong>Test Window</strong>: 1 hour (360,000 transactions)</p>
-<h3 id="performance-results-ground-truth-vs-model-score"><a class="header" href="#performance-results-ground-truth-vs-model-score">Performance Results (Ground Truth vs. Model Score)</a></h3>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Metric</th><th style="text-align: left">Performance</th></tr></thead><tbody>
-<tr><td style="text-align: left">Precision</td><td style="text-align: left">0.91</td></tr>
-<tr><td style="text-align: left">Recall</td><td style="text-align: left">0.68</td></tr>
-<tr><td style="text-align: left">F1-Score</td><td style="text-align: left">0.78</td></tr>
-<tr><td style="text-align: left">Latency (P99)</td><td style="text-align: left">12ms</td></tr>
-</tbody></table>
-</div>
-<h3 id="observations-real-time-performance-vs-batch"><a class="header" href="#observations-real-time-performance-vs-batch">Observations: Real-Time Performance vs. Batch</a></h3>
+<p><strong>Note</strong>: In addition to the leakage issues documented below, v1 and v2 iterations were trained on an incomplete feature set. Behavioral features computed in the Rust ETL layer — including <code>amount_deviation_z_score</code>, <code>spatial_velocity</code>, and granular anomaly flags — were silently dropped before reaching XGBoost due to a narrow Gold table join. The inflated AUC figures in these iterations reflect both metadata leakage and the absence of the features that would have provided genuine behavioral signal.</p>
+<h2 id="section-2-v3--production-configuration-final"><a class="header" href="#section-2-v3--production-configuration-final">Section 2: v3 — Production Configuration (Final)</a></h2>
+<p>The final model configuration focuses on pure behavioral signals, specifically tuned to handle the extreme class imbalance (1.4% fraud rate) found in realistic production environments.</p>
+<h3 id="training-setup"><a class="header" href="#training-setup">Training Setup</a></h3>
 <ul>
-<li><strong>Recall Dip</strong>: The recall in the streaming environment (0.68) is slightly lower than the batch environment (0.72). This is likely due to the <strong>Feature Consistency Gap</strong>—some features in Redis (from <code>seed_redis.py</code>) may be slightly stale compared to the real-time transaction stream.</li>
-<li><strong>Latency Benchmarks</strong>: The P99 latency of 12ms (including Redis feature lookup and XGBoost inference) confirms that the Python-based scorer is capable of maintaining 100 tx/s on standard hardware.</li>
-<li><strong>Ground Truth Capture</strong>: The verification mode successfully captured <code>ground_truth.csv</code>, allowing for direct row-by-row accuracy validation without manual labeling.</li>
+<li><strong>Dataset:</strong> 1.5M transactions (Seed 42).</li>
+<li><strong>Fraud Rate:</strong> 1.41% (<code>target_share</code>: 0.01, <code>fp_rate</code>: 0.005).</li>
+<li><strong>Model:</strong> XGBoost binary classifier.</li>
+<li><strong>Scale Pos Weight:</strong> 69.57 (Computed dynamically from training imbalance).</li>
+<li><strong>Eval Metric:</strong> <code>aucpr</code> (Area Under Precision-Recall Curve).</li>
+<li><strong>Label Noise:</strong> 0.5% False Positives and 1% False Negatives deliberately injected.</li>
+<li><strong>Theoretical Recall Ceiling:</strong> 66.7% (Derived from the intentional label noise ratio).</li>
 </ul>
+<h3 id="feature-importance"><a class="header" href="#feature-importance">Feature Importance</a></h3>
+<p>The model prioritizes physical and financial anomalies over static identifiers.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Feature</th><th style="text-align: left">Importance</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>spatial_velocity</code></td><td style="text-align: left">25.38%</td><td style="text-align: left">Impossible travel speed between transactions</td></tr>
+<tr><td style="text-align: left"><code>amount_deviation_z_score</code></td><td style="text-align: left">20.80%</td><td style="text-align: left">Spending magnitude relative to customer norm</td></tr>
+<tr><td style="text-align: left"><code>time_since_last_transaction</code></td><td style="text-align: left">12.72%</td><td style="text-align: left">Temporal burst and frequency detection</td></tr>
+<tr><td style="text-align: left"><code>transaction_channel</code></td><td style="text-align: left">11.60%</td><td style="text-align: left">Risk associated with specific payment methods</td></tr>
+<tr><td style="text-align: left"><code>merchant_category</code></td><td style="text-align: left">11.08%</td><td style="text-align: left">Contextual risk of the merchant type</td></tr>
+<tr><td style="text-align: left"><code>hour_deviation_from_norm</code></td><td style="text-align: left">7.40%</td><td style="text-align: left">Circadian rhythm anomalies</td></tr>
+<tr><td style="text-align: left"><code>merchant_category_switch_flag</code></td><td style="text-align: left">2.89%</td><td style="text-align: left">Unexpected shifts in merchant category</td></tr>
+<tr><td style="text-align: left"><code>card_present</code></td><td style="text-align: left">2.45%</td><td style="text-align: left">Physical vs. digital transaction risk</td></tr>
+<tr><td style="text-align: left"><code>transaction_sequence_number</code></td><td style="text-align: left">1.95%</td><td style="text-align: left">Position within the account lifecycle</td></tr>
+<tr><td style="text-align: left"><code>rapid_fire_transaction_flag</code></td><td style="text-align: left">1.88%</td><td style="text-align: left">High-velocity sequence identification</td></tr>
+</tbody></table>
+</div>
+<p>For a detailed narrative of the discovery and resolution of these artifacts, see the <a href="feature_importance_analysis.html">Feature Leakage Case Study</a>.</p>
+<h3 id="generalization-results"><a class="header" href="#generalization-results">Generalization Results</a></h3>
+<p>Validated against three independent populations to ensure robust performance across different random seeds.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Test Population</th><th style="text-align: left">Seed</th><th style="text-align: left">Transactions</th><th style="text-align: left">AUC</th></tr></thead><tbody>
+<tr><td style="text-align: left">Holdout</td><td style="text-align: left">42 (Same)</td><td style="text-align: left">1.5M</td><td style="text-align: left">84.72%</td></tr>
+<tr><td style="text-align: left">Independent</td><td style="text-align: left">8888 (Different)</td><td style="text-align: left">1.5M</td><td style="text-align: left">79.94%</td></tr>
+<tr><td style="text-align: left">Independent</td><td style="text-align: left">5555 (Different)</td><td style="text-align: left">3.0M</td><td style="text-align: left">79.81%</td></tr>
+</tbody></table>
+</div>
+<p>Note: The higher AUC on the holdout set is due to distributional overlap with the training population, while the ~80% AUC on independent seeds represents the model's true behavioral generalization.</p>
+<hr />
+<h2 id="section-3-threshold-operating-points"><a class="header" href="#section-3-threshold-operating-points">Section 3: Threshold Operating Points</a></h2>
+<p>In a production environment, the model's probability output is mapped to specific operational actions.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Operating Mode</th><th style="text-align: left">Threshold</th><th style="text-align: left">Precision</th><th style="text-align: left">Recall</th><th style="text-align: left">F1</th><th style="text-align: left">Use Case</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong>Detection Layer</strong></td><td style="text-align: left">0.495</td><td style="text-align: left">10%</td><td style="text-align: left">60%</td><td style="text-align: left">0.172</td><td style="text-align: left">Review queue — broad capture</td></tr>
+<tr><td style="text-align: left"><strong>Triage</strong></td><td style="text-align: left">0.645</td><td style="text-align: left">18%</td><td style="text-align: left">55%</td><td style="text-align: left">0.268</td><td style="text-align: left">Early analyst filtering</td></tr>
+<tr><td style="text-align: left"><strong>Investigation</strong></td><td style="text-align: left">0.736</td><td style="text-align: left">31%</td><td style="text-align: left">50%</td><td style="text-align: left">0.385</td><td style="text-align: left">Analyst workbench</td></tr>
+<tr><td style="text-align: left"><strong>High Confidence</strong></td><td style="text-align: left">0.842</td><td style="text-align: left">57%</td><td style="text-align: left">45%</td><td style="text-align: left">0.502</td><td style="text-align: left">Escalation decisions</td></tr>
+<tr><td style="text-align: left"><strong>Blocking</strong></td><td style="text-align: left">0.945</td><td style="text-align: left">73%</td><td style="text-align: left">40%</td><td style="text-align: left">0.517</td><td style="text-align: left">Automatic card block</td></tr>
+</tbody></table>
+</div>
+<p>The Detection Layer feeds a review queue for manual inspection, while the Blocking Layer is reserved for automated enforcement. The tradeoff between these layers is an operational business decision, not a model failure.</p>
+<hr />
+<h2 id="section-4-merchant-category-audit"><a class="header" href="#section-4-merchant-category-audit">Section 4: Merchant Category Audit</a></h2>
+<p>Leakage verification at the "Blocking" threshold (0.945) confirms that overrepresentation reflects genuine category risk levels rather than static bypasses.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Category</th><th style="text-align: left">Global Share</th><th style="text-align: left">Flag Share</th><th style="text-align: left">Index</th><th style="text-align: left">Verified Fraud Rate</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong>GAMBLING</strong></td><td style="text-align: left">0.07%</td><td style="text-align: left">1.09%</td><td style="text-align: left">17x</td><td style="text-align: left">17.68%</td></tr>
+<tr><td style="text-align: left"><strong>ENTERTAINMENT</strong></td><td style="text-align: left">1.10%</td><td style="text-align: left">14.35%</td><td style="text-align: left">13x</td><td style="text-align: left">11.20%</td></tr>
+<tr><td style="text-align: left"><strong>LUXURY</strong></td><td style="text-align: left">1.62%</td><td style="text-align: left">8.63%</td><td style="text-align: left">5x</td><td style="text-align: left">4.91%</td></tr>
+<tr><td style="text-align: left"><strong>ELECTRONICS</strong></td><td style="text-align: left">3.39%</td><td style="text-align: left">10.22%</td><td style="text-align: left">3x</td><td style="text-align: left">2.40%</td></tr>
+<tr><td style="text-align: left"><strong>TRAVEL</strong></td><td style="text-align: left">6.14%</td><td style="text-align: left">16.29%</td><td style="text-align: left">2.6x</td><td style="text-align: left">2.53%</td></tr>
+<tr><td style="text-align: left"><strong>SERVICES</strong></td><td style="text-align: left">5.15%</td><td style="text-align: left">11.92%</td><td style="text-align: left">2.3x</td><td style="text-align: left">2.53%</td></tr>
+</tbody></table>
+</div>
+<p>All verified fraud rates fall below the 20% threshold, confirming that no single category acts as a near-deterministic fraud rule. The model uses category as a Bayesian prior requiring behavioral confirmation rather than a static classifier.</p>
+<p>The <code>GAMBLING</code> index was previously at 103x (documented in the leakage case study); its reduction to 17x after generator retuning and the verified fraud rate confirms it is now a legitimate signal.</p>
+<hr />
+<h2 id="section-5-known-limitations"><a class="header" href="#section-5-known-limitations">Section 5: Known Limitations</a></h2>
+<h3 id="recall-ceiling-667"><a class="header" href="#recall-ceiling-667">Recall Ceiling (66.7%)</a></h3>
+<p>Theoretical maximum recall is imposed by deliberate label noise design. The 0.5% false positive rate in <code>fp_rate</code> creates labels that are behaviorally unlearnable. Recall approaching this ceiling represents optimal behavior.</p>
+<h3 id="silver-etl-eager-execution"><a class="header" href="#silver-etl-eager-execution">Silver ETL Eager Execution</a></h3>
+<p>Sequence features using <code>.over()</code> window functions trigger eager in-memory execution despite Polars lazy API usage. Datasets significantly exceeding available RAM will hit memory pressure. Roadmap: transition to a stateful streaming pre-aggregation pass.</p>
+<h3 id="campaign-detection"><a class="header" href="#campaign-detection">Campaign Detection</a></h3>
+<p>Coordinated attack signatures require graph-based reasoning over entity relationships. Individual transactions in a campaign are often behaviorally indistinguishable from legitimate ones when viewed in isolation—this is a structural limitation of single-transaction classifiers.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="feature-leakage-case-study"><a class="header" href="#feature-leakage-case-study">Feature Leakage Case Study</a></h1>
 <p>While designing a fraud detection model for flagging potentially fraudulent transactions using XGBoost, some problems were discovered that made it unsuitable for being used in real-time scoring. The issue revolves around an individual feature primarily deciding the model's decision making.</p>
 <p>Transactions were synthetically generated for 10,000 customers with a total figure being around 6M transactions. After feature engineering and interpolating them into a gold_master_table which is used by XGBoost for training. An AUC score of 0.9079 was achieved which felt more realistic than the previous test which ran on a smaller dataset (4.3M transactions and achieved an AUC score of 0.97). However, the crux of the issue became apparent when the top features by importance were checked:</p>
@@ -1464,7 +1554,7 @@ amount_multiplier: 0.8_to_1.2  # within customer's normal band
 <div style="break-before: page; page-break-before: always;"></div><h1 id="technical-issues--resolutions"><a class="header" href="#technical-issues--resolutions">Technical Issues &amp; Resolutions</a></h1>
 <h2 id="summary-30"><a class="header" href="#summary-30">Summary</a></h2>
 <p>The <code>issues.md</code> document acts as the primary engineering log for RiskFabric. It captures architectural hurdles, environment-specific bugs, and performance bottlenecks encountered during development, along with their implemented or proposed resolutions.</p>
-<h2 id="design-intent-11"><a class="header" href="#design-intent-11">Design Intent</a></h2>
+<h2 id="design-intent-10"><a class="header" href="#design-intent-10">Design Intent</a></h2>
 <p>This document serves as <strong>Institutional Knowledge</strong> for the project. In complex simulations, the most difficult bugs often arise from the interaction between system layers (e.g., Rust → Kafka → Python). Documenting these issues provides a roadmap for future optimizations and prevents the repetition of architectural errors. Every entry is paired with a specific technical fix validated through benchmarking or regression testing.</p>
 <hr />
 <h2 id="-data-engine--type-safety"><a class="header" href="#-data-engine--type-safety">🛠️ Data Engine &amp; Type Safety</a></h2>
@@ -1518,7 +1608,7 @@ amount_multiplier: 0.8_to_1.2  # within customer's normal band
 <li><strong>Resolution</strong>: The <code>target_share</code> parameter was tuned to 0.005 (0.5% transaction rate) to align with industry benchmarks for sparse fraud data.</li>
 </ul>
 <hr />
-<h2 id="known-issues-28"><a class="header" href="#known-issues-28">Known Issues</a></h2>
+<h2 id="known-issues-27"><a class="header" href="#known-issues-27">Known Issues</a></h2>
 <p>There is ongoing difficulty with <strong>Container Runtime Variability</strong>. The <code>podman exec</code> calls used in ingestion and ETL pipelines behave inconsistently across Linux and macOS environments, causing failures in the data warehouse loading process. Transitioning to native database drivers is required to eliminate dependency on the host's container CLI.</p>
 <p>Furthermore, <strong>Memory Management during Reference Extraction</strong> is currently insufficient. When processing large OSM PBF files, the <code>prepare_refs.rs</code> binary can consume significant RAM. Implementing a "Spill-to-Disk" strategy for the parallel map-reduce operation is necessary to maintain a memory footprint below 4GB.</p>
 
@@ -1556,6 +1646,7 @@ amount_multiplier: 0.8_to_1.2  # within customer's normal band
         <script src="book.js"></script>
 
         <!-- Custom JS scripts -->
+        <script src="documentation/mermaid-init.js"></script>
 
         <script>
         window.addEventListener('load', function() {

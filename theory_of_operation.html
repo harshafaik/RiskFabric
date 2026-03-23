@@ -180,6 +180,28 @@
 <p>This document explains the underlying philosophy, architecture, and logic of the RiskFabric simulation. It answers the question: "How does the engine actually think?"</p>
 <h2 id="1-agent-based-simulation-abm-philosophy"><a class="header" href="#1-agent-based-simulation-abm-philosophy">1. Agent-Based Simulation (ABM) Philosophy</a></h2>
 <p>RiskFabric functions as an <strong>Agent-Based Simulator</strong> rather than a simple random data generator.</p>
+<pre><code class="language-mermaid">graph TD
+    subgraph "World Building"
+        OSM[OpenStreetMap Data] --&gt; Prepare[prepare_refs.rs]
+        Prepare --&gt; PG[(Postgres / PostGIS)]
+        PG --&gt; Parquet[Reference Parquet Files]
+    end
+
+    subgraph "Simulation Engine"
+        Parquet --&gt; Gen[generate.rs / stream.rs]
+        Config[YAML Configs] --&gt; Gen
+        Gen --&gt; Trans[Transactions]
+    end
+
+    subgraph "Detection Pipeline"
+        Trans --&gt; CH[(ClickHouse)]
+        CH --&gt; ETL[etl.rs]
+        ETL --&gt; Train[train_xgboost.py]
+        Train --&gt; Scorer[scorer.py]
+        Gen --&gt; Kafka[Redpanda]
+        Kafka --&gt; Scorer
+    end
+</code></pre>
 <ul>
 <li><strong>The Agent</strong>: The primary agent, the <code>Customer</code>, drives the logic.</li>
 <li><strong>The World</strong>: <strong>OpenStreetMap (OSM)</strong> reference nodes (Residential and Merchant points) across India define the physical world.</li>
@@ -189,6 +211,12 @@
 <hr />
 <h2 id="2-the-deterministic-lifecycle"><a class="header" href="#2-the-deterministic-lifecycle">2. The Deterministic Lifecycle</a></h2>
 <p>To ensure consistency across 10M rows and all tables, RiskFabric follows a strict creation order:</p>
+<pre><code class="language-mermaid">graph LR
+    Cust[Customer] --&gt;|1:N| Acc[Account]
+    Acc --&gt;|1:N| Card[Card]
+    Card --&gt;|1:N| Tx[Transaction]
+    Tx --&gt;|linked| Merch[Merchant]
+</code></pre>
 <ol>
 <li><strong>Customer Birth</strong>: The generator assigns each customer a name, age, and a <strong>Home Coordinate</strong> based on real residential OSM nodes.</li>
 <li><strong>Financial Anchoring</strong>: The system assigns one or more <code>Accounts</code> to every customer.</li>
@@ -283,6 +311,7 @@
         <script src="book.js"></script>
 
         <!-- Custom JS scripts -->
+        <script src="documentation/mermaid-init.js"></script>
 
 
     </div>

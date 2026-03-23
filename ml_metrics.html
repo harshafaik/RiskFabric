@@ -176,89 +176,103 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="machine-learning-model-metrics"><a class="header" href="#machine-learning-model-metrics">Machine Learning Model Metrics</a></h1>
-<p>This document tracks the performance and evolution of the fraud detection models trained on RiskFabric synthetic data.</p>
-<h2 id="v1-iteration-dry-run"><a class="header" href="#v1-iteration-dry-run">v1 Iteration (Dry Run)</a></h2>
-<p><strong>Date</strong>: February 15, 2026<br />
-<strong>Model Type</strong>: XGBoost (Binary Classifier)<br />
-<strong>Dataset Size</strong>: 358,830 rows (Gold Master Table)<br />
-<strong>Training Target</strong>: <code>fraud_target</code> (Ground Truth)</p>
-<h3 id="performance-results"><a class="header" href="#performance-results">Performance Results</a></h3>
+                        <h1 id="machine-learning-metrics--model-progression"><a class="header" href="#machine-learning-metrics--model-progression">Machine Learning Metrics &amp; Model Progression</a></h1>
+<p>This document tracks the performance and evolution of the fraud detection models trained on RiskFabric synthetic data, progressing from initial leakage-prone baselines to a robust, behavioral production configuration.</p>
+<hr />
+<h2 id="section-1-early-iterations"><a class="header" href="#section-1-early-iterations">Section 1: Early Iterations</a></h2>
+<p>The development process began with basic feature sets to establish a baseline for fraud detection performance.</p>
+<h3 id="v1-iteration-baseline"><a class="header" href="#v1-iteration-baseline">v1 Iteration (Baseline)</a></h3>
+<p>The initial model established core feature sets including amount deviations and spatial velocity on a sample population.</p>
 <ul>
 <li><strong>Accuracy</strong>: 0.95</li>
 <li><strong>ROC AUC Score</strong>: 0.9782</li>
+<li><strong>Recall (Fraud)</strong>: 0.30 (Identified significant "Recall Gap")</li>
 </ul>
-<h4 id="classification-report-test-set"><a class="header" href="#classification-report-test-set">Classification Report (Test Set)</a></h4>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Class</th><th style="text-align: left">Precision</th><th style="text-align: left">Recall</th><th style="text-align: left">F1-Score</th><th style="text-align: left">Support</th></tr></thead><tbody>
-<tr><td style="text-align: left">0 (Legit)</td><td style="text-align: left">0.96</td><td style="text-align: left">1.00</td><td style="text-align: left">0.98</td><td style="text-align: left">67,426</td></tr>
-<tr><td style="text-align: left">1 (Fraud)</td><td style="text-align: left">0.85</td><td style="text-align: left">0.30</td><td style="text-align: left">0.44</td><td style="text-align: left">4,340</td></tr>
-</tbody></table>
-</div>
-<h3 id="observations"><a class="header" href="#observations">Observations</a></h3>
+<h3 id="v2-high-fidelity-leakage-detected"><a class="header" href="#v2-high-fidelity-leakage-detected">v2 High-Fidelity (Leakage Detected)</a></h3>
+<p>Scaling to larger datasets revealed massive performance inflation due to generator artifacts in metadata fields.</p>
 <ul>
-<li><strong>Recall Gap</strong>: Low recall (0.30) for fraud suggests the model misses significant synthetic patterns.</li>
-<li><strong>Top Signals</strong>: Merchant-level fraud rates and anomaly flags are dominant predictors.</li>
-</ul>
-<hr />
-<h2 id="v2-high-fidelity-iteration-leakage-detected"><a class="header" href="#v2-high-fidelity-iteration-leakage-detected">v2 High-Fidelity Iteration (Leakage Detected)</a></h2>
-<p><strong>Date</strong>: February 13, 2026 (Full 100k run)<br />
-<strong>Model Type</strong>: XGBoost (Binary Classifier)<br />
-<strong>Dataset Size</strong>: 4,391,523 rows (Gold Master Table)<br />
-<strong>Training Target</strong>: <code>fraud_target</code> (Ground Truth)</p>
-<h3 id="performance-results-1"><a class="header" href="#performance-results-1">Performance Results</a></h3>
-<ul>
-<li><strong>Accuracy</strong>: 0.99</li>
 <li><strong>ROC AUC Score</strong>: 0.9993</li>
+<li><strong>Leakage Identified</strong>: Synthetic metadata fields (<code>fraud_target</code>, <code>burst_seq</code>) were providing a "static bypass" for the model.</li>
 </ul>
-<h4 id="classification-report-test-set-1"><a class="header" href="#classification-report-test-set-1">Classification Report (Test Set)</a></h4>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Class</th><th style="text-align: left">Precision</th><th style="text-align: left">Recall</th><th style="text-align: left">F1-Score</th><th style="text-align: left">Support</th></tr></thead><tbody>
-<tr><td style="text-align: left">0 (Legit)</td><td style="text-align: left">0.99</td><td style="text-align: left">1.00</td><td style="text-align: left">1.00</td><td style="text-align: left">807,054</td></tr>
-<tr><td style="text-align: left">1 (Fraud)</td><td style="text-align: left">0.97</td><td style="text-align: left">0.93</td><td style="text-align: left">0.95</td><td style="text-align: left">71,251</td></tr>
-</tbody></table>
-</div>
-<hr />
-<h2 id="v2-iteration-leakage-prevention"><a class="header" href="#v2-iteration-leakage-prevention">v2 Iteration (Leakage Prevention)</a></h2>
-<p><strong>Date</strong>: February 13, 2026<br />
-<strong>Model Type</strong>: XGBoost (Binary Classifier)<br />
-<strong>Dataset Size</strong>: 4,391,523 rows (Gold Master Table)<br />
-<strong>Training Target</strong>: <code>is_fraud</code> (Noisy Label)</p>
-<h3 id="performance-results-2"><a class="header" href="#performance-results-2">Performance Results</a></h3>
+<h3 id="v2-iteration-leakage-prevention"><a class="header" href="#v2-iteration-leakage-prevention">v2 Iteration (Leakage Prevention)</a></h3>
+<p>The feature vector was sanitized to exclude metadata, shifting the focus to behavioral signals.</p>
 <ul>
-<li><strong>Accuracy</strong>: 0.97</li>
 <li><strong>ROC AUC Score</strong>: 0.9746</li>
+<li><strong>Recall (Noisy Labels)</strong>: 0.72</li>
+<li><strong>Sanitization</strong>: Transitioned from <code>fraud_target</code> to the noisy <code>is_fraud</code> label.</li>
 </ul>
-<h4 id="classification-report-noisy-labels"><a class="header" href="#classification-report-noisy-labels">Classification Report (Noisy Labels)</a></h4>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Class</th><th style="text-align: left">Precision</th><th style="text-align: left">Recall</th><th style="text-align: left">F1-Score</th><th style="text-align: left">Support</th></tr></thead><tbody>
-<tr><td style="text-align: left">0 (Legit)</td><td style="text-align: left">0.97</td><td style="text-align: left">0.99</td><td style="text-align: left">0.98</td><td style="text-align: left">795,892</td></tr>
-<tr><td style="text-align: left">1 (Fraud)</td><td style="text-align: left">0.92</td><td style="text-align: left">0.72</td><td style="text-align: left">0.81</td><td style="text-align: left">82,413</td></tr>
-</tbody></table>
-</div>
-<h3 id="observations-how-leakage-was-prevented"><a class="header" href="#observations-how-leakage-was-prevented">Observations: How Leakage was Prevented</a></h3>
-<ol>
-<li><strong>Sanitized Feature Vector</strong>: Explicitly excluded synthetic metadata fields (<code>geo_anomaly</code>, <code>device_anomaly</code>, <code>ip_anomaly</code>, <code>label_noise</code>, <code>fraud_type</code>, <code>fraud_target</code>, <code>burst_session</code>, <code>burst_seq</code>) from the training set.</li>
-<li><strong>Noisy Target Shift</strong>: Shifted the training target from the perfect <code>fraud_target</code> to the noisy <code>is_fraud</code> label.</li>
-<li><strong>Behavioral Validation</strong>: The model now identifies fraud based on behavioral signals like <code>amount</code> (36% importance), <code>mf_fraud_rate</code> (33%), and <code>df_fraud_rate</code> (16%).</li>
-</ol>
-<hr />
-<h2 id="v3-streaming-verification-real-time-performance"><a class="header" href="#v3-streaming-verification-real-time-performance">v3 Streaming Verification (Real-Time Performance)</a></h2>
-<p><strong>Date</strong>: March 15, 2026<br />
-<strong>Inference Engine</strong>: <code>scorer.py</code> (Real-time scoring via Kafka)<br />
-<strong>Throughput</strong>: 100 tx/s (Rate-limited)<br />
-<strong>Test Window</strong>: 1 hour (360,000 transactions)</p>
-<h3 id="performance-results-ground-truth-vs-model-score"><a class="header" href="#performance-results-ground-truth-vs-model-score">Performance Results (Ground Truth vs. Model Score)</a></h3>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Metric</th><th style="text-align: left">Performance</th></tr></thead><tbody>
-<tr><td style="text-align: left">Precision</td><td style="text-align: left">0.91</td></tr>
-<tr><td style="text-align: left">Recall</td><td style="text-align: left">0.68</td></tr>
-<tr><td style="text-align: left">F1-Score</td><td style="text-align: left">0.78</td></tr>
-<tr><td style="text-align: left">Latency (P99)</td><td style="text-align: left">12ms</td></tr>
-</tbody></table>
-</div>
-<h3 id="observations-real-time-performance-vs-batch"><a class="header" href="#observations-real-time-performance-vs-batch">Observations: Real-Time Performance vs. Batch</a></h3>
+<p><strong>Note</strong>: In addition to the leakage issues documented below, v1 and v2 iterations were trained on an incomplete feature set. Behavioral features computed in the Rust ETL layer — including <code>amount_deviation_z_score</code>, <code>spatial_velocity</code>, and granular anomaly flags — were silently dropped before reaching XGBoost due to a narrow Gold table join. The inflated AUC figures in these iterations reflect both metadata leakage and the absence of the features that would have provided genuine behavioral signal.</p>
+<h2 id="section-2-v3--production-configuration-final"><a class="header" href="#section-2-v3--production-configuration-final">Section 2: v3 — Production Configuration (Final)</a></h2>
+<p>The final model configuration focuses on pure behavioral signals, specifically tuned to handle the extreme class imbalance (1.4% fraud rate) found in realistic production environments.</p>
+<h3 id="training-setup"><a class="header" href="#training-setup">Training Setup</a></h3>
 <ul>
-<li><strong>Recall Dip</strong>: The recall in the streaming environment (0.68) is slightly lower than the batch environment (0.72). This is likely due to the <strong>Feature Consistency Gap</strong>—some features in Redis (from <code>seed_redis.py</code>) may be slightly stale compared to the real-time transaction stream.</li>
-<li><strong>Latency Benchmarks</strong>: The P99 latency of 12ms (including Redis feature lookup and XGBoost inference) confirms that the Python-based scorer is capable of maintaining 100 tx/s on standard hardware.</li>
-<li><strong>Ground Truth Capture</strong>: The verification mode successfully captured <code>ground_truth.csv</code>, allowing for direct row-by-row accuracy validation without manual labeling.</li>
+<li><strong>Dataset:</strong> 1.5M transactions (Seed 42).</li>
+<li><strong>Fraud Rate:</strong> 1.41% (<code>target_share</code>: 0.01, <code>fp_rate</code>: 0.005).</li>
+<li><strong>Model:</strong> XGBoost binary classifier.</li>
+<li><strong>Scale Pos Weight:</strong> 69.57 (Computed dynamically from training imbalance).</li>
+<li><strong>Eval Metric:</strong> <code>aucpr</code> (Area Under Precision-Recall Curve).</li>
+<li><strong>Label Noise:</strong> 0.5% False Positives and 1% False Negatives deliberately injected.</li>
+<li><strong>Theoretical Recall Ceiling:</strong> 66.7% (Derived from the intentional label noise ratio).</li>
 </ul>
+<h3 id="feature-importance"><a class="header" href="#feature-importance">Feature Importance</a></h3>
+<p>The model prioritizes physical and financial anomalies over static identifiers.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Feature</th><th style="text-align: left">Importance</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>spatial_velocity</code></td><td style="text-align: left">25.38%</td><td style="text-align: left">Impossible travel speed between transactions</td></tr>
+<tr><td style="text-align: left"><code>amount_deviation_z_score</code></td><td style="text-align: left">20.80%</td><td style="text-align: left">Spending magnitude relative to customer norm</td></tr>
+<tr><td style="text-align: left"><code>time_since_last_transaction</code></td><td style="text-align: left">12.72%</td><td style="text-align: left">Temporal burst and frequency detection</td></tr>
+<tr><td style="text-align: left"><code>transaction_channel</code></td><td style="text-align: left">11.60%</td><td style="text-align: left">Risk associated with specific payment methods</td></tr>
+<tr><td style="text-align: left"><code>merchant_category</code></td><td style="text-align: left">11.08%</td><td style="text-align: left">Contextual risk of the merchant type</td></tr>
+<tr><td style="text-align: left"><code>hour_deviation_from_norm</code></td><td style="text-align: left">7.40%</td><td style="text-align: left">Circadian rhythm anomalies</td></tr>
+<tr><td style="text-align: left"><code>merchant_category_switch_flag</code></td><td style="text-align: left">2.89%</td><td style="text-align: left">Unexpected shifts in merchant category</td></tr>
+<tr><td style="text-align: left"><code>card_present</code></td><td style="text-align: left">2.45%</td><td style="text-align: left">Physical vs. digital transaction risk</td></tr>
+<tr><td style="text-align: left"><code>transaction_sequence_number</code></td><td style="text-align: left">1.95%</td><td style="text-align: left">Position within the account lifecycle</td></tr>
+<tr><td style="text-align: left"><code>rapid_fire_transaction_flag</code></td><td style="text-align: left">1.88%</td><td style="text-align: left">High-velocity sequence identification</td></tr>
+</tbody></table>
+</div>
+<p>For a detailed narrative of the discovery and resolution of these artifacts, see the <a href="feature_importance_analysis.html">Feature Leakage Case Study</a>.</p>
+<h3 id="generalization-results"><a class="header" href="#generalization-results">Generalization Results</a></h3>
+<p>Validated against three independent populations to ensure robust performance across different random seeds.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Test Population</th><th style="text-align: left">Seed</th><th style="text-align: left">Transactions</th><th style="text-align: left">AUC</th></tr></thead><tbody>
+<tr><td style="text-align: left">Holdout</td><td style="text-align: left">42 (Same)</td><td style="text-align: left">1.5M</td><td style="text-align: left">84.72%</td></tr>
+<tr><td style="text-align: left">Independent</td><td style="text-align: left">8888 (Different)</td><td style="text-align: left">1.5M</td><td style="text-align: left">79.94%</td></tr>
+<tr><td style="text-align: left">Independent</td><td style="text-align: left">5555 (Different)</td><td style="text-align: left">3.0M</td><td style="text-align: left">79.81%</td></tr>
+</tbody></table>
+</div>
+<p>Note: The higher AUC on the holdout set is due to distributional overlap with the training population, while the ~80% AUC on independent seeds represents the model's true behavioral generalization.</p>
+<hr />
+<h2 id="section-3-threshold-operating-points"><a class="header" href="#section-3-threshold-operating-points">Section 3: Threshold Operating Points</a></h2>
+<p>In a production environment, the model's probability output is mapped to specific operational actions.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Operating Mode</th><th style="text-align: left">Threshold</th><th style="text-align: left">Precision</th><th style="text-align: left">Recall</th><th style="text-align: left">F1</th><th style="text-align: left">Use Case</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong>Detection Layer</strong></td><td style="text-align: left">0.495</td><td style="text-align: left">10%</td><td style="text-align: left">60%</td><td style="text-align: left">0.172</td><td style="text-align: left">Review queue — broad capture</td></tr>
+<tr><td style="text-align: left"><strong>Triage</strong></td><td style="text-align: left">0.645</td><td style="text-align: left">18%</td><td style="text-align: left">55%</td><td style="text-align: left">0.268</td><td style="text-align: left">Early analyst filtering</td></tr>
+<tr><td style="text-align: left"><strong>Investigation</strong></td><td style="text-align: left">0.736</td><td style="text-align: left">31%</td><td style="text-align: left">50%</td><td style="text-align: left">0.385</td><td style="text-align: left">Analyst workbench</td></tr>
+<tr><td style="text-align: left"><strong>High Confidence</strong></td><td style="text-align: left">0.842</td><td style="text-align: left">57%</td><td style="text-align: left">45%</td><td style="text-align: left">0.502</td><td style="text-align: left">Escalation decisions</td></tr>
+<tr><td style="text-align: left"><strong>Blocking</strong></td><td style="text-align: left">0.945</td><td style="text-align: left">73%</td><td style="text-align: left">40%</td><td style="text-align: left">0.517</td><td style="text-align: left">Automatic card block</td></tr>
+</tbody></table>
+</div>
+<p>The Detection Layer feeds a review queue for manual inspection, while the Blocking Layer is reserved for automated enforcement. The tradeoff between these layers is an operational business decision, not a model failure.</p>
+<hr />
+<h2 id="section-4-merchant-category-audit"><a class="header" href="#section-4-merchant-category-audit">Section 4: Merchant Category Audit</a></h2>
+<p>Leakage verification at the "Blocking" threshold (0.945) confirms that overrepresentation reflects genuine category risk levels rather than static bypasses.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Category</th><th style="text-align: left">Global Share</th><th style="text-align: left">Flag Share</th><th style="text-align: left">Index</th><th style="text-align: left">Verified Fraud Rate</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong>GAMBLING</strong></td><td style="text-align: left">0.07%</td><td style="text-align: left">1.09%</td><td style="text-align: left">17x</td><td style="text-align: left">17.68%</td></tr>
+<tr><td style="text-align: left"><strong>ENTERTAINMENT</strong></td><td style="text-align: left">1.10%</td><td style="text-align: left">14.35%</td><td style="text-align: left">13x</td><td style="text-align: left">11.20%</td></tr>
+<tr><td style="text-align: left"><strong>LUXURY</strong></td><td style="text-align: left">1.62%</td><td style="text-align: left">8.63%</td><td style="text-align: left">5x</td><td style="text-align: left">4.91%</td></tr>
+<tr><td style="text-align: left"><strong>ELECTRONICS</strong></td><td style="text-align: left">3.39%</td><td style="text-align: left">10.22%</td><td style="text-align: left">3x</td><td style="text-align: left">2.40%</td></tr>
+<tr><td style="text-align: left"><strong>TRAVEL</strong></td><td style="text-align: left">6.14%</td><td style="text-align: left">16.29%</td><td style="text-align: left">2.6x</td><td style="text-align: left">2.53%</td></tr>
+<tr><td style="text-align: left"><strong>SERVICES</strong></td><td style="text-align: left">5.15%</td><td style="text-align: left">11.92%</td><td style="text-align: left">2.3x</td><td style="text-align: left">2.53%</td></tr>
+</tbody></table>
+</div>
+<p>All verified fraud rates fall below the 20% threshold, confirming that no single category acts as a near-deterministic fraud rule. The model uses category as a Bayesian prior requiring behavioral confirmation rather than a static classifier.</p>
+<p>The <code>GAMBLING</code> index was previously at 103x (documented in the leakage case study); its reduction to 17x after generator retuning and the verified fraud rate confirms it is now a legitimate signal.</p>
+<hr />
+<h2 id="section-5-known-limitations"><a class="header" href="#section-5-known-limitations">Section 5: Known Limitations</a></h2>
+<h3 id="recall-ceiling-667"><a class="header" href="#recall-ceiling-667">Recall Ceiling (66.7%)</a></h3>
+<p>Theoretical maximum recall is imposed by deliberate label noise design. The 0.5% false positive rate in <code>fp_rate</code> creates labels that are behaviorally unlearnable. Recall approaching this ceiling represents optimal behavior.</p>
+<h3 id="silver-etl-eager-execution"><a class="header" href="#silver-etl-eager-execution">Silver ETL Eager Execution</a></h3>
+<p>Sequence features using <code>.over()</code> window functions trigger eager in-memory execution despite Polars lazy API usage. Datasets significantly exceeding available RAM will hit memory pressure. Roadmap: transition to a stateful streaming pre-aggregation pass.</p>
+<h3 id="campaign-detection"><a class="header" href="#campaign-detection">Campaign Detection</a></h3>
+<p>Coordinated attack signatures require graph-based reasoning over entity relationships. Individual transactions in a campaign are often behaviorally indistinguishable from legitimate ones when viewed in isolation—this is a structural limitation of single-transaction classifiers.</p>
 
                     </main>
 
@@ -306,6 +320,7 @@
         <script src="book.js"></script>
 
         <!-- Custom JS scripts -->
+        <script src="documentation/mermaid-init.js"></script>
 
 
     </div>

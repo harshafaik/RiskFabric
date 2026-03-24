@@ -73,7 +73,23 @@ This document tracks the evolution of `riskfabric` generation performance, focus
 
 ---
 
-## Summary of Optimization Impact
+---
 
-*   **Scale Testing**: Achieve similar linear scaling for 10,000,000 transactions.
-*   **I/O Optimization**: Investigate partitioned Parquet writes to further reduce the 2.6s write bottleneck.
+### 6. End-to-End Pipeline Stress Test (3M Transactions)
+*Date: March 2026*
+*   **Workload**: 3,334 Customers | 2,984,575 Transactions
+*   **Scope**: Full lifecycle orchestration via `stress_test.py` (Reset -> Generate -> Ingest -> ETL -> Gold).
+
+| Pipeline Stage | Duration (s) | Throughput / Info |
+| :--- | :--- | :--- |
+| **Generation** | 16.96s | **~176,000 TPS** |
+| **ClickHouse Ingestion** | 25.54s | ~116,000 Rows/s |
+| **Silver ETL (Parallel)** | 56.61s | Features: Sequence, Merchant, Customer |
+| **Gold Finalization** | 11.32s | Materialized Join |
+| **Total End-to-End** | **110.43s** | **~1.8 Minutes** |
+
+### Benchmark Conclusions
+The stress test confirms that the **One-Pass Architecture** successfully scales to multi-million row datasets while maintaining near-linear throughput. The entire pipeline, including heavy feature engineering and entity joins, completes in under 2 minutes for 3 million transactions, making it suitable for rapid iterative model development.
+
+## Summary of Optimization Impact
+...

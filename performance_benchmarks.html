@@ -255,11 +255,25 @@
 </div>
 <p><em>*Note: Streaming throughput is artificially limited to 100 tx/s for realism, but peak unbound performance is ~1,200 tx/s on a single thread.</em></p>
 <hr />
-<h2 id="summary-of-optimization-impact-1"><a class="header" href="#summary-of-optimization-impact-1">Summary of Optimization Impact</a></h2>
+<hr />
+<h3 id="6-end-to-end-pipeline-stress-test-3m-transactions"><a class="header" href="#6-end-to-end-pipeline-stress-test-3m-transactions">6. End-to-End Pipeline Stress Test (3M Transactions)</a></h3>
+<p><em>Date: March 2026</em></p>
 <ul>
-<li><strong>Scale Testing</strong>: Achieve similar linear scaling for 10,000,000 transactions.</li>
-<li><strong>I/O Optimization</strong>: Investigate partitioned Parquet writes to further reduce the 2.6s write bottleneck.</li>
+<li><strong>Workload</strong>: 3,334 Customers | 2,984,575 Transactions</li>
+<li><strong>Scope</strong>: Full lifecycle orchestration via <code>stress_test.py</code> (Reset -&gt; Generate -&gt; Ingest -&gt; ETL -&gt; Gold).</li>
 </ul>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Pipeline Stage</th><th style="text-align: left">Duration (s)</th><th style="text-align: left">Throughput / Info</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong>Generation</strong></td><td style="text-align: left">16.96s</td><td style="text-align: left"><strong>~176,000 TPS</strong></td></tr>
+<tr><td style="text-align: left"><strong>ClickHouse Ingestion</strong></td><td style="text-align: left">25.54s</td><td style="text-align: left">~116,000 Rows/s</td></tr>
+<tr><td style="text-align: left"><strong>Silver ETL (Parallel)</strong></td><td style="text-align: left">56.61s</td><td style="text-align: left">Features: Sequence, Merchant, Customer</td></tr>
+<tr><td style="text-align: left"><strong>Gold Finalization</strong></td><td style="text-align: left">11.32s</td><td style="text-align: left">Materialized Join</td></tr>
+<tr><td style="text-align: left"><strong>Total End-to-End</strong></td><td style="text-align: left"><strong>110.43s</strong></td><td style="text-align: left"><strong>~1.8 Minutes</strong></td></tr>
+</tbody></table>
+</div>
+<h3 id="benchmark-conclusions"><a class="header" href="#benchmark-conclusions">Benchmark Conclusions</a></h3>
+<p>The stress test confirms that the <strong>One-Pass Architecture</strong> successfully scales to multi-million row datasets while maintaining near-linear throughput. The entire pipeline, including heavy feature engineering and entity joins, completes in under 2 minutes for 3 million transactions, making it suitable for rapid iterative model development.</p>
+<h2 id="summary-of-optimization-impact-1"><a class="header" href="#summary-of-optimization-impact-1">Summary of Optimization Impact</a></h2>
+<p>...</p>
 
                     </main>
 

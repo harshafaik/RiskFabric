@@ -178,9 +178,7 @@
                     <main>
                         <h1 id="your-first-generation"><a class="header" href="#your-first-generation">Your First Generation</a></h1>
 <h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
-<p>The <code>tutorial_first_run.md</code> provides a step-by-step operational guide for initializing the RiskFabric environment and executing a full synthetic data lifecycle—from world-building to real-time scoring.</p>
-<h2 id="design-intent"><a class="header" href="#design-intent">Design Intent</a></h2>
-<p>This tutorial provides an end-to-end workflow for the simulation. By following this path, the integration between the Rust generators, dbt models, ClickHouse ingestion, and Python inference can be verified. The workflow includes the use of Verification Mode in the streaming section to evaluate simulation fidelity by joining real-time model scores against the simulated ground truth.</p>
+<p>This tutorial provides a step-by-step operational guide for initializing the RiskFabric environment and executing a full synthetic data lifecycle—from world-building to model training.</p>
 <h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
 <p>The following components must be installed and available:</p>
 <ul>
@@ -195,15 +193,53 @@
 docker-compose up -d
 </code></pre>
 <h2 id="step-1-world-building-level-0"><a class="header" href="#step-1-world-building-level-0">Step 1: World Building (Level 0)</a></h2>
-<p>Before generating transactions, the physical reference data must be prepared by extracting OpenStreetMap nodes and exporting them to Parquet.</p>
-<pre><code class="language-bash"># Extract OSM nodes to Postgres
+<p>Before generating transactions, the physical reference data must be prepared by extracting OpenStreetMap nodes, enriching them via dbt, and exporting them to Parquet.</p>
+<pre><code class="language-bash"># 1. Extract raw OSM nodes to Postgres
 cargo run --bin prepare_refs -- extract-nodes
 
-# Export to Parquet for the generator
+# 2. Enrich &amp; Transform (Spatial Joins and Risk Categorization)
+dbt run --project-dir warehouse
+
+# 3. Export to Parquet for the generator
+# Option A: Rust-based export
 cargo run --bin export_references
+# Option B: DLT-based export (Recommended)
+python dlt/pipelines.py export
 </code></pre>
+<h3 id="the-database-transformation-process"><a class="header" href="#the-database-transformation-process">The Database Transformation Process</a></h3>
+<p>During this step, the Postgres database performs three critical operations to build the "Physical World":</p>
+<ol>
+<li><strong>Ingestion</strong>: Millions of raw coordinates are copied from OSM PBF files into the staging area.</li>
+<li><strong>Spatial Anchoring</strong>: <code>dbt</code> uses <strong>PostGIS</strong> to perform spatial intersections against official Indian boundaries, ensuring every coordinate is anchored to a verified State and District for realistic travel-velocity calculations.</li>
+<li><strong>Adversarial DNA</strong>: Raw merchant tags are mapped to standardized categories (e.g., <code>LUXURY</code>, <code>GAMBLING</code>) and assigned baseline risk levels, establishing the ground truth for fraud injection.</li>
+</ol>
 <h2 id="step-2-batch-generation-and-etl"><a class="header" href="#step-2-batch-generation-and-etl">Step 2: Batch Generation and ETL</a></h2>
 <p>The historical dataset used for model training must be generated, ingested into the warehouse, and processed through the feature engineering pipeline.</p>
+<h3 id="configuring-the-simulation"><a class="header" href="#configuring-the-simulation">Configuring the Simulation</a></h3>
+<p>Before running the generation, you can tune the scale and behavior of the synthetic population in the <code>data/config/</code> directory:</p>
+<ul>
+<li><strong>Population Scale (<code>customer_config.yaml</code>)</strong>:
+<ul>
+<li><code>control.customer_count</code>: Total number of unique agents (Default: <code>3334</code>).</li>
+<li><code>control.transactions_per_customer</code>: Min/Max transaction volume per agent (Default: <code>400-800</code>).</li>
+<li><code>registration.lookback_years</code>: How far back the customer history goes (Default: <code>5 years</code>).</li>
+</ul>
+</li>
+<li><strong>Transaction Patterns (<code>transaction_config.yaml</code>)</strong>:
+<ul>
+<li><code>transactions.lookback_days</code>: Duration of the generated transaction history (Default: <code>365 days</code>).</li>
+<li><code>transactions.amount_range</code>: The global min/max for transaction values (Default: <code>10 - 50,000 INR</code>).</li>
+<li><code>temporal_patterns</code>: Hourly and daily weights that drive circadian rhythms.</li>
+</ul>
+</li>
+<li><strong>Fraud Injection (<code>fraud_rules.yaml</code>)</strong>:
+<ul>
+<li><code>fraud_injector.target_share</code>: The percentage of transactions that are intentionally fraudulent (Default: <code>0.01</code> or 1%).</li>
+<li><code>fraud_injector.default_fp_rate</code>: Baseline "noise" (False Positives) injected into the labels (Default: <code>0.005</code>).</li>
+<li><code>fraud_injector.profiles</code>: Tune the frequency and behavior of specific attack types (UPI Scams, ATO, Velocity Abuse).</li>
+</ul>
+</li>
+</ul>
 <pre><code class="language-bash"># Generate the initial population and history
 cargo run --release --bin generate
 
@@ -214,10 +250,42 @@ cargo run --bin etl -- gold-master
 </code></pre>
 <h2 id="step-3-model-training-and-streaming"><a class="header" href="#step-3-model-training-and-streaming">Step 3: Model Training and Streaming</a></h2>
 <p>The final phase involves training the XGBoost classifier, seeding the real-time feature store, and starting the streaming simulation.</p>
+<h3 id="model-configuration-established"><a class="header" href="#model-configuration-established">Model Configuration established</a></h3>
+<p>The training script (<code>train_xgboost.py</code>) uses a configration optimal for high-imbalance datasets:</p>
+<ul>
+<li><strong>Class Imbalance Handling</strong>: The <code>scale_pos_weight</code> is calculated dynamically (Legitimate / Fraud ratio) to ensure the model doesn't ignore the minority fraud class.</li>
+<li><strong>Hyperparameters</strong>:
+<ul>
+<li><code>n_estimators</code>: 100</li>
+<li><code>max_depth</code>: 6</li>
+<li><code>learning_rate</code>: 0.1</li>
+<li><code>eval_metric</code>: <code>aucpr</code></li>
+</ul>
+</li>
+<li><strong>Operational Feature Set</strong>: The model trains on 12 behavioral features (e.g., <code>spatial_velocity</code>, <code>amount_deviation_z_score</code>), explicitly excluding synthetic IDs (<code>customer_id</code>, etc.) to prevent label leakage.</li>
+</ul>
 <pre><code class="language-bash"># Train the fraud detection model
 python src/ml/train_xgboost.py
+</code></pre>
+<h3 id="model-validation-and-interpretability"><a class="header" href="#model-validation-and-interpretability">Model Validation and Interpretability</a></h3>
+<p>Before moving to production scoring, you should validate the model's performance and interpret its decision drivers:</p>
+<ul>
+<li><strong>Performance Testing (<code>test_model.py</code>)</strong>: Runs the trained model against a test dataset to generate classification reports and conduct threshold analysis (identifying the optimal Precision/Recall trade-off).</li>
+<li><strong>Explainability (<code>shap_analysis.py</code>)</strong>: Uses SHAP (SHapley Additive exPlanations) to create visual reports in <code>reports/shap/</code>. This identifies which features (e.g., <code>spatial_velocity</code>) drove the model's flags globally and for each specific fraud profile.</li>
+<li><strong>Model Metadata (<code>dump_model.py</code>)</strong>: A developer utility used to inspect the internals of the saved JSON model, verifying feature names, types, and categorical encodings.</li>
+</ul>
+<pre><code class="language-bash"># Run performance and threshold analysis
+python src/ml/test_model.py
 
-# Seed the Redis feature store with warehouse state
+# Generate SHAP interpretability reports
+python src/ml/shap_analysis.py
+
+# (Optional) Inspect model metadata
+python src/ml/dump_model.py
+</code></pre>
+<h3 id="starting-the-real-time-pipeline"><a class="header" href="#starting-the-real-time-pipeline">Starting the Real-time Pipeline</a></h3>
+<p>Once the model is validated, seed the feature store and start the inference engine:</p>
+<pre><code class="language-bash"># Seed the Redis feature store with warehouse state
 python src/ml/seed_redis.py
 
 # Start the real-time scorer and the streaming generator

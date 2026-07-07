@@ -1,14 +1,23 @@
-# Batch Data Generator (`generate.rs`)
+# Batch Generator
 
-## Summary
-The `generate.rs` binary serves as the primary orchestration engine for creating large-scale, labeled synthetic datasets. It generates a complete ecosystem of customers, accounts, cards, and historical transactions, providing the "ground truth" required for training fraud detection models.
+## Overview
+The batch generator module `generate.rs` serves as the primary orchestration engine for synthetic datasets.
 
-## Architectural Decisions
+## Schema
+The generator outputs five primary relational tables:
+
+| File Name | Primary Keys / Foreign Keys | Description |
+| :--- | :--- | :--- |
+| `customers.parquet` | `customer_id` | Labeled customer profile data, including demographic, geographical, and risk profile columns. |
+| `accounts.parquet` | `account_id`, `customer_id` | Relational deposit and credit account profiles. |
+| `cards.parquet` | `card_id`, `account_id`, `customer_id` | Physical and virtual card payment instruments linked to accounts. |
+| `transactions.parquet` | `transaction_id`, `card_id` | Labeled transaction events stream. |
+| `fraud_metadata.parquet` | `transaction_id` | Injected adversarial mutation metadata and diagnostics labels. |
+
 The generator uses a **chunked execution strategy** to handle datasets that exceed available system memory. By processing cards in batches of 5,000, the generator maintains a stable memory profile regardless of the total population size. For spatial lookups, the system implements a multi-tier H3 index (resolutions 4 and 6) and a state-level index. This allows for rapid, localized merchant selection during transaction generation without exhaustive searching of the merchant reference dataset.
 
 The choice of **Apache Parquet** as the output format ensures that multi-million row datasets remain compressed and performant for the downstream Python-based ML pipeline and Polars-based ETL.
 
-## System Integration
 `generate.rs` sits at the start of the RiskFabric lifecycle. It consumes reference Parquet files for merchants and residential locations and produces the four core tables: `customers.parquet`, `accounts.parquet`, `cards.parquet`, and `transactions.parquet` (including its accompanying `fraud_metadata.parquet`).
 
 ## Known Issues

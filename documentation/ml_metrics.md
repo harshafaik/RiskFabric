@@ -59,7 +59,7 @@ The model prioritizes physical and financial anomalies over static identifiers.
 | `transaction_sequence_number` | 1.95% | Position within the account lifecycle |
 | `rapid_fire_transaction_flag` | 1.88% | High-velocity sequence identification |
 
-For a detailed narrative of the discovery and resolution of these artifacts, see the [Feature Leakage Case Study](feature_importance_analysis.md).
+For a detailed narrative of the discovery and resolution of these artifacts, see the [Feature Leakage Case Study](feature_leakage_issues.md).
 
 ### Generalization Results
 Validated against three independent populations to ensure robust performance across different random seeds.

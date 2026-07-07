@@ -141,7 +141,7 @@ The challenge is that none of these features possess sufficient signal strength 
 
 To address this at the root level, the logic responsible for injecting fraudulent signatures and behaviors requires refinement to increase signal strength for training a behaviorally-driven fraud model.
 
-In the RiskFabric project, `fraud.rs` is primarily responsible for injecting fraud labels and altering transaction behavior according to the fraud signature. Two configurations drive transaction behavior: `geo_anomaly_prob` and `device_anomaly_prob`. Inspection of `geo_anomaly_prob` identified significant limitations:
+In the RiskFabric project, `transaction_gen.rs` is primarily responsible for injecting fraud labels and altering transaction behavior according to the fraud signature. Two configurations drive transaction behavior: `geo_anomaly_prob` and `device_anomaly_prob`. Inspection of `geo_anomaly_prob` identified significant limitations:
 
 If a transaction has the `geo_anomaly` flag set to true, its coordinates are randomized from the global range. While this creates an anomaly, it does not provide a behavioral signal that the model can learn without access to the customer's "Home" coordinates or a feature like "Distance from Home." Consequently, the model only evaluates `final_lat` and `final_lon`. Since legitimate transactions are also distributed across India (clustered around specific homes), a random coordinate appears normal to a model lacking home location context.
 

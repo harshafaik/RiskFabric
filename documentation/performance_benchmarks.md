@@ -90,6 +90,3 @@ This document tracks the evolution of `riskfabric` generation performance, focus
 
 ### Benchmark Conclusions
 The stress test confirms that the **One-Pass Architecture** successfully scales to multi-million row datasets while maintaining near-linear throughput. The entire pipeline, including heavy feature engineering and entity joins, completes in under 2 minutes for 3 million transactions, making it suitable for rapid iterative model development.
-
-## Summary of Optimization Impact
-...

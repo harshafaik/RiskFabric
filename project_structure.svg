@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 710" width="100%" height="100%">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="rust-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f39c12" />
+      <stop offset="100%" stop-color="#d35400" />
+    </linearGradient>
+    <linearGradient id="etl-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3498db" />
+      <stop offset="100%" stop-color="#2980b9" />
+    </linearGradient>
+    <linearGradient id="ml-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#7e22ce" />
+    </linearGradient>
+    <linearGradient id="infra-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#94a3b8" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+    
+    <!-- Shadow & Glow -->
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+    
+    <!-- Arrow Marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#64748b" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="710" rx="16" fill="#0f172a" />
+  
+  <!-- Grid Pattern (Subtle) -->
+  <g opacity="0.05">
+    <path d="M 0,50 L 900,50 M 0,100 L 900,100 M 0,150 L 900,150 M 0,200 L 900,200 M 0,250 L 900,250 M 0,300 L 900,300 M 0,350 L 900,350 M 0,400 L 900,400 M 0,450 L 900,450 M 0,500 L 900,500 M 0,550 L 900,550 M 0,600 L 900,600 M 0,650 L 900,650" stroke="#94a3b8" stroke-width="1" />
+    <path d="M 50,0 L 50,710 M 100,0 L 100,710 M 150,0 L 150,710 M 200,0 L 200,710 M 250,0 L 250,710 M 300,0 L 300,710 M 350,0 L 350,710 M 400,0 L 400,710 M 450,0 L 450,710 M 500,0 L 500,710 M 550,0 L 550,710 M 600,0 L 600,710 M 650,0 L 650,710 M 700,0 L 700,710 M 750,0 L 750,710 M 800,0 L 800,710 M 850,0 L 850,710" stroke="#94a3b8" stroke-width="1" />
+  </g>
+
+  <!-- Connectors -->
+  <g fill="none" stroke="#475569" stroke-width="2.5" marker-end="url(#arrow)">
+    <!-- Core Simulation to ETL & Warehouse -->
+    <path d="M 430 185 L 468 185" />
+    <!-- ETL & Warehouse to Machine Learning -->
+    <path d="M 670 340 L 670 365 L 230 365 L 230 388" />
+  </g>
+
+  <!-- ==================== 1. CORE SIMULATION ==================== -->
+  <g filter="url(#shadow)">
+    <!-- Main Box -->
+    <rect x="40" y="30" width="390" height="310" rx="12" fill="#1e293b" stroke="url(#rust-grad)" stroke-width="2" />
+    <!-- Title -->
+    <text x="60" y="65" fill="#f8fafc" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="bold">🧠 Core Simulation (src/)</text>
+    
+    <!-- generators/ -->
+    <g transform="translate(60, 85)">
+      <rect width="350" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="15" y="24" fill="#f39c12" font-family="monospace" font-size="14" font-weight="bold">generators/</text>
+      <text x="15" y="40" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="11">ABM Logic, Entity Gen &amp; Fraud Injection</text>
+    </g>
+
+    <!-- models/ -->
+    <g transform="translate(60, 145)">
+      <rect width="350" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="15" y="24" fill="#f39c12" font-family="monospace" font-size="14" font-weight="bold">models/</text>
+      <text x="15" y="40" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="11">Rust Structures (Customers, Accounts, Txns)</text>
+    </g>
+
+    <!-- bin/ -->
+    <g transform="translate(60, 205)">
+      <rect width="350" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="15" y="24" fill="#f39c12" font-family="monospace" font-size="14" font-weight="bold">bin/</text>
+      <text x="15" y="40" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="11">CLI Drivers (generate.rs &amp; stream.rs)</text>
+    </g>
+
+    <!-- config.rs -->
+    <g transform="translate(60, 265)">
+      <rect width="350" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="15" y="24" fill="#f8fafc" font-family="monospace" font-size="14" font-weight="bold">config.rs</text>
+      <text x="15" y="40" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="11">Centralized Type-Safe Configuration Engine</text>
+    </g>
+  </g>
+
+  <!-- ==================== 2. ETL & DATA WAREHOUSE ==================== -->
+  <g filter="url(#shadow)">
+    <!-- Main Box -->
+    <rect x="470" y="30" width="390" height="310" rx="12" fill="#1e293b" stroke="url(#etl-grad)" stroke-width="2" />
+    <!-- Title -->
+    <text x="490" y="65" fill="#f8fafc" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="bold">🥈 ETL &amp; Warehouse</text>
+    
+    <!-- etl/ -->
+    <g transform="translate(490, 85)">
+      <rect width="350" height="65" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="15" y="24" fill="#3498db" font-family="monospace" font-size="14" font-weight="bold">etl/</text>
+      <text x="15" y="42" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="11">Multi-stage Polars Feature Pipelines</text>
+      <text x="15" y="55" fill="#64748b" font-family="system-ui, -apple-system, sans-serif" font-size="10">Processes Raw Data ➔ Silver/Gold Features</text>
+    </g>
+
+    <!-- warehouse/ -->
+    <g transform="translate(490, 160)">
+      <rect width="350" height="65" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="15" y="24" fill="#3498db" font-family="monospace" font-size="14" font-weight="bold">warehouse/</text>
+      <text x="15" y="42" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="11">dbt Project &amp; PostgreSQL Spatial Staging</text>
+      <text x="15" y="55" fill="#64748b" font-family="system-ui, -apple-system, sans-serif" font-size="10">ClickHouse Analytical Engine &amp; PostGIS Setup</text>
+    </g>
+
+    <!-- dlt/ -->
+    <g transform="translate(490, 235)">
+      <rect width="350" height="65" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="15" y="24" fill="#3498db" font-family="monospace" font-size="14" font-weight="bold">dlt/</text>
+      <text x="15" y="42" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="11">MDS (Modern Data Stack) Integration</text>
+      <text x="15" y="55" fill="#64748b" font-family="system-ui, -apple-system, sans-serif" font-size="10">Automated Data Lake Ingestors</text>
+    </g>
+  </g>
+
+  <!-- ==================== 3. MACHINE LEARNING ==================== -->
+  <g filter="url(#shadow)">
+    <!-- Main Box -->
+    <rect x="40" y="400" width="390" height="270" rx="12" fill="#1e293b" stroke="url(#ml-grad)" stroke-width="2" />
+    <!-- Title -->
+    <text x="60" y="435" fill="#f8fafc" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="bold">🤖 Machine Learning (src/ml/)</text>
+    
+    <!-- train_xgboost.py -->
+    <g transform="translate(60, 455)">
+      <rect width="350" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="15" y="24" fill="#a855f7" font-family="monospace" font-size="14" font-weight="bold">train_xgboost.py</text>
+      <text x="15" y="40" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="11">Training Pipeline (Leakage &amp; Validation logic)</text>
+    </g>
+
+    <!-- scorer.py -->
+    <g transform="translate(60, 515)">
+      <rect width="350" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="15" y="24" fill="#a855f7" font-family="monospace" font-size="14" font-weight="bold">scorer.py</text>
+      <text x="15" y="40" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="11">Real-time Inference (Redpanda ➔ Redis Scoring)</text>
+    </g>
+
+    <!-- seed_redis.py -->
+    <g transform="translate(60, 575)">
+      <rect width="350" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="15" y="24" fill="#a855f7" font-family="monospace" font-size="14" font-weight="bold">seed_redis.py</text>
+      <text x="15" y="40" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="11">Point-in-Time State Synchronization Utility</text>
+    </g>
+  </g>
+
+  <!-- ==================== 4. INFRASTRUCTURE & DOCS ==================== -->
+  <g filter="url(#shadow)">
+    <!-- Main Box -->
+    <rect x="470" y="400" width="390" height="270" rx="12" fill="#1e293b" stroke="url(#infra-grad)" stroke-width="2" />
+    <!-- Title -->
+    <text x="490" y="435" fill="#f8fafc" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="bold">🛠️ Infrastructure &amp; Docs</text>
+    
+    <!-- docker-compose.yml -->
+    <g transform="translate(490, 455)">
+      <rect width="350" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="15" y="24" fill="#cbd5e1" font-family="monospace" font-size="14" font-weight="bold">docker-compose.yml</text>
+      <text x="15" y="40" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="11">Orchestration (ClickHouse, Redpanda, Redis, Postgres)</text>
+    </g>
+
+    <!-- documentation/ -->
+    <g transform="translate(490, 515)">
+      <rect width="350" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="15" y="24" fill="#cbd5e1" font-family="monospace" font-size="14" font-weight="bold">documentation/</text>
+      <text x="15" y="40" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="11">mdBook Documentation Source Files</text>
+    </g>
+
+    <!-- data/config/ -->
+    <g transform="translate(490, 575)">
+      <rect width="350" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="15" y="24" fill="#cbd5e1" font-family="monospace" font-size="14" font-weight="bold">data/config/</text>
+      <text x="15" y="40" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="11">Behavioral Spent Profiles &amp; Rule YAML Files</text>
+    </g>
+  </g>
+</svg>

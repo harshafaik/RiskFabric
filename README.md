@@ -10,54 +10,48 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Deploy mdBook](https://github.com/harshafaik/riskfabric/actions/workflows/deploy_book.yml/badge.svg)](https://github.com/harshafaik/riskfabric/actions/workflows/deploy_book.yml)
 
-RiskFabric is a fraud intelligence platform that generates synthetic Indian payment transaction data, processes it through a Medallion ETL pipeline, and produces trained fraud detection models.
+RiskFabric is a fraud intelligence platform designed for building fraud detection models using synthetic financial records. 
 
-## ✨ Key Features
-- **Extreme Throughput**: Achieves **~182,000 Transactions Per Second (TPS)** using a parallelized "One-Pass" architecture.
+## ✨ Features
 - **Agent-Based Realism**: Simulates the full lifecycle of `Customers`, `Accounts`, and `Cards`, with behavioral spend profiles driven by real-world heuristics.
-- **Geographic Fidelity**: Integrates **OpenStreetMap (OSM)** India data and **Uber H3** hexagonal indexing for hyper-realistic spatial spend patterns and location anomalies.
-- **Sophisticated Fraud Injection**: Includes signatures for UPI Scams, Account Takeover (ATO), Card Not Present (CNP) fraud, and coordinated campaigns.
-- **Medallion Data Architecture**: A full pipeline taking data from **Bronze** (Raw) to **Silver** (Feature Engineered) to **Gold** (ML-Ready).
-- **ML Mastery**: Built-in leakage prevention and simulated label noise (False Positives/Negatives) to ensure models are robust and production-ready.
+- **Geographic Fidelity**: Integrates **OpenStreetMap (OSM)** and **H3** hexagonal indexing for realistic spatial spend patterns and location anomalies.
+- **Sophisticated Fraud Injection**: Includes signatures for UPI Scams, Account Takeover (ATO), Card Not Present (CNP) fraud, and coordinated campaigns(yet to be implemented).
 
 ## 🛠️ Tech Stack
-- **Core Engine**: Rust (Rayon for parallelization, Rand for deterministic simulation).
+- **Core Engine**: Rust 
 - **Real-time Streaming**: Redpanda (Kafka-compatible), `rdkafka`, and Tokio async runtime.
-- **Data Processing**: Polars 0.51.0 (Lazy API & high-performance transformation).
-- **Data Warehouse**: PostgreSQL (Spatial/OSM staging), ClickHouse (High-volume transactions), and dbt (Analytical enrichment).
-- **Feature Store**: Redis (Low-latency state for real-time Z-scores and behavior).
+- **Data Processing**: Polars
+- **Data Warehouse**: PostgreSQL (Spatial/OSM staging), ClickHouse (Synthetic financial data), and dbt (Analytical enrichment).
+- **Feature Store**: Redis
 - **Data Ingestion**: `dlt` (Data Load Tool) for MDS integration.
-- **Machine Learning**: Python (XGBoost) with real-time inference via `scorer.py`.
-- **Infrastructure**: Docker/Podman orchestration with Prometheus and Grafana for observability.
+- **Machine Learning**: XGBoost
+- **Infrastructure**: Docker/Podman
 
-## 📁 Project Structure
+## 🗄️ Case Management OLTP Store
 
-### 🧠 Core Simulation (`src/`)
-- `generators/`: Agent-Based Modeling (ABM) logic, entity creation, and fraud mutation engines.
-- `models/`: Rust structures for Customers, Accounts, Cards, and Transactions.
-- `bin/`: CLI binaries for data generation (`generate.rs`), streaming (`stream.rs`), and preparation.
-- `config.rs`: Centralized, type-safe configuration engine for simulation parameters.
+### Architecture (OLTP vs. OLAP)
+RiskFabric separates operational case management workloads (OLTP) from analytical workloads (OLAP) using distinct engines:
+- **ClickHouse (OLAP)**: Optimizes bulk-analytical, historical, and batch operations for feature engineering and XGBoost training.
+- **PostgreSQL (OLTP)**: Optimizes operational, read-write, single-record transactions. Handles live per-transaction case states, status modifications, and free-text investigator notes.
 
-### 🥈 ETL & Data Warehouse (`src/etl/` & `warehouse/`)
-- `etl/`: Multi-stage Polars transformation pipeline (Silver/Gold feature engineering).
-- `warehouse/`: dbt project for geographic enrichment and merchant risk profiling using PostGIS.
-- `dlt/`: MDS integration for automated data lake ingestion.
+We run a dedicated Postgres service (`oltp-postgres`) separate from ClickHouse and the static PostGIS geo database to isolate analytical queries from transactional updates.
 
-### 🤖 Machine Learning (`src/ml/`)
-- `train_xgboost.py`: Training pipeline with Feature sanitization and OOT validation.
-- `scorer.py`: Real-time inference service consuming from Kafka and stateful Redis features.
-- `seed_redis.py`: Point-in-time state synchronization between the warehouse and feature store.
+### Running Locally
+To start the database and the case management admin panel:
+```bash
+podman-compose up --build -d
+```
 
-### 🛠️ Infrastructure & Docs
-- `docker-compose.yml`: Orchestrated local stack (ClickHouse, Postgres, Redpanda, Redis, Grafana).
-- `documentation/`: Arichitectural docs and theory of operation (mdBook).
-- `data/config/`: Behavioral rules and system tuning YAML configurations.
+Once running:
+- **Django Admin Interface**: Accessible at [http://localhost:8001/admin](http://localhost:8001/admin).
+- **Default Credentials**: Username: `admin`, Password: `admin`.
 
-## 📈 Benchmarks (150k Txns)
-| Architecture | Throughput | Total Time | Speedup |
-| :--- | :--- | :--- | :--- |
-| Sequential Port | 3,400 TPS | 48.7s | 1x |
-| **Optimized One-Pass** | **182,000 TPS** | **4.4s** | **53x** |
+### Ingestion Path Simulation
+To simulate operational ingestion of flagged transactions into the case store, run:
+```bash
+podman-compose exec scorer python src/ml/ingest_cases.py
+```
+This script attempts to pull flagged transactions from ClickHouse's `fraud_scores` table, falling back to reading ground-truth fraud from `data/output/transactions.parquet` if ClickHouse has not yet been seeded. It then upserts the records into the Postgres `cases` table.
 
 ---
 *Developed by harshafaik*

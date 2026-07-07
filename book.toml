@@ -10,4 +10,4 @@ optional = true
 
 [output.html]
 git-repository-url = "https://github.com/harshafaik/riskfabric"
-additional-js = ["documentation/mermaid-init.js"]
+additional-js = ["documentation/mermaid.js"]

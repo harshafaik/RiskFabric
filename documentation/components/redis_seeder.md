@@ -1,15 +1,37 @@
-# Redis Feature Seeder (`seed_redis.py`)
+# Redis Feature Seeder
 
-## Summary
-The `seed_redis.py` script is an operational utility that initializes the real-time feature store (Redis) with historical data from the warehouse (ClickHouse). It bridges the gap between the batch-trained model and the streaming inference engine by ensuring that every card and customer has immediate behavioral context before real-time transactions start arriving.
+## Overview
 
-## Architectural Decisions
-This seeder is designed to facilitate **Warm-Start Inference**. Without this script, the first few transactions for every card in the streaming pipeline would be difficult to score accurately (as there would be no "previous" location for velocity or "previous" amount for Z-score). The seeder extracts the most recent state for every card and customer, including the last 10 transactions, the final coordinate pair, and the cumulative count of events.
+The Redis seeder (`seed_redis.py`) is an operational utility that initializes the real-time feature store with pre-computed historical state derived from `fact_transactions_gold`. It executes five ClickHouse queries — customer Welford state, customer aggregates, merchant aggregates, card transaction history, and card location/sequence state — and writes the results into the Redis key schema expected by `scorer.py`. It must be run after `etl.rs` completes and before `stream.rs` and `scorer.py` are started.
 
-A key architectural choice is the **Redis Hash/List strategy**. Redis Lists (`RPUSH`) are used to store chronological card history and Hashes (`HSET`) to store aggregate statistics. This allows `scorer.py` to perform O(1) lookups for behavioral context, maintaining the strict latency requirements of real-time fraud detection. Furthermore, the seeder explicitly calculates the initial Welford state (Mean and M2) from the warehouse, enabling the online scorer to continue updating statistical variance incrementally without a full history scan.
+## Schema
 
-## System Integration
-`seed_redis.py` acts as a synchronization service between the **Warehouse layer** (ClickHouse) and the **Scoring layer** (Redis/Kafka). It must be executed after `etl.rs` completes (to ensure the "Gold" table is populated) and before `stream.rs` and `scorer.py` are started.
+### Seeded Redis Keys
+
+| Key Pattern | Redis Type | Fields Written | Source Query |
+| :--- | :--- | :--- | :--- |
+| `cust:{customer_id}:stats` | Hash | `count`, `mean`, `M2` | Per-customer `count()`, `avg(amount)`, `sum((amount - mean)²)` from `fact_transactions_gold`. |
+| `cust:{customer_id}:agg` | Hash | `fraud_rate`, `night_ratio` | Per-customer `any(fraud_rate)`, `any(night_transaction_ratio)` from `fact_transactions_gold`. |
+| `merch:{merchant_id}:agg` | Hash | `fraud_rate` | Per-merchant `avg(is_fraud)` from `fact_transactions_gold`. |
+| `card:{card_id}:history` | List | JSON objects: `transaction_id`, `merchant_category`, `amount`, `timestamp`, `location_lat`, `location_long` | Last 10 transactions per card ordered by `timestamp DESC`, via window function `row_number()`. |
+| `card:{card_id}:last_ts` | String | Unix timestamp of most recent transaction | Written only for `rn = 1` (the latest transaction per card). |
+| `card:{card_id}:loc` | Hash | `lat`, `lon` | Written only for `rn = 1` (the latest transaction per card). |
+| `card:{card_id}:seq` | String | Approximate sequence counter, initialized to `1` | Written only for `rn = 1`; reflects `row_number` value, not true cumulative count. |
+
+**Warm-Start Inference** is the core purpose of the seeder. Without pre-seeded state, the first transaction for every card and customer in the streaming pipeline would produce degenerate feature values: `time_since_last_transaction = 0`, `amount_deviation_z_score = 0` (no prior mean), `spatial_velocity = 0` (no prior location), and an empty card history. The seeder eliminates this cold-start period by loading the terminal state of the batch simulation into Redis before the streaming phase begins, allowing `scorer.py` to produce meaningful behavioral features from the first event.
+
+**Welford State Seeding** initializes the per-customer running statistics from a single aggregation query rather than replaying every historical transaction. The query computes `count()`, `avg(amount)`, and `sum((amount - mean) * (amount - mean))` — the three Welford accumulator fields (`count`, `mean`, `M2`) — in one ClickHouse pass. This gives `scorer.py`'s `WelfordState` class an accurate starting point for computing `amount_deviation_z_score` incrementally on new streaming events, matching the statistical baseline established during batch training.
+
+**Windowed Card History via Row Number** selects the last 10 transactions per card using a `row_number() OVER (PARTITION BY card_id ORDER BY timestamp DESC)` window function and filters to `rn <= 10`. The results are written as JSON strings to a Redis List at `card:{card_id}:history` via `RPUSH`. Location and timestamp state (`card:{card_id}:last_ts`, `card:{card_id}:loc`) are written only for the row where `rn = 1`, ensuring that the scorer's initial velocity and time-since calculations are anchored to the most recent known transaction per card.
+
+**Fault-Tolerant Query Execution** wraps each of the five seeding queries in a `try/except` block that prints a warning and continues rather than aborting. This means the seeder will complete successfully even if `fact_transactions_gold` is partially populated or missing certain columns, leaving the corresponding Redis keys unseeded. The `scorer.py` handles missing Redis keys by defaulting to zero values for the affected features.
+
+`seed_redis.py` is a one-shot synchronization utility that bridges the **Warehouse layer** (ClickHouse `fact_transactions_gold`) and the **Scoring layer** (Redis). It has no upstream or downstream runtime dependency beyond requiring `fact_transactions_gold` to be populated by `etl.rs` and Redis to be available. It does not need to be re-run unless the Gold table is rebuilt or Redis is flushed.
 
 ## Known Issues
-The entire feature initialization set is currently pulled into local Python memory before pushing to Redis. For datasets with millions of cards, this may lead to a **memory-exhaustion failure**. The ClickHouse queries should be refactored to use chunked fetching (cursors) or a parallelized worker pool implemented to stream data from the warehouse to Redis in batches. Additionally, a hardcoded password for ClickHouse is currently used; this should be moved to an environment variable to align with project security standards.
+
+The seeder loads all five query result sets entirely into local Python memory before writing to Redis. For a synthetic population of 1 million customers with 365 days of transactions, `fact_transactions_gold` may contain hundreds of millions of rows. The card history query in particular selects up to 10 rows per card and then iterates row-by-row to write to Redis — this pattern will cause memory-exhaustion failure at scale. Refactoring to stream results in chunks using `clickhouse_connect`'s cursor API and processing each chunk before fetching the next is required before the seeder can handle large populations.
+
+The `card:{card_id}:seq` key is initialized to the `row_number()` value (`1`) for the most recent transaction, not the actual cumulative transaction count for the card. This means `scorer.py`'s `r.incr(f"card:{card_id}:seq")` will produce a sequence number of `2` for the first streaming transaction rather than the true historical count. The `transaction_sequence_number` feature fed to the model is therefore incorrect for all cards that have prior history. The fix requires the seeder to query the true total transaction count per card and use that as the initial sequence value.
+
+The ClickHouse password (`123`) is hardcoded as a string literal in the `clickhouse_connect.get_client` call. This is the same credential duplicated across `ingest.rs`, `etl.rs`, `train_xgboost.py`, and `scorer.py`. Moving the credential to the `CLICKHOUSE_PASSWORD` environment variable — already defined in `docker-compose.yml` for the scorer container — and reading it via `os.getenv` would make this consistent with how the other services in the stack handle credentials.

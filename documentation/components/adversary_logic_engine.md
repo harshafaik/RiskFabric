@@ -1,4 +1,4 @@
-# Adversary Logic Engine (`fraud.rs`)
+# Fraud Injector (`fraud.rs`)
 
 ## Summary
 The `fraud.rs` module contains the "attack logic" of RiskFabric. It defines the specific behavioral rules used to mutate legitimate transactions into adversarial patterns. This module ensures that synthetic fraud reflects realistic criminal tactics such as velocity abuse, account takeovers, and coordinated campaigns.

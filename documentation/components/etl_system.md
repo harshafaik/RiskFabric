@@ -1,12 +1,44 @@
-# ETL Pipeline System
+# Feature Engineering Pipeline
 
 ## Overview
 
-The ETL pipeline system (`etl.rs` and `src/etl/`) is the transformation engine that converts raw Bronze-level data into ML-ready features. It reads `fact_transactions_bronze`, `fact_fraud_metadata_bronze`, `dim_customers`, and `dim_accounts` from ClickHouse via `podman exec` calls, applies subject-specific feature engineering in Rust using `polars` lazy evaluation, and writes the resulting Silver and Gold tables back to ClickHouse. The pipeline is invoked as a standalone binary (`riskfabric-etl`) with individual subcommands per stage, and is consumed downstream by the Python-based ML training pipeline.
+The feature engineering pipeline (`etl.rs` and `src/etl/`) is the transformation engine that converts raw Bronze-level data into ML-ready features. It reads Parquet files from `data/output/` (Bronze stage), applies subject-specific feature engineering in Rust using `polars` lazy evaluation, and writes Silver and Gold Parquet snapshots to `data/silver/` and `data/gold/<timestamp>/`. The pipeline is invoked as a standalone binary (`riskfabric-etl`) with individual subcommands per stage, and is consumed downstream by Python ML scripts using DuckDB to query Gold Parquet snapshots.
+
+**Architecture:** The batch ETL path is Parquet-only with no external database dependency. ClickHouse is reserved exclusively for the live streaming `fraud_scores` path. The previous ClickHouse-based batch architecture is documented in [ClickHouse Batch ETL (Defunct)](defunct/clickhouse_batch_etl.md).
 
 ## Schema
 
-### `customer_features_silver`
+The four output datasets and their join relationships:
+
+```mermaid
+erDiagram
+    customer_features_silver ||--o{ fact_transactions_silver : "customer_id"
+    merchant_features_silver ||--o{ fact_transactions_silver : "merchant_id"
+    fact_transactions_silver ||--|| fact_transactions_gold : "transaction_id"
+    customer_features_silver ||--o{ fact_transactions_gold : "customer_id"
+    merchant_features_silver ||--o{ fact_transactions_gold : "merchant_id"
+    fact_transactions_silver {
+        string transaction_id PK
+        string customer_id FK
+        string merchant_id FK
+        string card_id
+        string account_id
+    }
+    customer_features_silver {
+        string customer_id PK
+    }
+    merchant_features_silver {
+        string merchant_id PK
+    }
+    fact_transactions_gold {
+        string transaction_id PK
+        string customer_id FK
+        string merchant_id FK
+    }
+```
+
+<details>
+<summary><code>customer_features_silver</code></summary>
 
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
@@ -23,12 +55,15 @@ The ETL pipeline system (`etl.rs` and `src/etl/`) is the transformation engine t
 | `first_transaction_ts` | `Nullable(DateTime64(3, 'UTC'))` | Timestamp of the customer's earliest recorded transaction. |
 | `last_transaction_ts` | `Nullable(DateTime64(3, 'UTC'))` | Timestamp of the customer's most recent recorded transaction. |
 
-### `merchant_features_silver`
+</details>
+
+<details>
+<summary><code>merchant_features_silver</code></summary>
 
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
 | `merchant_id` | `String` | Unique identifier of the merchant. |
-| `merchant_name` | `String` | Name of the merchant, carried over from `fact_transactions_bronze`. |
+| `merchant_name` | `String` | Name of the merchant, carried over from the Bronze transactions. |
 | `merchant_category` | `String` | Category classification of the merchant. |
 | `total_transactions` | `UInt32` | Total count of transactions processed by the merchant. |
 | `total_amount` | `Float64` | Sum of all transaction amounts at this merchant. |
@@ -36,7 +71,12 @@ The ETL pipeline system (`etl.rs` and `src/etl/`) is the transformation engine t
 | `total_fraud_transactions` | `UInt32` | Count of fraudulent transactions processed by the merchant. |
 | `merchant_fraud_rate` | `Float64` | Ratio of fraudulent to total transactions (`total_fraud_transactions / total_transactions`). |
 
-### `fact_transactions_silver`
+</details>
+
+<details>
+<summary><code>fact_transactions_silver</code></summary>
+
+**Identity & context**
 
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
@@ -53,10 +93,20 @@ The ETL pipeline system (`etl.rs` and `src/etl/`) is the transformation engine t
 | `user_agent` | `String` | User Agent string recorded for the transaction. |
 | `ip_address` | `String` | IP address of the client device. |
 | `is_fraud` | `UInt32` | Ground truth fraud label (0 or 1). |
+
+**Sequence & temporal features**
+
+| Field Name | Type | Description |
+| :--- | :--- | :--- |
 | `time_since_last_transaction` | `Float64` | Elapsed time in seconds since the customer's previous transaction; null for the first transaction. |
 | `transaction_sequence_number` | `UInt32` | Cumulative count of transactions for this customer, ordered by timestamp. |
 | `hours_since_midnight` | `Float64` | Fractional hour of the transaction within the day (e.g., 13.5 = 13:30). |
 | `is_weekend` | `UInt32` | Flag (0 or 1) indicating if the transaction occurred on Saturday or Sunday. |
+
+**Behavioral features**
+
+| Field Name | Type | Description |
+| :--- | :--- | :--- |
 | `spatial_velocity` | `Float64` | Estimated travel speed in km/h between the current and previous transaction location; capped at 10,000 km/h to suppress infinite values. |
 | `hour_deviation_from_norm` | `Float64` | Absolute deviation of the transaction hour from the customer's mean transaction hour. |
 | `amount_round_number_flag` | `UInt32` | Flag (0 or 1) set when the amount is divisible by 1, 5, or 10 — a known carding heuristic. |
@@ -64,45 +114,71 @@ The ETL pipeline system (`etl.rs` and `src/etl/`) is the transformation engine t
 | `rapid_fire_transaction_flag` | `UInt32` | Flag (0 or 1) set when `time_since_last_transaction` is 300 seconds (5 minutes) or less. |
 | `escalating_amounts_flag` | `UInt32` | Flag (0 or 1) set when the previous two transactions show a strictly increasing amount pattern. |
 | `merchant_category_switch_flag` | `UInt32` | Flag (0 or 1) set when the merchant category differs from the immediately preceding transaction. |
-| `fraud_target` | `UInt32` | Ground truth fraud target label from `fact_fraud_metadata_bronze`. |
-| `fraud_type` | `String` | Type classification of injected fraud (e.g., `"Simulated Compromise"`, `"Carding"`); `"none"` for legitimate transactions. |
+
+**Anomaly & fraud labels**
+
+| Field Name | Type | Description |
+| :--- | :--- | :--- |
+| `fraud_target` | `UInt32` | Ground truth fraud target label from fraud metadata. |
+| `fraud_type` | `String` | Type classification of injected fraud (e.g., `"velocity_abuse"`, `"account_takeover"`); `"none"` for legitimate transactions. |
 | `geo_anomaly` | `UInt32` | Flag (0 or 1) from fraud metadata indicating a geographic anomaly was injected. |
 | `device_anomaly` | `UInt32` | Flag (0 or 1) from fraud metadata indicating a device anomaly was injected. |
 | `ip_anomaly` | `UInt32` | Flag (0 or 1) from fraud metadata indicating an IP anomaly was injected. |
 | `campaign_id` | `Nullable(String)` | UUID of the fraudulent campaign the transaction belongs to; null for non-campaign transactions. |
 
-### `fact_transactions_gold`
+</details>
+
+<details>
+<summary><code>fact_transactions_gold</code></summary>
+
+Inherits all columns from `fact_transactions_silver`, plus the following joined and derived fields:
 
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
-| *(All columns from `fact_transactions_silver`)* | — | All sequence features are inherited directly from the Silver table. |
 | `cf_fraud_rate` | `Float64` | Customer-level fraud rate, joined from `customer_features_silver`. |
 | `cf_night_tx_ratio` | `Float64` | Customer-level night transaction ratio, joined from `customer_features_silver`. |
 | `mf_fraud_rate` | `Float64` | Merchant-level fraud rate, joined from `merchant_features_silver`. |
-| `ip_fraud_rate` | `Float64` | IP reputation score; currently hardcoded to `0.0` (Network stage disabled). |
-| `ip_degree` | `UInt32` | Number of unique customers sharing this IP; currently hardcoded to `0` (Network stage disabled). |
-| `dev_fraud_rate` | `Float64` | Device reputation score; currently hardcoded to `0.0` (Network stage disabled). |
-| `dev_degree` | `UInt32` | Number of unique customers sharing this device fingerprint; currently hardcoded to `0` (Network stage disabled). |
-| `suspicious_cluster_member` | `UInt32` | Network cluster fraud flag; currently hardcoded to `0` (Network stage disabled). |
 | `campaign_txn_count` | `UInt32` | Transaction count within the fraud campaign; currently hardcoded to `0` (Campaign stage disabled). |
 | `campaign_total_amount` | `Float64` | Total amount transacted in the fraud campaign; currently hardcoded to `0.0` (Campaign stage disabled). |
 | `campaign_merchant_diversity` | `UInt32` | Unique merchant count within the campaign; currently hardcoded to `0` (Campaign stage disabled). |
 | `feature_calculated_at` | `DateTime` | Server timestamp recorded at Gold table creation time, used for feature lineage tracking. |
 
-**Parallel Execution** is used for the stable Silver stages. When the `silver-all` subcommand is invoked, `rayon` parallelizes `SilverCustomer`, `SilverMerchant`, and `SilverSequence` as concurrent threads. The Campaign, Device/IP, and Network stages are explicitly excluded from `silver-all` due to unresolved signal reliability issues; they must be run individually via their own subcommands, which emit a warning at runtime.
+</details>
 
-**Hybrid Execution** is the core architectural choice of this pipeline. Feature transformation logic — including per-customer windowed aggregations, z-score normalization, spatial velocity derivation, and the round-number flag heuristic — is implemented in Rust using `polars` lazy evaluation. Data is pulled from ClickHouse into local memory as Parquet via `podman exec clickhouse-client`, processed in-process, and then streamed back to ClickHouse via `ParquetWriter` piped into a second `clickhouse-client INSERT` invocation. This avoids the need to express stateful per-customer window operations in SQL while still leveraging ClickHouse for storage and final broad joins.
+## Architecture
 
-**Staged Gold Construction** is used in `run_gold_master` to avoid memory pressure from a single large multi-way join. The Gold table is assembled in two explicit stages: Stage 1 materializes `fact_transactions_silver` into a temporary `gold_stage_1` table; Stage 2 performs LEFT JOINs against `customer_features_silver` and `merchant_features_silver` using `join_algorithm = 'partial_merge'` with a 10 GB `max_memory_usage` cap. The temporary `gold_stage_1` table is dropped after Stage 2 completes. The Gold table is rebuilt from scratch on every run — `fact_transactions_gold` is dropped before Stage 1 executes — to prevent row accumulation from re-runs.
+**Parquet-Only Pipeline:** Data flows entirely through Parquet files with no external database dependency in the batch path. Generation writes to `data/output/`. The ETL reads from `data/output/` (Bronze), transforms in Rust/Polars, and writes Parquet snapshots to `data/silver/` and `data/gold/<timestamp>/`. DuckDB (embedded, no server) queries Gold snapshots for ML training via `conn.sql("SELECT * FROM 'data/gold/<snapshot>/fact_transactions_gold.parquet'").pl()`.
 
-**Campaign Feature Derivation** in `campaign.rs` identifies fraud burst campaigns by grouping consecutive fraudulent transactions per customer where the inter-transaction gap exceeds 48 hours (172,800,000 milliseconds). Each contiguous cluster is assigned a synthetic `campaign_id` composed of `customer_id` + a per-customer sequence counter. Campaign-level aggregates (`campaign_txn_count`, `campaign_total_amount`, `campaign_merchant_diversity`) are then joined back to the transaction level.
+**Parallel Execution** is used for the stable Silver stages. When the `silver-all` subcommand is invoked, `rayon` parallelizes `SilverCustomer`, `SilverMerchant`, and `SilverSequence` as concurrent threads. The Campaign stage is explicitly excluded from `silver-all` due to unresolved signal reliability issues and must be run individually via its own subcommand, which emits a warning at runtime. The Device/IP and Network reputation stages have been removed from the pipeline entirely — see `decisions/ip_device_reputation_removal.md`.
 
-`etl.rs` sits between the **Data Ingestion layer** (`ingest.rs`) and the **Machine Learning layer**. It reads from `fact_transactions_bronze`, `fact_fraud_metadata_bronze`, `dim_customers`, and `dim_accounts` — all populated by `ingest.rs` — and produces `customer_features_silver`, `merchant_features_silver`, `fact_transactions_silver`, and `fact_transactions_gold`. The `fact_transactions_gold` table is the direct input to the Python-based ML training pipeline.
+**Feature Engineering in Rust:** Feature transformation logic — including per-customer windowed aggregations, z-score normalization, spatial velocity derivation, and the round-number flag heuristic — is implemented in Rust using `polars` lazy evaluation. Active features are documented in the [Feature Leakage Case Study](../feature_leakage_issues.md) alongside the iterative discovery process that shaped them.
+
+**Sort-Before-Shift Ordering:** All window functions (`.shift().over()`, cumulative operations) depend on proper per-customer timestamp ordering. The `join()` after `sort()` bug documented in the [Feature Leakage Case Study](../feature_leakage_issues.md) caused 70% of customers to have corrupted sequence features across all prior snapshots. The fix moved the `.sort()` after the `.join()` so that `shift(1).over([col("customer_id")])` always picks the chronologically previous transaction.
+
+**Staged Gold Construction** assembles the Gold table via Polars joins against `customer_features_silver` and `merchant_features_silver` Parquet files, then writes a timestamped snapshot to `data/gold/`. Each run produces a new snapshot directory — Gold is never overwritten in-place, preserving immutable versioned releases of each training dataset.
+
+## Invocation
+
+```
+cargo run --release --bin etl -- bronze        # copy data/output/ → data/bronze/<ts>/
+cargo run --release --bin etl -- silver-all    # parallel Silver stages → data/silver/
+cargo run --release --bin etl -- gold-master   # join Silver → data/gold/<ts>/
+```
+
+Python downstream consumes Gold directly:
+
+```python
+import duckdb
+conn = duckdb.connect()
+df = conn.sql("SELECT * FROM 'data/gold/20260716_145639/fact_transactions_gold.parquet'").pl()
+```
 
 ## Known Issues
 
-The pipeline routes all ClickHouse I/O through `podman exec` shell invocations rather than a native client library. This creates a hard dependency on the local container runtime and shell environment, makes error handling coarse-grained (any non-zero exit code surfaces as a generic string error), and prevents connection pooling or query retries. Migrating to `clickhouse-rs` or an equivalent native Rust client will make the pipeline portable across deployment environments and enable proper query-level error propagation.
+The Campaign Silver stage is excluded from the `silver-all` parallel execution path due to unresolved signal reliability issues. It runs without errors but produces features whose statistical properties have not been validated against the ground truth labels. As a result, the corresponding Gold table columns (`campaign_txn_count`, `campaign_total_amount`, `campaign_merchant_diversity`) are hardcoded to zero in the current Gold build, making them useless as ML features.
 
-Three Silver stages — Campaign, Device/IP, and Network — are excluded from the `silver-all` parallel execution path due to unresolved signal reliability issues. These stages run without errors but produce features whose statistical properties have not been validated against the ground truth labels. As a result, all four corresponding Gold table columns (`ip_fraud_rate`, `ip_degree`, `dev_fraud_rate`, `dev_degree`, `suspicious_cluster_member`, `campaign_txn_count`, `campaign_total_amount`, `campaign_merchant_diversity`) are hardcoded to zero in the current Gold build, making them useless as ML features. Resolving the signal issues in each stage is required before re-enabling them in `silver-all` and removing the zero-fill overrides from `run_gold_master`.
+The Device/IP and Network reputation stages have been removed from the codebase (see `decisions/ip_device_reputation_removal.md`); the `ip_fraud_rate`, `ip_degree`, `dev_fraud_rate`, `dev_degree`, and `suspicious_cluster_member` Gold columns no longer exist, and their `network.rs` / `device_ip.rs` transforms, `SilverNetwork` / `SilverDeviceIp` subcommands, and `ip_features_silver` / `device_features_silver` tables were deleted.
 
-The `gold_master.rs` file defines a `create_gold_master_table` function that implements Gold construction as a pure Polars join chain in Rust. The actual `run_gold_master` function in `etl.rs` bypasses this entirely and implements the same join logic as raw ClickHouse SQL. These two implementations are not kept in sync, meaning any schema change applied to one will silently diverge from the other. The Polars-based `create_gold_master_table` function is currently dead code. Unifying these two approaches — either by routing the SQL path through the Rust function or by deprecating `gold_master.rs` — is required to prevent long-term schema drift.
+Entity-level features (`cf_fraud_rate`, `cf_night_tx_ratio`, `mf_fraud_rate`) are computed across the full batch including the transactions being predicted, creating a target encoding leak. These features must be excluded from ML training unless computed on a held-out time window. They are present in the Gold schema for analytical purposes but removed from the training feature set in `train_xgboost.py`.
+
+Training is always deterministic for a given seed: the Rust generator uses a cascaded seed through per-index deterministic `StdRng` instances, and all Python scripts use explicit `np.random.default_rng(seed)` objects. Parquet snapshots are immutable and versioned by timestamp, making every training run fully reproducible.

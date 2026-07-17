@@ -2,26 +2,25 @@
 
 ## Overview
 
-The training pipeline (`train_xgboost.py` and `dump_model.py`) trains and inspects the XGBoost fraud classifier that powers the real-time scoring service. It reads the full `fact_transactions_gold` table from ClickHouse via `clickhouse-connect` into a Polars DataFrame, applies an operational feature policy to select 12 behavioral features, trains an `XGBClassifier` with class-imbalance weighting, and serializes the resulting model to `models/fraud_model_v1.json`. `dump_model.py` is a post-training inspection utility that reads the serialized booster to verify the feature schema before the model is deployed to `scorer.py`.
+The training pipeline (`train_xgboost.py` and `dump_model.py`) trains and inspects the XGBoost fraud classifier that powers the real-time scoring service. It reads the Gold Parquet snapshot via DuckDB into a Polars DataFrame, applies an operational feature policy to select 10 behavioral features, trains an `XGBClassifier` with class-imbalance weighting and proper categorical encoding, and serializes the resulting model to `models/fraud_model_v4.json`. `dump_model.py` is a post-training inspection utility that reads the serialized booster to verify the feature schema before the model is deployed to `scorer.py`. All downstream scripts use `model_utils.load_model()` or `model_utils.get_model_features()` to auto-discover the latest model and derive the feature list — no manual renaming or hardcoded feature lists are required.
 
 ## Schema
 
 ### Training Feature Set
 
-| Feature | Type | Source Column in Gold Table |
+| Feature | Type | Description |
 | :--- | :--- | :--- |
-| `time_since_last_transaction` | `float` | Sequence feature — seconds since prior transaction per card. |
-| `transaction_sequence_number` | `int` | Sequence feature — cumulative transaction count per customer. |
-| `spatial_velocity` | `float` | Sequence feature — estimated travel speed in km/h between consecutive transactions. |
-| `hour_deviation_from_norm` | `float` | Sequence feature — deviation from the customer's mean transaction hour. |
-| `amount_deviation_z_score` | `float` | Sequence feature — per-customer z-score of the transaction amount. |
-| `rapid_fire_transaction_flag` | `int` | Sequence feature — 1 if time since last transaction ≤ 300 seconds. |
-| `escalating_amounts_flag` | `int` | Sequence feature — 1 if the last three transactions show strictly increasing amounts. |
-| `merchant_category_switch_flag` | `int` | Sequence feature — 1 if merchant category differs from the prior transaction. |
-| `transaction_channel` | `categorical` | Transaction context — e.g., `"upi"`, `"cards"`, `"online"`. |
-| `card_present` | `int` | Transaction context — 1 if physical card was present. |
-| `merchant_category` | `categorical` | Transaction context — standardized merchant category string. |
-| `suspicious_cluster_member` | `int` | Network feature — currently hardcoded to 0 in ETL; included for schema compatibility. |
+| `time_since_last_transaction` | `float` | Temporal — seconds since prior transaction per card. |
+| `transaction_sequence_number` | `int` | Temporal — cumulative transaction count per customer. |
+| `spatial_velocity` | `float` | Spatial — estimated travel speed in km/h between consecutive transactions. |
+| `hour_deviation_from_norm` | `float` | Temporal — deviation from the customer's mean transaction hour. |
+| `amount_deviation_z_score` | `float` | Behavioral — per-customer z-score of the transaction amount. |
+| `rapid_fire_transaction_flag` | `int` | Temporal — 1 if time since last transaction ≤ 300 seconds. |
+| `escalating_amounts_flag` | `int` | Behavioral — 1 if the last three transactions show strictly increasing amounts. |
+| `merchant_category_switch_flag` | `int` | Behavioral — 1 if merchant category differs from the prior transaction. |
+| `transaction_channel` | `categorical` | Channel — e.g., `"upi"`, `"cards"`, `"online"`. |
+| `card_present` | `int` | Channel — 1 if physical card was present. |
+| `merchant_category` | `categorical` | Channel — standardized merchant category string. |
 
 The following columns are **explicitly excluded** from training despite being present in `fact_transactions_gold`: `geo_anomaly`, `device_anomaly`, `ip_anomaly`, `fraud_type`, `fraud_target`, `campaign_id`, and all UUID identifier columns. These are generator-internal labels that would constitute direct data leakage — the model would learn to detect injected signals rather than behavioral anomalies.
 
@@ -34,7 +33,7 @@ The following columns are **explicitly excluded** from training despite being pr
 | `learning_rate` | `0.1` | Fixed shrinkage factor; not tuned. |
 | `objective` | `binary:logistic` | Binary fraud classification. |
 | `tree_method` | `hist` | Histogram-based split finding for performance on large datasets. |
-| `enable_categorical` | `True` | Native categorical support; `transaction_channel` and `merchant_category` are cast to `pl.Categorical` before training. |
+| `enable_categorical` | `False` | Disabled; categoricals are pre-encoded to ordinals before XGBoost sees them. |
 | `eval_metric` | `aucpr` | Area under precision-recall curve, appropriate for imbalanced fraud datasets. |
 | `scale_pos_weight` | `legitimate_count / fraud_count` | Computed per run from the training split to compensate for class imbalance. |
 | `random_state` | `42` | Fixed seed for reproducibility. |
@@ -45,9 +44,9 @@ The following columns are **explicitly excluded** from training despite being pr
 
 **Stratified 80/20 Split** is used for train/test partitioning with `random_state=42`. The `stratify` argument ensures that the fraud prevalence rate is preserved in both splits. The test set is used only for computing the final ROC AUC score and top-10 feature importances printed to stdout; no model selection or threshold tuning is performed on it.
 
-**Model Inspection via `dump_model.py`** is the post-training verification step. After `train_xgboost.py` saves `models/fraud_model_v1.json`, `dump_model.py` loads the booster and prints `feature_names` and `feature_types` directly from the booster object. It also parses the `learner.gradient_booster.model.cats` block in the JSON to extract the categorical level encodings the model observed during training. This provides a verifiable source of truth for the feature schema that `scorer.py` uses to reorder and type-cast its inference DataFrames.
+**Model Inspection via `dump_model.py`** is the post-training verification step. After `train_xgboost.py` saves a date-stamped model, `dump_model.py` loads the booster and prints `feature_names` and `feature_types` directly from the booster object. It also parses the `learner.gradient_booster.model.cats` block in the JSON to extract the categorical level encodings the model observed during training. This provides a verifiable source of truth for the feature schema that `scorer.py` uses to reorder and type-cast its inference DataFrames.
 
-`train_xgboost.py` is the terminal consumer of the **Data Warehouse layer** and the entry point to the **Machine Learning layer**. It reads from `fact_transactions_gold` (produced by `etl.rs`) and writes `models/fraud_model_v1.json`, which is consumed by `scorer.py` for real-time inference.
+`train_xgboost.py` is the terminal consumer of the **Data Warehouse layer** and the entry point to the **Machine Learning layer**. It reads from `fact_transactions_gold` (produced by `etl.rs`) and writes a date-stamped model JSON. Downstream scripts auto-discover the latest model via `model_utils.load_model()` — no manual renaming or path hardcoding is required.
 
 ## Known Issues
 

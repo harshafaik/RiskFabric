@@ -21,7 +21,7 @@ RiskFabric is a fraud intelligence platform designed for building fraud detectio
 - **Core Engine**: Rust 
 - **Real-time Streaming**: Redpanda (Kafka-compatible), `rdkafka`, and Tokio async runtime.
 - **Data Processing**: Polars
-- **Data Warehouse**: PostgreSQL (Spatial/OSM staging), ClickHouse (Synthetic financial data), and dbt (Analytical enrichment).
+- **Data Warehouse**: PostgreSQL (Spatial/OSM staging), Parquet (batch ETL via Polars), DuckDB (embedded training query engine), and dbt (Analytical enrichment).
 - **Feature Store**: Redis
 - **Data Ingestion**: `dlt` (Data Load Tool) for MDS integration.
 - **Machine Learning**: XGBoost

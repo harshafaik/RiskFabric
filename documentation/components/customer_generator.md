@@ -1,4 +1,4 @@
-# Customer Generator
+# Customer Data Generator
 
 ## Overview
 The customer generator module `customer_gen.rs` is responsible for generating a synthetic group of customer profiles, using the geographic data provided from OSM reference points as well as financial behavioral profiles dialed in using YAML configurations. 
@@ -7,7 +7,17 @@ The customer generator module `customer_gen.rs` is responsible for generating a 
 
 Each customer profile consists of several sub-profiles holding geographical, financial, and device metadata:
 
-### `Customer`
+<div style="max-width: 500px; margin: 0 auto;">
+
+```d2
+Customer <- GeoLocation
+Customer <- FinancialProfile
+Customer <- DeviceProfile
+```
+</div>
+<details>
+<summary><code>Customer</code></summary>
+
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
 | `customer_id` | `String` | Unique UUID v4 identifying the customer. |
@@ -22,7 +32,11 @@ Each customer profile consists of several sub-profiles holding geographical, fin
 | `registration_month` | `u32` | Month portion of the registration date. |
 | `registration_day` | `u32` | Day portion of the registration date. |
 
-### `GeoLocation`
+</details>
+
+<details>
+<summary><code>GeoLocation</code></summary>
+
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
 | `location` | `String` | Full text residential address (composed of building number, street name, city, and pincode). |
@@ -35,7 +49,11 @@ Each customer profile consists of several sub-profiles holding geographical, fin
 | `home_h3r5` | `String` | H3 Index at Resolution 5. |
 | `home_h3r7` | `String` | H3 Index at Resolution 7. |
 
-### `FinancialProfile`
+</details>
+
+<details>
+<summary><code>FinancialProfile</code></summary>
+
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
 | `credit_score` | `u16` | Normalized credit score correlated with customer age and bounded by config limits. |
@@ -43,13 +61,19 @@ Each customer profile consists of several sub-profiles holding geographical, fin
 | `customer_risk_score` | `f32` | Probability score representing the default risk level of the customer. |
 | `is_fraud` | `bool` | Flag designating if this customer profile is simulated as compromised/fraudulent. |
 
-### `DeviceProfile`
+</details>
+
+<details>
+<summary><code>DeviceProfile</code></summary>
+
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
 | `primary_ua` | `String` | Primary User Agent string (Android, iOS, desktop, or UPI app, chosen via share weights). |
 | `secondary_ua` | `Option<String>` | Optional secondary User Agent string (simulating multi-device ownership, present in 15% of agents). |
 | `isp` | `String` | Assigned Internet Service Provider (derived from location type share weights). |
 | `ip_subnet` | `String` | CIDR IP subnet mask assigned to the customer based on their ISP. |
+
+</details>
 
 
 To ensure realistic correlation between customer behavior, the module uses relations configured in the form of YAML configurations such as programmatically linking credit score to age, monthly spend vis-a-vis to location_type (Metro vs Rural). This ensures that customer profiles resemble structural patterns consistently similar to equivalent real-world financial data.

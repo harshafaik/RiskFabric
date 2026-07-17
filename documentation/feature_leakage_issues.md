@@ -242,3 +242,154 @@ A more realistic temporal pattern for fraud bursts was implemented, ensuring tra
 Amount-based features are now in third place at 21%. Temporal behavioral signals—`time_since_last_transaction` and `rapid_fire_transaction_flag`—together drive 60% of model decisions. This allows for fraud detection based on behavioral patterns rather than absolute cost, providing logic suitable for real-time scoring of velocity abuse, ATO, and CNP fraud without flagging high-value legitimate transactions.
 
 `merchant_category_switch_flag` at 2.1% and `hour_deviation_from_norm` at 0.45% both have potential for growth through future cross-card coordination work.
+
+---
+
+## Architecture Migration: ClickHouse → DuckDB/Parquet for Batch ETL
+
+While refactoring the storage layer to align with actual workload strengths, the batch ETL path (Bronze → Silver → Gold) was migrated from ClickHouse to a Parquet-only pipeline. The rationale: ClickHouse excels at high-throughput streaming inserts and real-time aggregation, but the batch training path reads full-table scans and writes snapshot files — a workload better suited to columnar file formats with an embedded query engine.
+
+**What changed:**
+
+The Rust ETL (`src/bin/etl.rs`) was rewritten to read Parquet via `LazyFrame::scan_parquet()` and write output via `ParquetWriter`. The `src/clickhouse/` module was deleted entirely along with `src/bin/ingest.rs`. Silver and Gold are now plain Parquet files in `data/silver/` and `data/gold/<snapshot>/`.
+
+All Python ML scripts (`train_xgboost.py`, `calibrate_model.py`, `compute_thresholds.py`, `shap_analysis.py`, `test_model.py`, `drift_simulation.py`, etc.) were converted from `clickhouse_connect` to DuckDB reading Parquet directly via `conn.sql("SELECT * FROM 'path/to/gold.parquet'").pl()`. A shared `ml_utils.load_gold_dataframe()` helper was created.
+
+ClickHouse remains for the live streaming path only: `fraud_scores` table receives scored transactions from the real-time pipeline.
+
+**Architecture post-migration:**
+
+| Path | Storage | Engine |
+|---|---|---|
+| Batch ETL (training) | Parquet (data/gold/) | DuckDB (embedded) |
+| Streaming (live scores) | ClickHouse | Native client |
+| Case state | Postgres | Django ORM |
+| Feature cache (seed) | Redis | redis-py |
+
+**Impact on the ML pipeline:** None. The exact same feature engineering runs in Rust — only the I/O layer changed. Parquet snapshots are schema-identical to the old ClickHouse tables, and DuckDB's SQL dialect is compatible with the queries previously run against ClickHouse. The only code-level change in Python scripts was swapping `clickhouse_connect.get_client()` for `duckdb.connect()`.
+
+**Why this matters for the leak investigation:** DuckDB reading Parquet made the pipeline fully deterministic and reproducible — no external database state to manage between runs, no schema drift between training and scoring, and Parquet snapshots serve as immutable versioned releases of each training dataset.
+
+---
+
+## Target Encoding Leak: `mf_fraud_rate` at 71.9%
+
+After the DuckDB migration, the pipeline was retrained on a freshly generated Gold snapshot. The model achieved AUC 0.925, but feature importance revealed a familiar pattern:
+
+| Features (AUC)                | 0.925 |
+| ----------------------------- | ------ |
+| mf_fraud_rate                 | 0.7185 |
+| spatial_velocity              | 0.0670 |
+| time_since_last_transaction   | 0.0558 |
+| transaction_channel           | 0.0321 |
+| amount_deviation_z_score      | 0.0297 |
+| merchant_category_switch_flag | 0.0218 |
+| merchant_category             | 0.0203 |
+| cf_fraud_rate                 | 0.0203 |
+| card_present                  | 0.0120 |
+| hour_deviation_from_norm      | 0.0055 |
+
+One feature at 71.9% — `mf_fraud_rate` — had completely swallowed the model. The remaining 11 features combined contributed 28%, with behavioral signals like `rapid_fire_transaction_flag` not even appearing in the top 10.
+
+**Root cause:** `mf_fraud_rate` is computed as `mean(is_fraud)` across all transactions per merchant. Since it's calculated on the entire batch including the very transaction being predicted, it's a direct target encoding leak — the model learns "this merchant has fraud" rather than "this transaction pattern looks fraudulent." It's the same category of problem as the IP/device reputation features removed earlier (see `documentation/decisions/ip_device_reputation_removal.md`).
+
+**Fix:** Removed `mf_fraud_rate`, `cf_fraud_rate`, and `cf_night_tx_ratio` from the training feature set — all three are entity-level target encodings computed across the full batch. `cf_fraud_rate` was less catastrophic (customers have more transactions, so the per-transaction leakage is diluted) but the mechanism is identical.
+
+**Post-fix (clean 10 features):**
+
+| Features (AUC)                | 0.798 |
+| ----------------------------- | ------ |
+| time_since_last_transaction   | 0.3525 |
+| amount_deviation_z_score      | 0.2315 |
+| transaction_channel           | 0.1315 |
+| spatial_velocity              | 0.0655 |
+| rapid_fire_transaction_flag   | 0.0529 |
+| merchant_category_switch_flag | 0.0514 |
+| card_present                  | 0.0472 |
+| hour_deviation_from_norm      | 0.0245 |
+| transaction_sequence_number   | 0.0244 |
+| escalating_amounts_flag       | 0.0186 |
+
+AUC dropped from 0.925 to 0.798 — the 0.925 was the target encoding talking, not the model detecting fraud patterns. The genuine behavioral features now carry all the signal, with `time_since_last_transaction` at 35.2% and `spatial_velocity` at 6.5%.
+
+However, this distribution diverged from the previously validated 0.8085 baseline where `rapid_fire` was at 27.1% and `time_since_last_transaction` was at 32.8%. The model was producing a different feature ranking on the same feature set, suggesting something deeper was wrong in the pipeline.
+
+---
+
+## Join Destroys Sort Order: 70% of Customers with Corrupted Sequence Features
+
+The divergence in feature importance (`spatial_velocity` at 6.5% vs. 32.8% in the validated baseline) prompted a deeper investigation. A check for negative `time_since_last_transaction` values — which are mathematically impossible for a chronologically sorted dataset — revealed:
+
+| Delta bucket | Rows | Unique customers |
+|---|---|---|
+| < -1 day | 1,769 | 1,769 |
+| < -1 hour | 2,195 | 1,577 |
+| < -5 min | 206 | 199 |
+| < 0 (small) | 7 | 7 |
+| **Total negative** | **4,177** | **2,385 (70%)** |
+
+4,177 rows had negative time deltas, and 2,385 out of 3,400 customers (70%) had at least one out-of-order sequence. Tracing one affected customer showed the pattern:
+
+```
+By timestamp (chronological):
+  seq=1   → ts=2025-07-16  (first transaction)
+  seq=349 → ts=2025-07-17  ← seq=349 has earlier ts than seq=2
+  seq=2   → ts=2025-07-18
+  ...
+  seq=350 → ts=2025-07-19
+```
+
+Sequence numbers were assigned in non-chronological order. seq=349 had an earlier timestamp than seq=2, so `time_since_last_transaction` for seq=2 was computed as `ts(seq=2) - ts(seq=349)` producing a -31M-second delta. The root cause was in `src/etl/features/sequence.rs`:
+
+```rust
+// BUG: sort before join — join scrambles row order
+let lf = lf.sort(["customer_id", "ts_physical"], ...);
+let lf = lf.join(fraud_meta_lf, ...);  // ← destroys sort
+// shift(1).over(customer_id) now picks wrong predecessor
+```
+
+Polars joins do not preserve input row order. The `.sort()` was called before `.join()`, so by the time `shift(1).over([col("customer_id")])` ran, transactions were paired with non-chronological predecessors. Every sequence-dependent feature was affected:
+
+- `time_since_last_transaction` — computed against wrong predecessor
+- `spatial_velocity` — distance from wrong prior location
+- `escalating_amounts_flag` — comparing against wrong prior amounts
+- `merchant_category_switch_flag` — checking category against wrong prior
+- `rapid_fire_transaction_flag` — threshold check against wrong time delta
+- `transaction_sequence_number` — cumcount on scrambled order
+- `amount_deviation_z_score` — cumulative mean/std on wrong sequence order
+
+**Fix:** Moved the `.sort()` after the `.join()` — a single block reposition with no logic changes.
+
+**Post-fix retraining (same seed, same 10 features):**
+
+| Features (AUC)                | 0.786 |
+| ----------------------------- | ------ |
+| spatial_velocity              | 0.3436 |
+| transaction_channel           | 0.1738 |
+| amount_deviation_z_score      | 0.1699 |
+| time_since_last_transaction   | 0.1318 |
+| merchant_category_switch_flag | 0.0478 |
+| card_present                  | 0.0462 |
+| hour_deviation_from_norm      | 0.0340 |
+| transaction_sequence_number   | 0.0227 |
+| rapid_fire_transaction_flag   | 0.0153 |
+| escalating_amounts_flag       | 0.0150 |
+
+| Metric | Before fix (scrambled) | After fix (sorted) |
+|---|---|---|
+| Negative deltas | 4,177 rows | 0 |
+| Out-of-order customers | 2,385 (70%) | 0 |
+| spatial_velocity importance | 6.5% | 34.4% |
+| time_since_last_transaction | 35.2% | 13.2% |
+| rapid_fire_transaction_flag | 5.3% | 1.5% |
+| AUC | 0.798 | 0.786 |
+
+**Key findings:**
+
+1. **`spatial_velocity` was always the strongest behavioral feature** — the join ordering bug had masked it entirely by pairing transactions with wrong prior coordinates. At 34.4% it's now the dominant signal, as the `geo_anomaly` fraud signature (teleporting fraudsters to random coordinates) produces massive velocity spikes when correctly computed against the real chronological predecessor.
+
+2. **`rapid_fire_transaction_flag` is genuinely redundant with `time_since_last_transaction`** — even with correct ordering, the binary flag contributes only 1.5%. The velocity_abuse bursts span 10-60 seconds (peak at 30-60s), which is within the range `time_since_last_transaction` captures continuously. The binary flag encodes nothing the continuous feature doesn't already provide. Tightening burst intervals to seconds-scale (5-15s) would make the flag distinctive since sub-15s gaps almost never occur in legitimate behavior.
+
+3. **AUC barely moved** — the old AUC was modestly inflated by the model picking up correlative patterns in the scrambled ordering artifact. The correct model at 0.786 is honest, with behavioral features carrying all the signal.
+
+4. **This bug was present across every snapshot generated so far.** All previous feature importance distributions, SHAP analyses, and threshold calculations were computed against data where `spatial_velocity`, `time_since_last_transaction`, `escalating_amounts_flag`, `merchant_category_switch_flag`, and `rapid_fire_transaction_flag` were systematically miscomputed for ~0.27% of rows across 70% of customers. The impact on aggregate metrics was muted because the corruption was diluted across the full dataset, but any per-customer trace or investigation would have shown incorrect feature values.

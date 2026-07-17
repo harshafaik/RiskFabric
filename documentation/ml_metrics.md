@@ -2,7 +2,6 @@
 
 This document tracks the performance and evolution of the fraud detection models trained on RiskFabric synthetic data, progressing from initial leakage-prone baselines to a robust, behavioral production configuration.
 
----
 
 ## Section 1: Early Iterations
 
@@ -72,7 +71,6 @@ Validated against three independent populations to ensure robust performance acr
 
 Note: The higher AUC on the holdout set is due to distributional overlap with the training population, while the ~80% AUC on independent seeds represents the model's true behavioral generalization.
 
----
 
 ## Section 3: Threshold Operating Points
 
@@ -88,7 +86,6 @@ In a production environment, the model's probability output is mapped to specifi
 
 The Detection Layer feeds a review queue for manual inspection, while the Blocking Layer is reserved for automated enforcement. The tradeoff between these layers is an operational business decision, not a model failure.
 
----
 
 ## Section 4: Merchant Category Audit
 
@@ -107,7 +104,6 @@ All verified fraud rates fall below the 20% threshold, confirming that no single
 
 The `GAMBLING` index was previously at 103x (documented in the leakage case study); its reduction to 17x after generator retuning and the verified fraud rate confirms it is now a legitimate signal.
 
----
 
 ## Section 5: Known Limitations
 

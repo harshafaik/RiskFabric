@@ -1,4 +1,4 @@
-# Reference Data Preparator
+# OSM Reference Extractor
 
 ## Overview
 
@@ -6,7 +6,17 @@ The reference data preparator (`prepare_refs.rs`) is the world-building binary t
 
 ## Schema
 
-### `ResidentialPoint` (internal struct → `raw_residential`)
+The preparator produces three Postgres staging tables from the India OSM PBF file, each sourced from an internal extraction struct:
+
+```mermaid
+erDiagram
+    raw_residential ||--o{ raw_merchants : "shares osm_id, h3_index"
+    raw_residential ||--o{ raw_financial : "shares osm_id, h3_index"
+    raw_merchants ||--o{ raw_financial : "shares osm_id, h3_index"
+```
+
+<details>
+<summary><code>raw_residential</code> &larr; <code>ResidentialPoint</code></summary>
 
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
@@ -20,7 +30,10 @@ The reference data preparator (`prepare_refs.rs`) is the world-building binary t
 
 A node is classified as residential if it carries a `building=residential` or `landuse=residential` tag, or if it has either `addr:housenumber` or `addr:street` present and is not already classified as a merchant.
 
-### `MerchantPoint` (internal struct → `raw_merchants`)
+</details>
+
+<details>
+<summary><code>raw_merchants</code> &larr; <code>MerchantPoint</code></summary>
 
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
@@ -37,7 +50,10 @@ A node is classified as residential if it carries a `building=residential` or `l
 
 Merchant classification matches `shop=*` nodes (all sub-categories), `amenity` nodes restricted to `restaurant`, `cafe`, `fast_food`, `bar`, `pub`, `fuel`, `cinema`, and `pharmacy`, and `tourism` nodes restricted to `hotel`, `motel`, and `guest_house`.
 
-### `FinancialPoint` (internal struct → `raw_financial`)
+</details>
+
+<details>
+<summary><code>raw_financial</code> &larr; <code>FinancialPoint</code></summary>
 
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
@@ -47,6 +63,8 @@ Merchant classification matches `shop=*` nodes (all sub-categories), `amenity` n
 | `operator` | `Option<String>` | Institution name from the `operator` or `brand` OSM tag; null if both are absent. |
 | `lat` | `f64` | Latitude coordinate of the node. |
 | `lon` | `f64` | Longitude coordinate of the node. |
+
+</details>
 
 **Parallel Map-Reduce Extraction** is the core performance mechanism of the `extract-nodes` subcommand. The `osmpbf` library's `par_map_reduce` function distributes OSM node processing across all available CPU cores using `rayon`. Each thread processes a local batch of `ResidentialPoint`, `MerchantPoint`, and `FinancialPoint` records, and the results are merged into a single collection after all threads complete. This allows the full India PBF file (several gigabytes) to be scanned in minutes rather than hours on a multi-core workstation.
 

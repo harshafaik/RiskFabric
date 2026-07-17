@@ -26,7 +26,6 @@ A statistical audit of the `fact_transactions_gold` table revealed that the frau
 
 **Discovery**: While the medians are relatively close, the upper tail of the fraud distribution is orders of magnitude higher than legitimate spend. The model learned that "High Value = Fraud" rather than learning behavioral patterns like velocity or location anomalies.
 
----
 
 ## 🧪 Behavioral Signal Strength
 
@@ -44,7 +43,6 @@ To test the strength of actual behavioral features, we performed a "Stress Test"
 
 **Insight**: Without the "Amount Shortcut," the model struggles to identify fraud. This indicates that while the generator injects behavioral anomalies (ATO, UPI scams), the **signal-to-noise ratio** for these features is currently too low for the model to generalize effectively.
 
----
 
 ## 🛠️ Remediation Strategy
 

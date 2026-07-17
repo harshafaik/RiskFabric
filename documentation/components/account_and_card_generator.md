@@ -1,4 +1,4 @@
-# Account and Card Generator
+# Account and Card Data Generator
 
 ## Overview
 The account and card generator modules `account_gen.rs` and `card_gen.rs` are responsible for constructing the financial "graph" of the simulation, establishing the hierarchical relationships between customers and their payment instruments. This layer provides the relational structure necessary to validate entity-linking algorithms, check transaction flows, and simulate realistic cross-account fraud behaviors.
@@ -7,7 +7,18 @@ The account and card generator modules `account_gen.rs` and `card_gen.rs` are re
 
 Each account and card record maintains consistent relations back to the customer profile:
 
-### `Account`
+<div style="max-width: 400px; margin: 0 auto;">
+
+```d2
+Customer -> Account: customer_id
+Account -> Card: account_id
+Customer -> Card: customer_id
+```
+</div>
+
+<details>
+<summary><code>Account</code></summary>
+
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
 | `account_id` | `String` | Unique UUID v4 identifying the account. |
@@ -19,7 +30,11 @@ Each account and card record maintains consistent relations back to the customer
 | `account_status` | `String` | Current status of the account (defaulting to `"Active"`). |
 | `creation_date` | `String` | ISO 8601 date string (`"YYYY-MM-DD"`) representing when the account was opened. |
 
-### `Card`
+</details>
+
+<details>
+<summary><code>Card</code></summary>
+
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
 | `card_id` | `String` | Unique UUID v4 identifying the card. |
@@ -39,6 +54,8 @@ Each account and card record maintains consistent relations back to the customer
 | `international_usage` | `String` | Flag designating if international usage is enabled (currently empty string placeholder). |
 | `issuing_bank` | `String` | Formatted name of the bank (composed as `"Bank of {bank_id}"`). |
 | `bank_code` | `String` | The bank routing/clearing code (equivalent to `bank_id`). |
+
+</details>
 
 These generators prioritize **Relational Consistency**. Instead of generating accounts and cards in isolation, the system uses a top-down orchestration: Customers drive the creation of Accounts, which in turn drive the creation of Cards. This ensures that every card PAN is programmatically linked back to a specific customer ID, maintaining 100% referential integrity across the multi-million row dataset.
 

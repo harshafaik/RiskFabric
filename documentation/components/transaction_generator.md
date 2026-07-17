@@ -1,4 +1,4 @@
-# Transaction Generator
+# Transactional Data Generator
 
 ## Overview
 The transaction generator module `transaction_gen.rs` is responsible for simulating the financial lifecycle of every card in the system over a specified lookback period (default 365 days). 
@@ -7,7 +7,20 @@ The transaction generator module `transaction_gen.rs` is responsible for simulat
 
 Each transaction execution pass generates a comprehensive transaction record and matching fraud diagnostics metadata:
 
-### `Transaction`
+<div style="max-width: 400px; margin: 0 auto;">
+
+```d2
+Customer -> Account: customer_id
+Account -> Card: account_id
+Card -> Transaction: card_id
+Customer -> Transaction: customer_id
+Account -> Transaction: account_id
+Transaction -> FraudMetadata: transaction_id
+```
+</div>
+<details>
+<summary><code>Transaction</code></summary>
+
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
 | `transaction_id` | `String` | Unique UUID v4 identifying the transaction. |
@@ -36,7 +49,11 @@ Each transaction execution pass generates a comprehensive transaction record and
 | `location_long` | `f64` | Longitude coordinate of the transaction. |
 | `h3_r7` | `String` | H3 Index at Resolution 7 representing the transaction location. |
 
-### `FraudMetadata`
+</details>
+
+<details>
+<summary><code>FraudMetadata</code></summary>
+
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
 | `transaction_id` | `String` | Unique UUID v4 linking back to the transaction. |
@@ -54,6 +71,8 @@ Each transaction execution pass generates a comprehensive transaction record and
 | `campaign_type` | `Option<String>` | Type/Strategy of the campaign. |
 | `campaign_phase` | `Option<String>` | Phase of the multi-step fraud campaign (e.g., testing, extraction). |
 | `campaign_day_number` | `Option<i32>` | Day sequence number within the campaign duration. |
+
+</details>
 
 This module uses `rayon` to iterate over cards, all logic—including merchant selection, timestamp generation, amount calculation, and fraud injection, occuring within a single parallelized loop. This eliminates the need for multi-pass joins, thereby improving performance.
 

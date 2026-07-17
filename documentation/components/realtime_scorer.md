@@ -2,7 +2,7 @@
 
 ## Overview
 
-The scoring service (`scorer.py`) is the real-time inference engine that consumes transaction events from Kafka, computes behavioral features using a Redis-backed state store, and applies the trained XGBoost model to produce per-transaction fraud probabilities. It reads from the `raw_transactions` Kafka topic (populated by `stream.rs`), maintains per-card and per-customer state in Redis, and writes scored results to the `fraud_scores` ClickHouse table. The service uses `models/fraud_model_v1.json` produced by `train_xgboost.py`.
+The scoring service (`scorer.py`) is the real-time inference engine that consumes transaction events from Kafka, computes behavioral features using a Redis-backed state store, and applies the trained XGBoost model to produce per-transaction fraud probabilities. It reads from the `raw_transactions` Kafka topic (populated by `stream.rs`), maintains per-card and per-customer state in Redis, and writes scored results to the `fraud_scores` ClickHouse table. The service uses `model_utils.load_model()` to auto-discover the latest model JSON produced by `train_xgboost.py`.
 
 ## Schema
 
@@ -41,7 +41,7 @@ The scoring service (`scorer.py`) is the real-time inference engine that consume
 
 **Feature Alignment at Inference Time** prevents training-serving skew. Before calling `predict_proba`, the service reads `model.get_booster().feature_names` and `feature_types` directly from the loaded booster to determine the expected column order and types. Missing feature columns are filled with `0.0`. Each column is then cast to the exact dtype the booster expects (`"c"` → `category`, `"float"` → `float32`, `"int"` → `int32`). The DataFrame is reordered to match `feature_names` before prediction. If inference fails despite alignment, the batch falls back to a probability of `0.0` for all records.
 
-`scorer.py` is the terminal component of the **Streaming layer**. It consumes from the `raw_transactions` Kafka topic produced by `stream.rs`, reads behavioral context from Redis seeded by `seed_redis.py`, and writes scored decisions to the `fraud_scores` ClickHouse table. It depends on `models/fraud_model_v1.json` being present and valid before startup.
+`scorer.py` is the terminal component of the **Streaming layer**. It consumes from the `raw_transactions` Kafka topic produced by `stream.rs`, reads behavioral context from Redis seeded by `seed_redis.py`, and writes scored decisions to the `fraud_scores` ClickHouse table. It depends on a trained model JSON in `models/` being present and valid before startup.
 
 ## Known Issues
 

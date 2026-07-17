@@ -1,4 +1,4 @@
-# Physical World Transformation
+# Geospatial Reference Pipeline
 
 ## Overview
 
@@ -6,7 +6,20 @@ The `warehouse/` directory contains the dbt project that transforms raw OSM stag
 
 ## Schema
 
-### `stg_residential`
+The dbt project reads the three `raw_*` staging sources and produces two staging models and three mart tables. The marts are exported to Parquet for the simulation generators:
+
+```mermaid
+erDiagram
+    raw_residential ||--o{ stg_residential : "osm_id"
+    raw_merchants ||--o{ stg_merchants : "osm_id"
+    stg_residential ||--o{ mart_residential : "osm_id"
+    stg_merchants ||--o{ mart_merchants : "osm_id"
+    mart_residential ||--o{ mart_district_summary : "state, district_name"
+    mart_merchants ||--o{ mart_district_summary : "state, district_name"
+```
+
+<details>
+<summary><code>stg_residential</code></summary>
 
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
@@ -18,7 +31,10 @@ The `warehouse/` directory contains the dbt project that transforms raw OSM stag
 | `postcode` | `TEXT` | Raw postal code from the `addr:postcode` OSM tag. |
 | `state_standardized` | `TEXT` | State name normalized via a left join against `ref_state_map`; falls back to the raw `addr:state` value, then `'Unknown'`, if no mapping exists. |
 
-### `stg_merchants`
+</details>
+
+<details>
+<summary><code>stg_merchants</code></summary>
 
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
@@ -33,7 +49,10 @@ The `warehouse/` directory contains the dbt project that transforms raw OSM stag
 | `merchant_category` | `TEXT` | Standardized RiskFabric category joined from `ref_category_map` on `sub_category`; defaults to `'GENERAL_RETAIL'` if no mapping exists. |
 | `risk_level` | `TEXT` | Risk classification joined from `ref_category_map`; defaults to `'LOW'` if no mapping exists. |
 
-### `mart_residential`
+</details>
+
+<details>
+<summary><code>mart_residential</code></summary>
 
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
@@ -46,7 +65,10 @@ The `warehouse/` directory contains the dbt project that transforms raw OSM stag
 | `state` | `TEXT` | Official state name derived from a PostGIS `ST_Intersects` join against `ref_boundaries_states` (DataMeet boundaries). |
 | `district_name` | `TEXT` | Official district name derived from a PostGIS `ST_Intersects` join against `ref_boundaries_districts` (DataMeet boundaries). |
 
-### `mart_merchants`
+</details>
+
+<details>
+<summary><code>mart_merchants</code></summary>
 
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
@@ -62,7 +84,10 @@ The `warehouse/` directory contains the dbt project that transforms raw OSM stag
 | `state` | `TEXT` | Official state name from PostGIS spatial join. |
 | `district_name` | `TEXT` | Official district name from PostGIS spatial join. |
 
-### `mart_district_summary`
+</details>
+
+<details>
+<summary><code>mart_district_summary</code></summary>
 
 | Field Name | Type | Description |
 | :--- | :--- | :--- |
@@ -73,6 +98,8 @@ The `warehouse/` directory contains the dbt project that transforms raw OSM stag
 | `high_risk_merchants` | `INTEGER` | Count of merchants with `risk_level = 'VERY_HIGH'`. |
 | `medium_high_risk_merchants` | `INTEGER` | Count of merchants with `risk_level = 'HIGH'`. |
 | `merchant_to_residential_ratio` | `NUMERIC` | Merchant node count divided by residential node count, rounded to 2 decimal places; 0 if no residential nodes exist. |
+
+</details>
 
 **Spatial Join Strategy** is the core mechanism used in both mart models to assign authoritative state and district names. Rather than trusting the `addr:state` OSM tag — which is inconsistently populated and contains a wide variety of spelling and transliteration variants — both `mart_residential` and `mart_merchants` perform `ST_Intersects` operations against official administrative boundary geometries sourced from DataMeet (`ref_boundaries_states` and `ref_boundaries_districts`). Every coordinate is point-in-polygon tested against both boundary layers, producing a verified `state` and `district_name` for each node regardless of what its OSM address tags contain.
 

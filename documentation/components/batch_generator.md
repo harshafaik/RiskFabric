@@ -1,10 +1,24 @@
-# Batch Generator
+# Batch Orchestrator
 
 ## Overview
 The batch generator module `generate.rs` serves as the primary orchestration engine for synthetic datasets.
 
 ## Schema
-The generator outputs five primary relational tables:
+The orchestrator outputs five primary relational tables:
+
+<div style="max-width: 350px; margin: 0 auto;">
+
+```d2
+"Customer" -> "Account": customer_id
+"Account" -> "Card": account_id
+"Card" -> "Transaction": card_id
+"Customer" -> "Card": customer_id
+"Transaction" -> "FraudMetadata": transaction_id
+```
+
+</div>
+<details>
+<summary>Output tables</summary>
 
 | File Name | Primary Keys / Foreign Keys | Description |
 | :--- | :--- | :--- |
@@ -13,6 +27,8 @@ The generator outputs five primary relational tables:
 | `cards.parquet` | `card_id`, `account_id`, `customer_id` | Physical and virtual card payment instruments linked to accounts. |
 | `transactions.parquet` | `transaction_id`, `card_id` | Labeled transaction events stream. |
 | `fraud_metadata.parquet` | `transaction_id` | Injected adversarial mutation metadata and diagnostics labels. |
+
+</details>
 
 The generator uses a **chunked execution strategy** to handle datasets that exceed available system memory. By processing cards in batches of 5,000, the generator maintains a stable memory profile regardless of the total population size. For spatial lookups, the system implements a multi-tier H3 index (resolutions 4 and 6) and a state-level index. This allows for rapid, localized merchant selection during transaction generation without exhaustive searching of the merchant reference dataset.
 

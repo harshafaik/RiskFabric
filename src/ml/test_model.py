@@ -1,51 +1,25 @@
 import polars as pl
 import xgboost as xgb
-import clickhouse_connect
 from sklearn.metrics import classification_report, roc_auc_score, confusion_matrix
 import os
+from model_utils import load_model, get_model_features
+from ml_utils import load_gold_dataframe
+
 
 def test_model():
-    print("🚀 Connecting to ClickHouse...")
-    client = clickhouse_connect.get_client(
-        host='localhost', 
-        port=8123,
-        username='riskfabric_user',
-        password='123',
-        database='riskfabric'
-    )
-
-    print("📊 Loading Fresh Test Data (Seed 2026)...")
-    query = "SELECT * FROM fact_transactions_gold"
-    df = pl.from_arrow(client.query_arrow(query))
+    print("📊 Loading Gold snapshot...")
+    df = load_gold_dataframe()
     
     target_col = 'is_fraud'
-    feature_cols = [
-        'time_since_last_transaction',
-        'transaction_sequence_number',
-        'spatial_velocity',
-        'hour_deviation_from_norm',
-        'amount_deviation_z_score',
-        'rapid_fire_transaction_flag',
-        'escalating_amounts_flag',
-        'merchant_category_switch_flag',
-        'transaction_channel',
-        'card_present',
-        'merchant_category',
-        'suspicious_cluster_member',
-    ]
+    feature_cols = get_model_features()
+    feature_cols = [c for c in feature_cols if c in df.columns]
     
-    # Ensure columns exist
-    available_cols = df.columns
-    feature_cols = [c for c in feature_cols if c in available_cols]
-    
-    # Handle Categoricals
     string_cols = [c for c in feature_cols if df[c].dtype == pl.String]
     if string_cols:
-        df = df.with_columns([pl.col(c).cast(pl.Categorical) for c in string_cols])
+        df = df.with_columns([pl.col(c).cast(pl.Categorical).to_physical().alias(c) for c in string_cols])
 
-    print(f"🧠 Loading Model: models/fraud_model_v1.json")
-    model = xgb.XGBClassifier()
-    model.load_model("models/fraud_model_v1.json")
+    print(f"🧠 Loading Model ({len(feature_cols)} features)")
+    model = load_model()
 
     X_test = df.select(feature_cols)
     y_test = df.select(target_col).to_numpy().flatten()
@@ -54,7 +28,6 @@ def test_model():
     y_prob = model.predict_proba(X_test)[:, 1]
     y_pred = (y_prob > 0.5).astype(int)
 
-    # Evaluation
     auc = roc_auc_score(y_test, y_prob)
     print(f"\n✨ TEST ROC AUC Score: {auc:.4f}")
     

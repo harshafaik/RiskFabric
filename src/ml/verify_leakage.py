@@ -1,21 +1,13 @@
 import polars as pl
 import xgboost as xgb
-import clickhouse_connect
 import os
+from model_utils import load_model
+from ml_utils import load_gold_dataframe
+
 
 def verify_leakage():
-    print("🚀 Connecting to ClickHouse...")
-    client = clickhouse_connect.get_client(
-        host='localhost', 
-        port=8123,
-        username='riskfabric_user',
-        password='123',
-        database='riskfabric'
-    )
-
-    print("📊 Loading Test Data (Seed 8888)...")
-    query = "SELECT * FROM fact_transactions_gold"
-    df = pl.from_arrow(client.query_arrow(query))
+    print("📊 Loading Gold snapshot...")
+    df = load_gold_dataframe()
     
     feature_cols = [
         'time_since_last_transaction', 'transaction_sequence_number', 'spatial_velocity',
@@ -27,11 +19,10 @@ def verify_leakage():
     # Handle Categoricals
     string_cols = [c for c in feature_cols if df[c].dtype == pl.String]
     if string_cols:
-        df = df.with_columns([pl.col(c).cast(pl.Categorical) for c in string_cols])
+        df = df.with_columns([pl.col(c).cast(pl.Categorical).to_physical().alias(c) for c in string_cols])
 
     print("🧠 Loading Model...")
-    model = xgb.XGBClassifier()
-    model.load_model("models/fraud_model_v1.json")
+    model = load_model()
 
     print("🔮 Running Predictions...")
     X_test = df.select(feature_cols)

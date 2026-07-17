@@ -8,6 +8,7 @@ import redis
 from confluent_kafka import Consumer, KafkaError
 import clickhouse_connect
 from datetime import datetime
+from model_utils import load_model
 
 # --- Constants & Config ---
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
@@ -15,7 +16,6 @@ REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST", "localhost")
 TOPIC = "raw_transactions"
 GROUP_ID = "fraud_scorer_v1"
-MODEL_PATH = "models/fraud_model_v1.json"
 THRESHOLD = 0.85
 
 CATEGORIES = {
@@ -136,10 +136,10 @@ def main():
     print("🚀 Initializing Real-time Scorer...")
     
     # Load Model
-    model = xgb.XGBClassifier(enable_categorical=True)
-    model.load_model(MODEL_PATH)
+    model = load_model(enable_categorical=True)
     model_features = model.get_booster().feature_names
-    print(f"   -> Model loaded: {MODEL_PATH}")
+    model_types = model.get_booster().feature_types
+    print(f"   -> Model loaded")
     print(f"   -> Expected features: {model_features}")
 
     # ClickHouse Client

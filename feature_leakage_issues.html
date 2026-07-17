@@ -29,6 +29,7 @@
         <link rel="stylesheet" href="ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="documentation/custom.css">
 
     </head>
     <body class="sidebar-visible no-js">
@@ -88,7 +89,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="tutorial_first_run.html"><strong aria-hidden="true">2.</strong> Tutorials</a></li><li class="chapter-item expanded "><a href="simulation_index.html"><strong aria-hidden="true">3.</strong> Simulation & Generation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/customer_generator.html"><strong aria-hidden="true">3.1.</strong> Customer Generator</a></li><li class="chapter-item expanded "><a href="components/account_and_card_generator.html"><strong aria-hidden="true">3.2.</strong> Account and Card Generator</a></li><li class="chapter-item expanded "><a href="components/transaction_generator.html"><strong aria-hidden="true">3.3.</strong> Transaction Generator</a></li><li class="chapter-item expanded "><a href="components/batch_generator.html"><strong aria-hidden="true">3.4.</strong> Batch Generator</a></li><li class="chapter-item expanded "><a href="components/streaming_generator.html"><strong aria-hidden="true">3.5.</strong> Streaming Generator</a></li><li class="chapter-item expanded "><a href="components/adversary_logic_engine.html"><strong aria-hidden="true">3.6.</strong> Adversary Logic Engine</a></li><li class="chapter-item expanded "><a href="components/central_configuration_engine.html"><strong aria-hidden="true">3.7.</strong> Central Configuration Engine</a></li></ol></li><li class="chapter-item expanded "><a href="engineering_index.html"><strong aria-hidden="true">4.</strong> Data & Engineering</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/etl_system.html"><strong aria-hidden="true">4.1.</strong> ETL Pipeline System</a></li><li class="chapter-item expanded "><a href="components/dbt_models.html"><strong aria-hidden="true">4.2.</strong> Physical World Transformation</a></li><li class="chapter-item expanded "><a href="components/ingestor_rs.html"><strong aria-hidden="true">4.3.</strong> Data Warehouse Ingestor</a></li><li class="chapter-item expanded "><a href="components/reference_preparator.html"><strong aria-hidden="true">4.4.</strong> Reference Data Preparator</a></li></ol></li><li class="chapter-item expanded "><a href="ml_systems_index.html"><strong aria-hidden="true">5.</strong> Machine Learning Systems</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/ml_training.html"><strong aria-hidden="true">5.1.</strong> Training Pipeline</a></li><li class="chapter-item expanded "><a href="components/realtime_scorer.html"><strong aria-hidden="true">5.2.</strong> Real-Time Scoring Service</a></li></ol></li><li class="chapter-item expanded "><a href="infrastructure_index.html"><strong aria-hidden="true">6.</strong> Infrastructure & Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/infrastructure.html"><strong aria-hidden="true">6.1.</strong> Infrastructure & Local Stack</a></li><li class="chapter-item expanded "><a href="components/redis_seeder.html"><strong aria-hidden="true">6.2.</strong> Redis Feature Seeder</a></li></ol></li><li class="chapter-item expanded "><a href="reference_index.html"><strong aria-hidden="true">7.</strong> Technical Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="data_schema.html"><strong aria-hidden="true">7.1.</strong> Synthetic Data Schema</a></li><li class="chapter-item expanded "><a href="config_reference.html"><strong aria-hidden="true">7.2.</strong> Configuration Reference</a></li></ol></li><li class="chapter-item expanded "><a href="concepts_index.html"><strong aria-hidden="true">8.</strong> Conceptual Explanations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="theory_of_operation.html"><strong aria-hidden="true">8.1.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="fraud_signatures.html"><strong aria-hidden="true">8.2.</strong> Fraud Signatures & Attack Patterns</a></li><li class="chapter-item expanded "><a href="fraud_profiles.html"><strong aria-hidden="true">8.3.</strong> Synthetic Fraud Profiles</a></li><li class="chapter-item expanded "><a href="objectives.html"><strong aria-hidden="true">8.4.</strong> Project Goals</a></li></ol></li><li class="chapter-item expanded "><a href="results_index.html"><strong aria-hidden="true">9.</strong> Results & Monitoring</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ml_metrics.html"><strong aria-hidden="true">9.1.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="feature_leakage_issues.html" class="active"><strong aria-hidden="true">9.2.</strong> Feature Leakage Case Study</a></li><li class="chapter-item expanded "><a href="performance_benchmarks.html"><strong aria-hidden="true">9.3.</strong> Generation Performance</a></li></ol></li><li class="chapter-item expanded "><a href="knowledge_index.html"><strong aria-hidden="true">10.</strong> Knowledge Base</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="issues.html"><strong aria-hidden="true">10.1.</strong> Technical Issues & Resolutions</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="simulation_index.html"><strong aria-hidden="true">2.</strong> Data Generation Modules</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/customer_generator.html"><strong aria-hidden="true">2.1.</strong> Customer Data Generator</a></li><li class="chapter-item expanded "><a href="components/account_and_card_generator.html"><strong aria-hidden="true">2.2.</strong> Account and Card Data Generator</a></li><li class="chapter-item expanded "><a href="components/transaction_generator.html"><strong aria-hidden="true">2.3.</strong> Transactional Data Generator</a></li><li class="chapter-item expanded "><a href="components/batch_generator.html"><strong aria-hidden="true">2.4.</strong> Batch Orchestrator</a></li><li class="chapter-item expanded "><a href="components/streaming_generator.html"><strong aria-hidden="true">2.5.</strong> Streaming Orchestrator</a></li><li class="chapter-item expanded "><a href="components/adversary_logic_engine.html"><strong aria-hidden="true">2.6.</strong> Fraud Injector</a></li><li class="chapter-item expanded "><a href="components/configuration.html"><strong aria-hidden="true">2.7.</strong> Configuration Module</a></li></ol></li><li class="chapter-item expanded "><a href="engineering_index.html"><strong aria-hidden="true">3.</strong> Data & Engineering</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/etl_system.html"><strong aria-hidden="true">3.1.</strong> Feature Engineering Pipeline</a></li><li class="chapter-item expanded "><a href="components/dbt_models.html"><strong aria-hidden="true">3.2.</strong> Geospatial Reference Pipeline</a></li><li class="chapter-item expanded "><a href="components/reference_preparator.html"><strong aria-hidden="true">3.3.</strong> OSM Reference Extractor</a></li></ol></li><li class="chapter-item expanded "><a href="ml_systems_index.html"><strong aria-hidden="true">4.</strong> Machine Learning Systems</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/ml_training.html"><strong aria-hidden="true">4.1.</strong> Training Pipeline</a></li><li class="chapter-item expanded "><a href="components/ml_calibration.html"><strong aria-hidden="true">4.2.</strong> Model Calibration</a></li><li class="chapter-item expanded "><a href="components/realtime_scorer.html"><strong aria-hidden="true">4.3.</strong> Real-Time Scoring Service</a></li><li class="chapter-item expanded "><a href="components/ml_explainability.html"><strong aria-hidden="true">4.4.</strong> Model Explainability (SHAP)</a></li><li class="chapter-item expanded "><a href="components/ml_robustness.html"><strong aria-hidden="true">4.5.</strong> Model Robustness & Drift</a></li><li class="chapter-item expanded "><a href="ml_analysis_scripts.html"><strong aria-hidden="true">4.6.</strong> Analysis & Utility Scripts</a></li></ol></li><li class="chapter-item expanded "><a href="infrastructure_index.html"><strong aria-hidden="true">5.</strong> Infrastructure & Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/infrastructure.html"><strong aria-hidden="true">5.1.</strong> Infrastructure & Local Stack</a></li><li class="chapter-item expanded "><a href="components/case_admin.html"><strong aria-hidden="true">5.2.</strong> Django Case Management UI</a></li><li class="chapter-item expanded "><a href="components/redis_seeder.html"><strong aria-hidden="true">5.3.</strong> Redis Feature Seeder</a></li></ol></li><li class="chapter-item expanded "><a href="concepts_index.html"><strong aria-hidden="true">6.</strong> Conceptual Explanations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="theory_of_operation.html"><strong aria-hidden="true">6.1.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="fraud_signatures.html"><strong aria-hidden="true">6.2.</strong> Fraud Signatures & Attack Patterns</a></li></ol></li><li class="chapter-item expanded "><a href="results_index.html"><strong aria-hidden="true">7.</strong> Results & Monitoring</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ml_metrics.html"><strong aria-hidden="true">7.1.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="feature_leakage_issues.html" class="active"><strong aria-hidden="true">7.2.</strong> Feature Leakage Case Study</a></li></ol></li><li class="chapter-item expanded "><a href="defunct_index.html"><strong aria-hidden="true">8.</strong> Defunct Implementations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/defunct/etl_system_shell_pivot.html"><strong aria-hidden="true">8.1.</strong> ETL Pipeline System (Shell-Pivot Variant)</a></li><li class="chapter-item expanded "><a href="components/defunct/clickhouse_batch_etl.html"><strong aria-hidden="true">8.2.</strong> ClickHouse Batch ETL Architecture</a></li></ol></li><li class="chapter-item expanded "><a href="decisions_index.html"><strong aria-hidden="true">9.</strong> Decisions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="decisions/ip_device_reputation_removal.html"><strong aria-hidden="true">9.1.</strong> IP and Device Reputation Removal</a></li><li class="chapter-item expanded "><a href="decisions/storage_architecture_split.html"><strong aria-hidden="true">9.2.</strong> Storage Architecture Split</a></li><li class="chapter-item expanded "><a href="decisions/deployment_architecture.html"><strong aria-hidden="true">9.3.</strong> Deployment Architecture</a></li><li class="chapter-item expanded "><a href="decisions/fraud_operations_cost_model.html"><strong aria-hidden="true">9.4.</strong> Fraud Operations Cost Model</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -394,6 +395,133 @@ amount_multiplier: 0.8_to_1.2  # within customer's normal band
 </div>
 <p>Amount-based features are now in third place at 21%. Temporal behavioral signals—<code>time_since_last_transaction</code> and <code>rapid_fire_transaction_flag</code>—together drive 60% of model decisions. This allows for fraud detection based on behavioral patterns rather than absolute cost, providing logic suitable for real-time scoring of velocity abuse, ATO, and CNP fraud without flagging high-value legitimate transactions.</p>
 <p><code>merchant_category_switch_flag</code> at 2.1% and <code>hour_deviation_from_norm</code> at 0.45% both have potential for growth through future cross-card coordination work.</p>
+<hr />
+<h2 id="architecture-migration-clickhouse--duckdbparquet-for-batch-etl"><a class="header" href="#architecture-migration-clickhouse--duckdbparquet-for-batch-etl">Architecture Migration: ClickHouse → DuckDB/Parquet for Batch ETL</a></h2>
+<p>While refactoring the storage layer to align with actual workload strengths, the batch ETL path (Bronze → Silver → Gold) was migrated from ClickHouse to a Parquet-only pipeline. The rationale: ClickHouse excels at high-throughput streaming inserts and real-time aggregation, but the batch training path reads full-table scans and writes snapshot files — a workload better suited to columnar file formats with an embedded query engine.</p>
+<p><strong>What changed:</strong></p>
+<p>The Rust ETL (<code>src/bin/etl.rs</code>) was rewritten to read Parquet via <code>LazyFrame::scan_parquet()</code> and write output via <code>ParquetWriter</code>. The <code>src/clickhouse/</code> module was deleted entirely along with <code>src/bin/ingest.rs</code>. Silver and Gold are now plain Parquet files in <code>data/silver/</code> and <code>data/gold/&lt;snapshot&gt;/</code>.</p>
+<p>All Python ML scripts (<code>train_xgboost.py</code>, <code>calibrate_model.py</code>, <code>compute_thresholds.py</code>, <code>shap_analysis.py</code>, <code>test_model.py</code>, <code>drift_simulation.py</code>, etc.) were converted from <code>clickhouse_connect</code> to DuckDB reading Parquet directly via <code>conn.sql("SELECT * FROM 'path/to/gold.parquet'").pl()</code>. A shared <code>ml_utils.load_gold_dataframe()</code> helper was created.</p>
+<p>ClickHouse remains for the live streaming path only: <code>fraud_scores</code> table receives scored transactions from the real-time pipeline.</p>
+<p><strong>Architecture post-migration:</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Path</th><th>Storage</th><th>Engine</th></tr></thead><tbody>
+<tr><td>Batch ETL (training)</td><td>Parquet (data/gold/)</td><td>DuckDB (embedded)</td></tr>
+<tr><td>Streaming (live scores)</td><td>ClickHouse</td><td>Native client</td></tr>
+<tr><td>Case state</td><td>Postgres</td><td>Django ORM</td></tr>
+<tr><td>Feature cache (seed)</td><td>Redis</td><td>redis-py</td></tr>
+</tbody></table>
+</div>
+<p><strong>Impact on the ML pipeline:</strong> None. The exact same feature engineering runs in Rust — only the I/O layer changed. Parquet snapshots are schema-identical to the old ClickHouse tables, and DuckDB's SQL dialect is compatible with the queries previously run against ClickHouse. The only code-level change in Python scripts was swapping <code>clickhouse_connect.get_client()</code> for <code>duckdb.connect()</code>.</p>
+<p><strong>Why this matters for the leak investigation:</strong> DuckDB reading Parquet made the pipeline fully deterministic and reproducible — no external database state to manage between runs, no schema drift between training and scoring, and Parquet snapshots serve as immutable versioned releases of each training dataset.</p>
+<hr />
+<h2 id="target-encoding-leak-mf_fraud_rate-at-719"><a class="header" href="#target-encoding-leak-mf_fraud_rate-at-719">Target Encoding Leak: <code>mf_fraud_rate</code> at 71.9%</a></h2>
+<p>After the DuckDB migration, the pipeline was retrained on a freshly generated Gold snapshot. The model achieved AUC 0.925, but feature importance revealed a familiar pattern:</p>
+<div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.925</th></tr></thead><tbody>
+<tr><td>mf_fraud_rate</td><td>0.7185</td></tr>
+<tr><td>spatial_velocity</td><td>0.0670</td></tr>
+<tr><td>time_since_last_transaction</td><td>0.0558</td></tr>
+<tr><td>transaction_channel</td><td>0.0321</td></tr>
+<tr><td>amount_deviation_z_score</td><td>0.0297</td></tr>
+<tr><td>merchant_category_switch_flag</td><td>0.0218</td></tr>
+<tr><td>merchant_category</td><td>0.0203</td></tr>
+<tr><td>cf_fraud_rate</td><td>0.0203</td></tr>
+<tr><td>card_present</td><td>0.0120</td></tr>
+<tr><td>hour_deviation_from_norm</td><td>0.0055</td></tr>
+</tbody></table>
+</div>
+<p>One feature at 71.9% — <code>mf_fraud_rate</code> — had completely swallowed the model. The remaining 11 features combined contributed 28%, with behavioral signals like <code>rapid_fire_transaction_flag</code> not even appearing in the top 10.</p>
+<p><strong>Root cause:</strong> <code>mf_fraud_rate</code> is computed as <code>mean(is_fraud)</code> across all transactions per merchant. Since it's calculated on the entire batch including the very transaction being predicted, it's a direct target encoding leak — the model learns "this merchant has fraud" rather than "this transaction pattern looks fraudulent." It's the same category of problem as the IP/device reputation features removed earlier (see <code>documentation/decisions/ip_device_reputation_removal.md</code>).</p>
+<p><strong>Fix:</strong> Removed <code>mf_fraud_rate</code>, <code>cf_fraud_rate</code>, and <code>cf_night_tx_ratio</code> from the training feature set — all three are entity-level target encodings computed across the full batch. <code>cf_fraud_rate</code> was less catastrophic (customers have more transactions, so the per-transaction leakage is diluted) but the mechanism is identical.</p>
+<p><strong>Post-fix (clean 10 features):</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.798</th></tr></thead><tbody>
+<tr><td>time_since_last_transaction</td><td>0.3525</td></tr>
+<tr><td>amount_deviation_z_score</td><td>0.2315</td></tr>
+<tr><td>transaction_channel</td><td>0.1315</td></tr>
+<tr><td>spatial_velocity</td><td>0.0655</td></tr>
+<tr><td>rapid_fire_transaction_flag</td><td>0.0529</td></tr>
+<tr><td>merchant_category_switch_flag</td><td>0.0514</td></tr>
+<tr><td>card_present</td><td>0.0472</td></tr>
+<tr><td>hour_deviation_from_norm</td><td>0.0245</td></tr>
+<tr><td>transaction_sequence_number</td><td>0.0244</td></tr>
+<tr><td>escalating_amounts_flag</td><td>0.0186</td></tr>
+</tbody></table>
+</div>
+<p>AUC dropped from 0.925 to 0.798 — the 0.925 was the target encoding talking, not the model detecting fraud patterns. The genuine behavioral features now carry all the signal, with <code>time_since_last_transaction</code> at 35.2% and <code>spatial_velocity</code> at 6.5%.</p>
+<p>However, this distribution diverged from the previously validated 0.8085 baseline where <code>rapid_fire</code> was at 27.1% and <code>time_since_last_transaction</code> was at 32.8%. The model was producing a different feature ranking on the same feature set, suggesting something deeper was wrong in the pipeline.</p>
+<hr />
+<h2 id="join-destroys-sort-order-70-of-customers-with-corrupted-sequence-features"><a class="header" href="#join-destroys-sort-order-70-of-customers-with-corrupted-sequence-features">Join Destroys Sort Order: 70% of Customers with Corrupted Sequence Features</a></h2>
+<p>The divergence in feature importance (<code>spatial_velocity</code> at 6.5% vs. 32.8% in the validated baseline) prompted a deeper investigation. A check for negative <code>time_since_last_transaction</code> values — which are mathematically impossible for a chronologically sorted dataset — revealed:</p>
+<div class="table-wrapper"><table><thead><tr><th>Delta bucket</th><th>Rows</th><th>Unique customers</th></tr></thead><tbody>
+<tr><td>&lt; -1 day</td><td>1,769</td><td>1,769</td></tr>
+<tr><td>&lt; -1 hour</td><td>2,195</td><td>1,577</td></tr>
+<tr><td>&lt; -5 min</td><td>206</td><td>199</td></tr>
+<tr><td>&lt; 0 (small)</td><td>7</td><td>7</td></tr>
+<tr><td><strong>Total negative</strong></td><td><strong>4,177</strong></td><td><strong>2,385 (70%)</strong></td></tr>
+</tbody></table>
+</div>
+<p>4,177 rows had negative time deltas, and 2,385 out of 3,400 customers (70%) had at least one out-of-order sequence. Tracing one affected customer showed the pattern:</p>
+<pre><code>By timestamp (chronological):
+  seq=1   → ts=2025-07-16  (first transaction)
+  seq=349 → ts=2025-07-17  ← seq=349 has earlier ts than seq=2
+  seq=2   → ts=2025-07-18
+  ...
+  seq=350 → ts=2025-07-19
+</code></pre>
+<p>Sequence numbers were assigned in non-chronological order. seq=349 had an earlier timestamp than seq=2, so <code>time_since_last_transaction</code> for seq=2 was computed as <code>ts(seq=2) - ts(seq=349)</code> producing a -31M-second delta. The root cause was in <code>src/etl/features/sequence.rs</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// BUG: sort before join — join scrambles row order
+let lf = lf.sort(["customer_id", "ts_physical"], ...);
+let lf = lf.join(fraud_meta_lf, ...);  // ← destroys sort
+// shift(1).over(customer_id) now picks wrong predecessor
+<span class="boring">}</span></code></pre></pre>
+<p>Polars joins do not preserve input row order. The <code>.sort()</code> was called before <code>.join()</code>, so by the time <code>shift(1).over([col("customer_id")])</code> ran, transactions were paired with non-chronological predecessors. Every sequence-dependent feature was affected:</p>
+<ul>
+<li><code>time_since_last_transaction</code> — computed against wrong predecessor</li>
+<li><code>spatial_velocity</code> — distance from wrong prior location</li>
+<li><code>escalating_amounts_flag</code> — comparing against wrong prior amounts</li>
+<li><code>merchant_category_switch_flag</code> — checking category against wrong prior</li>
+<li><code>rapid_fire_transaction_flag</code> — threshold check against wrong time delta</li>
+<li><code>transaction_sequence_number</code> — cumcount on scrambled order</li>
+<li><code>amount_deviation_z_score</code> — cumulative mean/std on wrong sequence order</li>
+</ul>
+<p><strong>Fix:</strong> Moved the <code>.sort()</code> after the <code>.join()</code> — a single block reposition with no logic changes.</p>
+<p><strong>Post-fix retraining (same seed, same 10 features):</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Features (AUC)</th><th>0.786</th></tr></thead><tbody>
+<tr><td>spatial_velocity</td><td>0.3436</td></tr>
+<tr><td>transaction_channel</td><td>0.1738</td></tr>
+<tr><td>amount_deviation_z_score</td><td>0.1699</td></tr>
+<tr><td>time_since_last_transaction</td><td>0.1318</td></tr>
+<tr><td>merchant_category_switch_flag</td><td>0.0478</td></tr>
+<tr><td>card_present</td><td>0.0462</td></tr>
+<tr><td>hour_deviation_from_norm</td><td>0.0340</td></tr>
+<tr><td>transaction_sequence_number</td><td>0.0227</td></tr>
+<tr><td>rapid_fire_transaction_flag</td><td>0.0153</td></tr>
+<tr><td>escalating_amounts_flag</td><td>0.0150</td></tr>
+</tbody></table>
+</div><div class="table-wrapper"><table><thead><tr><th>Metric</th><th>Before fix (scrambled)</th><th>After fix (sorted)</th></tr></thead><tbody>
+<tr><td>Negative deltas</td><td>4,177 rows</td><td>0</td></tr>
+<tr><td>Out-of-order customers</td><td>2,385 (70%)</td><td>0</td></tr>
+<tr><td>spatial_velocity importance</td><td>6.5%</td><td>34.4%</td></tr>
+<tr><td>time_since_last_transaction</td><td>35.2%</td><td>13.2%</td></tr>
+<tr><td>rapid_fire_transaction_flag</td><td>5.3%</td><td>1.5%</td></tr>
+<tr><td>AUC</td><td>0.798</td><td>0.786</td></tr>
+</tbody></table>
+</div>
+<p><strong>Key findings:</strong></p>
+<ol>
+<li>
+<p><strong><code>spatial_velocity</code> was always the strongest behavioral feature</strong> — the join ordering bug had masked it entirely by pairing transactions with wrong prior coordinates. At 34.4% it's now the dominant signal, as the <code>geo_anomaly</code> fraud signature (teleporting fraudsters to random coordinates) produces massive velocity spikes when correctly computed against the real chronological predecessor.</p>
+</li>
+<li>
+<p><strong><code>rapid_fire_transaction_flag</code> is genuinely redundant with <code>time_since_last_transaction</code></strong> — even with correct ordering, the binary flag contributes only 1.5%. The velocity_abuse bursts span 10-60 seconds (peak at 30-60s), which is within the range <code>time_since_last_transaction</code> captures continuously. The binary flag encodes nothing the continuous feature doesn't already provide. Tightening burst intervals to seconds-scale (5-15s) would make the flag distinctive since sub-15s gaps almost never occur in legitimate behavior.</p>
+</li>
+<li>
+<p><strong>AUC barely moved</strong> — the old AUC was modestly inflated by the model picking up correlative patterns in the scrambled ordering artifact. The correct model at 0.786 is honest, with behavioral features carrying all the signal.</p>
+</li>
+<li>
+<p><strong>This bug was present across every snapshot generated so far.</strong> All previous feature importance distributions, SHAP analyses, and threshold calculations were computed against data where <code>spatial_velocity</code>, <code>time_since_last_transaction</code>, <code>escalating_amounts_flag</code>, <code>merchant_category_switch_flag</code>, and <code>rapid_fire_transaction_flag</code> were systematically miscomputed for ~0.27% of rows across 70% of customers. The impact on aggregate metrics was muted because the corruption was diluted across the full dataset, but any per-customer trace or investigation would have shown incorrect feature values.</p>
+</li>
+</ol>
 
                     </main>
 
@@ -403,7 +531,7 @@ amount_multiplier: 0.8_to_1.2  # within customer's normal band
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="performance_benchmarks.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="defunct_index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -417,7 +545,7 @@ amount_multiplier: 0.8_to_1.2  # within customer's normal band
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="performance_benchmarks.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="defunct_index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

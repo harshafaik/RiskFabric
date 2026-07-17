@@ -1,0 +1,265 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Analysis &amp; Utility Scripts - RiskFabric Documentation</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="documentation/custom.css">
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="simulation_index.html"><strong aria-hidden="true">2.</strong> Data Generation Modules</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/customer_generator.html"><strong aria-hidden="true">2.1.</strong> Customer Data Generator</a></li><li class="chapter-item expanded "><a href="components/account_and_card_generator.html"><strong aria-hidden="true">2.2.</strong> Account and Card Data Generator</a></li><li class="chapter-item expanded "><a href="components/transaction_generator.html"><strong aria-hidden="true">2.3.</strong> Transactional Data Generator</a></li><li class="chapter-item expanded "><a href="components/batch_generator.html"><strong aria-hidden="true">2.4.</strong> Batch Orchestrator</a></li><li class="chapter-item expanded "><a href="components/streaming_generator.html"><strong aria-hidden="true">2.5.</strong> Streaming Orchestrator</a></li><li class="chapter-item expanded "><a href="components/adversary_logic_engine.html"><strong aria-hidden="true">2.6.</strong> Fraud Injector</a></li><li class="chapter-item expanded "><a href="components/configuration.html"><strong aria-hidden="true">2.7.</strong> Configuration Module</a></li></ol></li><li class="chapter-item expanded "><a href="engineering_index.html"><strong aria-hidden="true">3.</strong> Data & Engineering</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/etl_system.html"><strong aria-hidden="true">3.1.</strong> Feature Engineering Pipeline</a></li><li class="chapter-item expanded "><a href="components/dbt_models.html"><strong aria-hidden="true">3.2.</strong> Geospatial Reference Pipeline</a></li><li class="chapter-item expanded "><a href="components/reference_preparator.html"><strong aria-hidden="true">3.3.</strong> OSM Reference Extractor</a></li></ol></li><li class="chapter-item expanded "><a href="ml_systems_index.html"><strong aria-hidden="true">4.</strong> Machine Learning Systems</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/ml_training.html"><strong aria-hidden="true">4.1.</strong> Training Pipeline</a></li><li class="chapter-item expanded "><a href="components/ml_calibration.html"><strong aria-hidden="true">4.2.</strong> Model Calibration</a></li><li class="chapter-item expanded "><a href="components/realtime_scorer.html"><strong aria-hidden="true">4.3.</strong> Real-Time Scoring Service</a></li><li class="chapter-item expanded "><a href="components/ml_explainability.html"><strong aria-hidden="true">4.4.</strong> Model Explainability (SHAP)</a></li><li class="chapter-item expanded "><a href="components/ml_robustness.html"><strong aria-hidden="true">4.5.</strong> Model Robustness & Drift</a></li><li class="chapter-item expanded "><a href="ml_analysis_scripts.html" class="active"><strong aria-hidden="true">4.6.</strong> Analysis & Utility Scripts</a></li></ol></li><li class="chapter-item expanded "><a href="infrastructure_index.html"><strong aria-hidden="true">5.</strong> Infrastructure & Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/infrastructure.html"><strong aria-hidden="true">5.1.</strong> Infrastructure & Local Stack</a></li><li class="chapter-item expanded "><a href="components/case_admin.html"><strong aria-hidden="true">5.2.</strong> Django Case Management UI</a></li><li class="chapter-item expanded "><a href="components/redis_seeder.html"><strong aria-hidden="true">5.3.</strong> Redis Feature Seeder</a></li></ol></li><li class="chapter-item expanded "><a href="concepts_index.html"><strong aria-hidden="true">6.</strong> Conceptual Explanations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="theory_of_operation.html"><strong aria-hidden="true">6.1.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="fraud_signatures.html"><strong aria-hidden="true">6.2.</strong> Fraud Signatures & Attack Patterns</a></li></ol></li><li class="chapter-item expanded "><a href="results_index.html"><strong aria-hidden="true">7.</strong> Results & Monitoring</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ml_metrics.html"><strong aria-hidden="true">7.1.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="feature_leakage_issues.html"><strong aria-hidden="true">7.2.</strong> Feature Leakage Case Study</a></li></ol></li><li class="chapter-item expanded "><a href="defunct_index.html"><strong aria-hidden="true">8.</strong> Defunct Implementations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/defunct/etl_system_shell_pivot.html"><strong aria-hidden="true">8.1.</strong> ETL Pipeline System (Shell-Pivot Variant)</a></li><li class="chapter-item expanded "><a href="components/defunct/clickhouse_batch_etl.html"><strong aria-hidden="true">8.2.</strong> ClickHouse Batch ETL Architecture</a></li></ol></li><li class="chapter-item expanded "><a href="decisions_index.html"><strong aria-hidden="true">9.</strong> Decisions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="decisions/ip_device_reputation_removal.html"><strong aria-hidden="true">9.1.</strong> IP and Device Reputation Removal</a></li><li class="chapter-item expanded "><a href="decisions/storage_architecture_split.html"><strong aria-hidden="true">9.2.</strong> Storage Architecture Split</a></li><li class="chapter-item expanded "><a href="decisions/deployment_architecture.html"><strong aria-hidden="true">9.3.</strong> Deployment Architecture</a></li><li class="chapter-item expanded "><a href="decisions/fraud_operations_cost_model.html"><strong aria-hidden="true">9.4.</strong> Fraud Operations Cost Model</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">RiskFabric Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/harshafaik/riskfabric" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="ml-analysis--utility-scripts"><a class="header" href="#ml-analysis--utility-scripts">ML Analysis &amp; Utility Scripts</a></h1>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>Beyond the core training (<code>src/ml/train_xgboost.py</code>) and scoring (<code>src/ml/scorer.py</code>) pipelines, the <code>src/ml/</code> directory contains a suite of analysis, calibration, evaluation, and data generation scripts. Each operates independently against DuckDB/Parquet Gold snapshots or the XGBoost model artifacts in <code>models/</code>.</p>
+<h2 id="script-reference"><a class="header" href="#script-reference">Script Reference</a></h2>
+<h3 id="srcmlcompute_thresholdspy"><a class="header" href="#srcmlcompute_thresholdspy"><code>src/ml/compute_thresholds.py</code></a></h3>
+<p>Calculates precision-recall trade-off operating points for the fraud model. Queries the Gold Parquet snapshot via DuckDB, computes precision-recall curves, and outputs threshold layers at multiple recall-fidelity targets (e.g., 95% precision, 90% recall). These thresholds are consumed by <code>src/ml/scorer.py</code> for real-time decision boundaries.</p>
+<p><strong>Consumes:</strong> <code>models/calibrated_fraud_model_isotonic.pkl</code>, Gold Parquet snapshot.
+<strong>Produces:</strong> Threshold operating point report.</p>
+<h3 id="srcmlverify_leakagepy"><a class="header" href="#srcmlverify_leakagepy"><code>src/ml/verify_leakage.py</code></a></h3>
+<p>Validates that training-serving feature alignment is maintained. Queries the Gold Parquet snapshot via DuckDB, reconstructs features using the same transform pipeline as <code>src/etl/features/</code>, and compares against the stored values. Detects mismatches indicating training-serving skew.</p>
+<p><strong>Consumes:</strong> Latest model JSON from <code>models/</code> (auto-discovered via <code>model_utils</code>), Gold Parquet snapshot.
+<strong>Produces:</strong> Leakage verification report.</p>
+<h3 id="srcmltest_modelpy"><a class="header" href="#srcmltest_modelpy"><code>src/ml/test_model.py</code></a></h3>
+<p>Lightweight model smoke test. Loads the trained model, reads the Gold Parquet snapshot via DuckDB, runs inference on the full dataset, and outputs a sklearn <code>classification_report</code> with AUC, confusion matrix, and per-class precision/recall. Used as a sanity check after training or before deploying a new model version.</p>
+<p><strong>Consumes:</strong> Latest model JSON from <code>models/</code> (auto-discovered via <code>model_utils</code>), Gold Parquet snapshot.
+<strong>Produces:</strong> Classification report.</p>
+<h3 id="srcmlgenerate_and_score_transactionspy"><a class="header" href="#srcmlgenerate_and_score_transactionspy"><code>src/ml/generate_and_score_transactions.py</code></a></h3>
+<p>End-to-end pipeline harness. Generates synthetic transactions (using Python-side logic that mirrors the Rust <code>generate.rs</code> binary), scores them through the trained XGBoost model, seeds Redis with customer running statistics for the real-time scorer, and writes flagged cases to OLTP Postgres. Used for local, non-Rust integration testing.</p>
+<p><strong>Consumes:</strong> Redis, OLTP Postgres, latest model JSON from <code>models/</code> (auto-discovered via <code>model_utils</code>).
+<strong>Produces:</strong> Scored transactions in Postgres <code>cases</code> table, Redis customer stats.</p>
+<h3 id="srcmlgenerate_1m_transactionspy"><a class="header" href="#srcmlgenerate_1m_transactionspy"><code>src/ml/generate_1m_transactions.py</code></a></h3>
+<p>Bulk transaction generator for load testing. Generates 1 million synthetic transactions via Python-side logic, writes them to Redis and directly to the OLTP Postgres database. Used to stress-test the real-time scorer and case admin ingestion pipeline at scale.</p>
+<p><strong>Consumes:</strong> Redis, OLTP Postgres.
+<strong>Produces:</strong> 1M transactions in Redis and Postgres.</p>
+<h3 id="srcmldashboardpy-deprecated"><a class="header" href="#srcmldashboardpy-deprecated"><code>src/ml/dashboard.py</code> (DEPRECATED)</a></h3>
+<p>Replaced by Grafana (<code>docker/grafana/dashboards/fraud-monitoring.json</code>). Reads from ClickHouse (<code>fraud_scores</code> table) to display live fraud score distributions, volume trends, and alert dashboards. The file is kept for reference only.</p>
+<p><strong>Consumes:</strong> ClickHouse <code>fraud_scores</code> table.
+<strong>Produces:</strong> Grafana web dashboard on port 3000 (replaced Streamlit on port 8501).</p>
+<h3 id="srcmldump_modelpy"><a class="header" href="#srcmldump_modelpy"><code>src/ml/dump_model.py</code></a></h3>
+<p>Inspects a trained XGBoost model to verify the feature schema before deployment. Reads the latest model JSON from <code>models/</code> via <code>model_utils</code>, prints <code>feature_names</code> and <code>feature_types</code> from the booster object, and extracts categorical level encodings from the JSON.</p>
+<p><strong>Consumes:</strong> Latest model JSON from <code>models/</code> (auto-discovered via <code>model_utils</code>).</p>
+<h2 id="pipeline-position"><a class="header" href="#pipeline-position">Pipeline Position</a></h2>
+<p>All analysis scripts read from Gold Parquet snapshots via DuckDB and the trained model artifacts in <code>models/</code>. They operate independently of the streaming pipeline and do not write back to Redis. The <code>generate_and_score_transactions.py</code> and <code>generate_1m_transactions.py</code> scripts are the exception — they write directly to Postgres and Redis for integration testing and load testing.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="components/ml_robustness.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="infrastructure_index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="components/ml_robustness.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="infrastructure_index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="documentation/mermaid.js"></script>
+
+
+    </div>
+    </body>
+</html>

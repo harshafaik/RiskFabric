@@ -1,0 +1,304 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Storage Architecture Split - RiskFabric Documentation</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../documentation/custom.css">
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="../simulation_index.html"><strong aria-hidden="true">2.</strong> Data Generation Modules</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/customer_generator.html"><strong aria-hidden="true">2.1.</strong> Customer Data Generator</a></li><li class="chapter-item expanded "><a href="../components/account_and_card_generator.html"><strong aria-hidden="true">2.2.</strong> Account and Card Data Generator</a></li><li class="chapter-item expanded "><a href="../components/transaction_generator.html"><strong aria-hidden="true">2.3.</strong> Transactional Data Generator</a></li><li class="chapter-item expanded "><a href="../components/batch_generator.html"><strong aria-hidden="true">2.4.</strong> Batch Orchestrator</a></li><li class="chapter-item expanded "><a href="../components/streaming_generator.html"><strong aria-hidden="true">2.5.</strong> Streaming Orchestrator</a></li><li class="chapter-item expanded "><a href="../components/adversary_logic_engine.html"><strong aria-hidden="true">2.6.</strong> Fraud Injector</a></li><li class="chapter-item expanded "><a href="../components/configuration.html"><strong aria-hidden="true">2.7.</strong> Configuration Module</a></li></ol></li><li class="chapter-item expanded "><a href="../engineering_index.html"><strong aria-hidden="true">3.</strong> Data & Engineering</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/etl_system.html"><strong aria-hidden="true">3.1.</strong> Feature Engineering Pipeline</a></li><li class="chapter-item expanded "><a href="../components/dbt_models.html"><strong aria-hidden="true">3.2.</strong> Geospatial Reference Pipeline</a></li><li class="chapter-item expanded "><a href="../components/reference_preparator.html"><strong aria-hidden="true">3.3.</strong> OSM Reference Extractor</a></li></ol></li><li class="chapter-item expanded "><a href="../ml_systems_index.html"><strong aria-hidden="true">4.</strong> Machine Learning Systems</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/ml_training.html"><strong aria-hidden="true">4.1.</strong> Training Pipeline</a></li><li class="chapter-item expanded "><a href="../components/ml_calibration.html"><strong aria-hidden="true">4.2.</strong> Model Calibration</a></li><li class="chapter-item expanded "><a href="../components/realtime_scorer.html"><strong aria-hidden="true">4.3.</strong> Real-Time Scoring Service</a></li><li class="chapter-item expanded "><a href="../components/ml_explainability.html"><strong aria-hidden="true">4.4.</strong> Model Explainability (SHAP)</a></li><li class="chapter-item expanded "><a href="../components/ml_robustness.html"><strong aria-hidden="true">4.5.</strong> Model Robustness & Drift</a></li><li class="chapter-item expanded "><a href="../ml_analysis_scripts.html"><strong aria-hidden="true">4.6.</strong> Analysis & Utility Scripts</a></li></ol></li><li class="chapter-item expanded "><a href="../infrastructure_index.html"><strong aria-hidden="true">5.</strong> Infrastructure & Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/infrastructure.html"><strong aria-hidden="true">5.1.</strong> Infrastructure & Local Stack</a></li><li class="chapter-item expanded "><a href="../components/case_admin.html"><strong aria-hidden="true">5.2.</strong> Django Case Management UI</a></li><li class="chapter-item expanded "><a href="../components/redis_seeder.html"><strong aria-hidden="true">5.3.</strong> Redis Feature Seeder</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts_index.html"><strong aria-hidden="true">6.</strong> Conceptual Explanations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../theory_of_operation.html"><strong aria-hidden="true">6.1.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="../fraud_signatures.html"><strong aria-hidden="true">6.2.</strong> Fraud Signatures & Attack Patterns</a></li></ol></li><li class="chapter-item expanded "><a href="../results_index.html"><strong aria-hidden="true">7.</strong> Results & Monitoring</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ml_metrics.html"><strong aria-hidden="true">7.1.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="../feature_leakage_issues.html"><strong aria-hidden="true">7.2.</strong> Feature Leakage Case Study</a></li></ol></li><li class="chapter-item expanded "><a href="../defunct_index.html"><strong aria-hidden="true">8.</strong> Defunct Implementations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/defunct/etl_system_shell_pivot.html"><strong aria-hidden="true">8.1.</strong> ETL Pipeline System (Shell-Pivot Variant)</a></li><li class="chapter-item expanded "><a href="../components/defunct/clickhouse_batch_etl.html"><strong aria-hidden="true">8.2.</strong> ClickHouse Batch ETL Architecture</a></li></ol></li><li class="chapter-item expanded "><a href="../decisions_index.html"><strong aria-hidden="true">9.</strong> Decisions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../decisions/ip_device_reputation_removal.html"><strong aria-hidden="true">9.1.</strong> IP and Device Reputation Removal</a></li><li class="chapter-item expanded "><a href="../decisions/storage_architecture_split.html" class="active"><strong aria-hidden="true">9.2.</strong> Storage Architecture Split</a></li><li class="chapter-item expanded "><a href="../decisions/deployment_architecture.html"><strong aria-hidden="true">9.3.</strong> Deployment Architecture</a></li><li class="chapter-item expanded "><a href="../decisions/fraud_operations_cost_model.html"><strong aria-hidden="true">9.4.</strong> Fraud Operations Cost Model</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">RiskFabric Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/harshafaik/riskfabric" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="storage-architecture-split"><a class="header" href="#storage-architecture-split">Storage Architecture Split</a></h1>
+<h2 id="decision"><a class="header" href="#decision">Decision</a></h2>
+<p>Split RiskFabric's data storage across three workload-aligned tools instead of routing everything through ClickHouse and Postgres as catch-all engines. Move batch feature engineering and training data off ClickHouse entirely, leaving it as a streaming-only analytics engine. Introduce DuckDB as a zero-infrastructure query layer over Parquet snapshots for ML training. Keep Postgres for transactional state (case management, PostGIS, training metadata).</p>
+<h2 id="current-architecture-what-is-being-replaced"><a class="header" href="#current-architecture-what-is-being-replaced">Current architecture (what is being replaced)</a></h2>
+<pre><code>Postgres: PostGIS + case management
+ClickHouse: Bronze → Silver → Gold ETL + fraud_scores (streaming) + training data
+Redis: real-time feature cache
+</code></pre>
+<p>ClickHouse serves two disjoint workloads: batch ETL/training (Bronze→Silver→Gold materialization) and streaming analytics (Kafka → scorer → fraud_scores → dashboard). The batch path writes Parquet to disk at generation, ingests it into ClickHouse, reads it back out for feature computation, and writes it back — a round-trip that exists only because ClickHouse is the default store. The streaming path is append-only and read-heavy at dashboard time, a natural fit for MergeTree.</p>
+<p>Postgres holds case management but also absorbs cross-engine join burden — the dashboard and case admin both need to correlate ClickHouse scores with Postgres case state, requiring application-layer joins on <code>customer_id</code>.</p>
+<h2 id="target-architecture"><a class="header" href="#target-architecture">Target architecture</a></h2>
+<pre><code>Postgres: PostGIS + case state (customer records, case status, investigator notes, assignments) + training metadata
+ClickHouse: streaming ingestion → fraud_scores → dashboard queries
+DuckDB: training queries over Gold Parquet snapshots (read-only, embedded, no server)
+Redis: real-time feature cache (unchanged)
+Redpanda: streaming message broker (unchanged)
+</code></pre>
+<p>Feature engineering moves from ClickHouse-backed ETL to a direct Parquet pipeline:</p>
+<pre><code>generate.rs → data/bronze/{date}/*.parquet
+                   ↓
+             Polars (reads Bronze, computes features) → data/silver/{date}/*.parquet
+                   ↓
+             DuckDB (joins Silver tables) → data/gold/{snapshot}/*.parquet
+                   ↓
+             train_xgboost.py (reads Gold via DuckDB)
+</code></pre>
+<p>ClickHouse handles only the live path:</p>
+<pre><code>stream.rs → Redpanda → scorer.py → ClickHouse fraud_scores → Grafana
+</code></pre>
+<h2 id="why-this-direction-was-chosen"><a class="header" href="#why-this-direction-was-chosen">Why this direction was chosen</a></h2>
+<p><strong>ClickHouse was the wrong tool for batch training data.</strong> A columnar OLAP engine optimized for append-heavy analytical queries was being used as a mutable feature store. ClickHouse's slow/async ALTER TABLE UPDATE semantics and lack of point-in-time correctness make it unsuitable for reproducible training sets and correct backfills. The medallion architecture (Bronze → Silver → Gold) materialized three full copies of transaction data inside ClickHouse — data already stored as Parquet on disk from the generator — purely to satisfy an ETL pipeline that ran SQL against the database rather than Polars against files.</p>
+<p><strong>DuckDB eliminates operational overhead for batch queries.</strong> DuckDB is an embedded, in-process library, not a server. It reads Parquet natively with zero-copy columnar execution. There is no daemon to run, no port to expose, no container to maintain, and no connection pooling to configure. Training queries (full-table scans across 30+ feature columns) are a columnar workload — DuckDB handles them at performance comparable to ClickHouse but with zero infrastructure cost. And it supports point-in-time snapshots naturally: each training run points at a dated Parquet directory, making reproducibility trivial.</p>
+<p><strong>Parquet-first pipeline removes wasted I/O.</strong> The generator already writes Parquet to <code>data/output/</code>. The current pipeline then ingests those files into ClickHouse, reads them back into Polars for feature computation, and writes the result back to ClickHouse. The new pipeline cuts ClickHouse out of the loop entirely: Polars reads Bronze Parquet directly, computes features, and writes Gold Parquet. Bronze and Silver become files on disk rather than database tables, consistent with data lake patterns used in production data engineering.</p>
+<p><strong>Postgres regains workload isolation.</strong> Under the current architecture, Postgres handles case management CRUD alongside analytical queries that join across Postgres and ClickHouse. Under the new split, Postgres has three schemas — <code>location</code> (PostGIS), <code>case_state</code> (Django models), and <code>training</code> (run metadata) — all within one instance, but logically separated. Training data scanning millions of wide rows no longer competes with point-lookup case queries for buffer cache and I/O, because training data lives in Parquet, not in Postgres.</p>
+<p><strong>The streaming path is untouched.</strong> ClickHouse's real pipeline — Kafka → scorer → ClickHouse → dashboard — remains exactly as-is. ClickHouse serves a single, well-defined purpose: high-volume append-heavy analytics on live fraud scores. This is the workload MergeTree was designed for.</p>
+<p><strong>Each tool now has one defensible reason for being there.</strong> ClickHouse for streaming ingestion and aggregate dashboard queries, Postgres for transactional relational state, DuckDB for zero-infra columnar scans over files already generated, Redis for sub-millisecond feature lookups, Redpanda for stream buffering and replay. No tool does two things; no tool is a default hammer.</p>
+<h2 id="what-changes"><a class="header" href="#what-changes">What changes</a></h2>
+<ul>
+<li><code>src/bin/ingest.rs</code> — removed or repurposed (ClickHouse Bronze ingestion no longer needed)</li>
+<li><code>src/bin/etl.rs</code> — Bronze→Silver→Gold stages decoupled from ClickHouse I/O; Polars reads/writes Parquet directly</li>
+<li><code>src/summary/clickhouse.rs</code> — removed (dataset statistics move to DuckDB queries over Parquet)</li>
+<li><code>build_gold_master.py</code> — rewritten to use DuckDB joins over Silver Parquet instead of ClickHouse SQL</li>
+<li><code>train_xgboost.py</code> — reads Gold Parquet via DuckDB instead of ClickHouse <code>fraud_scores</code> table</li>
+<li><code>seed_redis.py</code> — reads Gold Parquet via DuckDB instead of ClickHouse Gold table</li>
+<li>ClickHouse tables <code>fact_transactions_bronze</code>, <code>fact_transactions_silver</code>, <code>fact_transactions_gold</code>, and all dimension Silver tables are dropped</li>
+<li>Postgres gains <code>training</code> schema with <code>training_runs</code> table (snapshot path, model hash, metrics, timestamp)</li>
+<li><code>documentation/decisions_index.md</code> updated with this decision</li>
+</ul>
+<h2 id="what-is-retained"><a class="header" href="#what-is-retained">What is retained</a></h2>
+<ul>
+<li>ClickHouse <code>fraud_scores</code> table (streaming path, unchanged)</li>
+<li>All ClickHouse DDL for <code>fraud_scores</code> and operational tables</li>
+<li><code>scorer.py</code> → ClickHouse write path (unchanged)</li>
+<li>Grafana → ClickHouse read path (replaces dashboard.py)</li>
+<li>Postgres <code>case_state</code> schema (Django models, unchanged)</li>
+<li>Postgres <code>location</code> schema (PostGIS, unchanged)</li>
+<li>Redis feature cache and <code>seed_redis.py</code> pattern (reads Gold Parquet instead of ClickHouse)</li>
+<li>Redpanda streaming broker (unchanged)</li>
+<li><code>stream.rs</code> Kafka producer (unchanged)</li>
+</ul>
+<h2 id="what-is-explicitly-not-changed"><a class="header" href="#what-is-explicitly-not-changed">What is explicitly not changed</a></h2>
+<ul>
+<li>Docker Compose service definitions (ClickHouse, Postgres, Redis, Redpanda, scorer, dashboard, case-admin all remain)</li>
+<li>The streaming data flow: <code>stream.rs → Redpanda → scorer.py → ClickHouse → dashboard</code></li>
+<li>Monitoring infrastructure (Prometheus targets unchanged)</li>
+<li>The case management Django application</li>
+</ul>
+<h2 id="risks-and-mitigations"><a class="header" href="#risks-and-mitigations">Risks and mitigations</a></h2>
+<p><strong>Polars feature extraction must be extracted from etl.rs.</strong> The current feature transforms in <code>src/etl/features/</code> are coupled to ClickHouse I/O. Extraction into standalone Polars functions reading/writing Parquet is a refactor, not a rewrite — the transform logic itself is portable — but it requires careful validation against existing Gold output to ensure feature parity.</p>
+<p><strong>DuckDB join performance must be validated.</strong> The current Gold master uses ClickHouse SQL with <code>join_algorithm = 'partial_merge'</code>. DuckDB's join performance is excellent on Parquet but should be benchmarked against the existing ClickHouse path before the switch is finalized.</p>
+<p><strong>Parquet snapshot storage must be durable.</strong> Training snapshots must live on persistent storage, not ephemeral temp directories. Local development uses a <code>data/gold/{date}/</code> directory. Cloud deployment uses S3 with lifecycle policies (hot → warm → cold tiering).</p>
+<p><strong>The streaming path has no training data dependency.</strong> If the batch ETL pipeline is broken, the streaming scorer and dashboard continue to function — they depend only on Redpanda, Redis, and ClickHouse <code>fraud_scores</code>. This isolation is intentional and documented.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../decisions/ip_device_reputation_removal.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../decisions/deployment_architecture.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../decisions/ip_device_reputation_removal.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../decisions/deployment_architecture.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../documentation/mermaid.js"></script>
+
+
+    </div>
+    </body>
+</html>

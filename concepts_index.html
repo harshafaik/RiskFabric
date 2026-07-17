@@ -29,6 +29,7 @@
         <link rel="stylesheet" href="ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="documentation/custom.css">
 
     </head>
     <body class="sidebar-visible no-js">
@@ -88,7 +89,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="tutorial_first_run.html"><strong aria-hidden="true">2.</strong> Tutorials</a></li><li class="chapter-item expanded "><a href="simulation_index.html"><strong aria-hidden="true">3.</strong> Simulation & Generation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/customer_generator.html"><strong aria-hidden="true">3.1.</strong> Customer Generator</a></li><li class="chapter-item expanded "><a href="components/account_and_card_generator.html"><strong aria-hidden="true">3.2.</strong> Account and Card Generator</a></li><li class="chapter-item expanded "><a href="components/transaction_generator.html"><strong aria-hidden="true">3.3.</strong> Transaction Generator</a></li><li class="chapter-item expanded "><a href="components/batch_generator.html"><strong aria-hidden="true">3.4.</strong> Batch Generator</a></li><li class="chapter-item expanded "><a href="components/streaming_generator.html"><strong aria-hidden="true">3.5.</strong> Streaming Generator</a></li><li class="chapter-item expanded "><a href="components/adversary_logic_engine.html"><strong aria-hidden="true">3.6.</strong> Adversary Logic Engine</a></li><li class="chapter-item expanded "><a href="components/central_configuration_engine.html"><strong aria-hidden="true">3.7.</strong> Central Configuration Engine</a></li></ol></li><li class="chapter-item expanded "><a href="engineering_index.html"><strong aria-hidden="true">4.</strong> Data & Engineering</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/etl_system.html"><strong aria-hidden="true">4.1.</strong> ETL Pipeline System</a></li><li class="chapter-item expanded "><a href="components/dbt_models.html"><strong aria-hidden="true">4.2.</strong> Physical World Transformation</a></li><li class="chapter-item expanded "><a href="components/ingestor_rs.html"><strong aria-hidden="true">4.3.</strong> Data Warehouse Ingestor</a></li><li class="chapter-item expanded "><a href="components/reference_preparator.html"><strong aria-hidden="true">4.4.</strong> Reference Data Preparator</a></li></ol></li><li class="chapter-item expanded "><a href="ml_systems_index.html"><strong aria-hidden="true">5.</strong> Machine Learning Systems</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/ml_training.html"><strong aria-hidden="true">5.1.</strong> Training Pipeline</a></li><li class="chapter-item expanded "><a href="components/realtime_scorer.html"><strong aria-hidden="true">5.2.</strong> Real-Time Scoring Service</a></li></ol></li><li class="chapter-item expanded "><a href="infrastructure_index.html"><strong aria-hidden="true">6.</strong> Infrastructure & Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/infrastructure.html"><strong aria-hidden="true">6.1.</strong> Infrastructure & Local Stack</a></li><li class="chapter-item expanded "><a href="components/redis_seeder.html"><strong aria-hidden="true">6.2.</strong> Redis Feature Seeder</a></li></ol></li><li class="chapter-item expanded "><a href="reference_index.html"><strong aria-hidden="true">7.</strong> Technical Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="data_schema.html"><strong aria-hidden="true">7.1.</strong> Synthetic Data Schema</a></li><li class="chapter-item expanded "><a href="config_reference.html"><strong aria-hidden="true">7.2.</strong> Configuration Reference</a></li></ol></li><li class="chapter-item expanded "><a href="concepts_index.html" class="active"><strong aria-hidden="true">8.</strong> Conceptual Explanations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="theory_of_operation.html"><strong aria-hidden="true">8.1.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="fraud_signatures.html"><strong aria-hidden="true">8.2.</strong> Fraud Signatures & Attack Patterns</a></li><li class="chapter-item expanded "><a href="fraud_profiles.html"><strong aria-hidden="true">8.3.</strong> Synthetic Fraud Profiles</a></li><li class="chapter-item expanded "><a href="objectives.html"><strong aria-hidden="true">8.4.</strong> Project Goals</a></li></ol></li><li class="chapter-item expanded "><a href="results_index.html"><strong aria-hidden="true">9.</strong> Results & Monitoring</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ml_metrics.html"><strong aria-hidden="true">9.1.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="feature_leakage_issues.html"><strong aria-hidden="true">9.2.</strong> Feature Leakage Case Study</a></li><li class="chapter-item expanded "><a href="performance_benchmarks.html"><strong aria-hidden="true">9.3.</strong> Generation Performance</a></li></ol></li><li class="chapter-item expanded "><a href="knowledge_index.html"><strong aria-hidden="true">10.</strong> Knowledge Base</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="issues.html"><strong aria-hidden="true">10.1.</strong> Technical Issues & Resolutions</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="simulation_index.html"><strong aria-hidden="true">2.</strong> Data Generation Modules</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/customer_generator.html"><strong aria-hidden="true">2.1.</strong> Customer Data Generator</a></li><li class="chapter-item expanded "><a href="components/account_and_card_generator.html"><strong aria-hidden="true">2.2.</strong> Account and Card Data Generator</a></li><li class="chapter-item expanded "><a href="components/transaction_generator.html"><strong aria-hidden="true">2.3.</strong> Transactional Data Generator</a></li><li class="chapter-item expanded "><a href="components/batch_generator.html"><strong aria-hidden="true">2.4.</strong> Batch Orchestrator</a></li><li class="chapter-item expanded "><a href="components/streaming_generator.html"><strong aria-hidden="true">2.5.</strong> Streaming Orchestrator</a></li><li class="chapter-item expanded "><a href="components/adversary_logic_engine.html"><strong aria-hidden="true">2.6.</strong> Fraud Injector</a></li><li class="chapter-item expanded "><a href="components/configuration.html"><strong aria-hidden="true">2.7.</strong> Configuration Module</a></li></ol></li><li class="chapter-item expanded "><a href="engineering_index.html"><strong aria-hidden="true">3.</strong> Data & Engineering</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/etl_system.html"><strong aria-hidden="true">3.1.</strong> Feature Engineering Pipeline</a></li><li class="chapter-item expanded "><a href="components/dbt_models.html"><strong aria-hidden="true">3.2.</strong> Geospatial Reference Pipeline</a></li><li class="chapter-item expanded "><a href="components/reference_preparator.html"><strong aria-hidden="true">3.3.</strong> OSM Reference Extractor</a></li></ol></li><li class="chapter-item expanded "><a href="ml_systems_index.html"><strong aria-hidden="true">4.</strong> Machine Learning Systems</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/ml_training.html"><strong aria-hidden="true">4.1.</strong> Training Pipeline</a></li><li class="chapter-item expanded "><a href="components/ml_calibration.html"><strong aria-hidden="true">4.2.</strong> Model Calibration</a></li><li class="chapter-item expanded "><a href="components/realtime_scorer.html"><strong aria-hidden="true">4.3.</strong> Real-Time Scoring Service</a></li><li class="chapter-item expanded "><a href="components/ml_explainability.html"><strong aria-hidden="true">4.4.</strong> Model Explainability (SHAP)</a></li><li class="chapter-item expanded "><a href="components/ml_robustness.html"><strong aria-hidden="true">4.5.</strong> Model Robustness & Drift</a></li><li class="chapter-item expanded "><a href="ml_analysis_scripts.html"><strong aria-hidden="true">4.6.</strong> Analysis & Utility Scripts</a></li></ol></li><li class="chapter-item expanded "><a href="infrastructure_index.html"><strong aria-hidden="true">5.</strong> Infrastructure & Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/infrastructure.html"><strong aria-hidden="true">5.1.</strong> Infrastructure & Local Stack</a></li><li class="chapter-item expanded "><a href="components/case_admin.html"><strong aria-hidden="true">5.2.</strong> Django Case Management UI</a></li><li class="chapter-item expanded "><a href="components/redis_seeder.html"><strong aria-hidden="true">5.3.</strong> Redis Feature Seeder</a></li></ol></li><li class="chapter-item expanded "><a href="concepts_index.html" class="active"><strong aria-hidden="true">6.</strong> Conceptual Explanations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="theory_of_operation.html"><strong aria-hidden="true">6.1.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="fraud_signatures.html"><strong aria-hidden="true">6.2.</strong> Fraud Signatures & Attack Patterns</a></li></ol></li><li class="chapter-item expanded "><a href="results_index.html"><strong aria-hidden="true">7.</strong> Results & Monitoring</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ml_metrics.html"><strong aria-hidden="true">7.1.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="feature_leakage_issues.html"><strong aria-hidden="true">7.2.</strong> Feature Leakage Case Study</a></li></ol></li><li class="chapter-item expanded "><a href="defunct_index.html"><strong aria-hidden="true">8.</strong> Defunct Implementations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/defunct/etl_system_shell_pivot.html"><strong aria-hidden="true">8.1.</strong> ETL Pipeline System (Shell-Pivot Variant)</a></li><li class="chapter-item expanded "><a href="components/defunct/clickhouse_batch_etl.html"><strong aria-hidden="true">8.2.</strong> ClickHouse Batch ETL Architecture</a></li></ol></li><li class="chapter-item expanded "><a href="decisions_index.html"><strong aria-hidden="true">9.</strong> Decisions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="decisions/ip_device_reputation_removal.html"><strong aria-hidden="true">9.1.</strong> IP and Device Reputation Removal</a></li><li class="chapter-item expanded "><a href="decisions/storage_architecture_split.html"><strong aria-hidden="true">9.2.</strong> Storage Architecture Split</a></li><li class="chapter-item expanded "><a href="decisions/deployment_architecture.html"><strong aria-hidden="true">9.3.</strong> Deployment Architecture</a></li><li class="chapter-item expanded "><a href="decisions/fraud_operations_cost_model.html"><strong aria-hidden="true">9.4.</strong> Fraud Operations Cost Model</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -178,12 +179,78 @@
                     <main>
                         <h1 id="conceptual-explanations"><a class="header" href="#conceptual-explanations">Conceptual Explanations</a></h1>
 <p>High-level documentation explaining the underlying philosophy, architectural strategies, and simulation logic of RiskFabric.</p>
+<h2 id="end-to-end-data-flow"><a class="header" href="#end-to-end-data-flow">End-to-End Data Flow</a></h2>
+<pre><code class="language-mermaid">%%{init: {
+  'themeVariables': {
+    'fontFamily': '"JetBrains Mono", monospace'
+  }
+}}%%
+flowchart LR
+    %% Node Class Definitions
+    classDef defaultNode fill:#22252a,stroke:#4d535b,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    classDef inputNode fill:#1b2a3a,stroke:#304e70,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    classDef dbNode fill:#1c2423,stroke:#2e403d,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+
+    subgraph INPUT["📥 Input"]
+        OSM["OSM PBF Data"]:::inputNode
+        YAML["YAML Configs"]:::inputNode
+    end
+
+    subgraph WB["🌍 World Building"]
+        OSM --&gt; REF["Reference Parquet&lt;br/&gt;Merchants, Residential"]:::defaultNode
+    end
+
+    subgraph GEN["⚙️ Generation"]
+        YAML --&gt; GEN_RS["batch_generator.rs"]:::defaultNode
+        REF --&gt; GEN_RS
+        GEN_RS --&gt; TXN_PQ["Parquet: Transactions +&lt;br/&gt;Customers + Accounts + Cards"]:::defaultNode
+    end
+
+    subgraph FE["🔧 Feature Engineering"]
+        TXN_PQ --&gt; ETL_RS["etl_system"]:::defaultNode
+        ETL_RS --&gt; GOLD[("Gold Parquet\nSnapshot")]:::dbNode
+    end
+
+    subgraph ML_TRAIN["🧠 ML Training"]
+        GOLD --&gt; TRAIN_PY["ml_training"]:::defaultNode
+        TRAIN_PY --&gt; MODEL["fraud_model_v4.json"]:::defaultNode
+    end
+
+    subgraph RT["⚡ Real-Time Scoring"]
+        YAML --&gt; STREAM_RS["streaming_generator"]:::defaultNode
+        STREAM_RS --&gt; KAFKA[("Redpanda")]:::dbNode
+        KAFKA --&gt; SCORER_PY["realtime_scorer"]:::defaultNode
+        MODEL --&gt; SCORER_PY
+        SEED_PY["redis_seeder"]:::defaultNode
+        REDIS[("Redis")]:::dbNode
+        REDIS --&gt; SCORER_PY
+        SCORER_PY --&gt; SCORES[("ClickHouse\nfraud_scores")]:::dbNode
+    end
+
+    %% Subgraph Styling
+    style INPUT fill:#1e232e,stroke:#333e54,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
+    style WB fill:#26231b,stroke:#474130,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
+    style GEN fill:#1c241e,stroke:#304033,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
+    style FE fill:#231e2d,stroke:#3f3354,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
+    style ML_TRAIN fill:#28201b,stroke:#4c392c,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
+    style RT fill:#1c2423,stroke:#2e403d,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
+
+    %% Node Specific Styling Override to match theme
+    style REF fill:#1b2a3a,stroke:#304e70,stroke-width:1px,color:#cfd2d9;
+    style GOLD fill:#1c2423,stroke:#2e403d,stroke-width:1px,color:#cfd2d9;
+    style MODEL fill:#1c241e,stroke:#304033,stroke-width:1px,color:#cfd2d9;
+    style REDIS fill:#2e1f26,stroke:#573a46,stroke-width:1px,color:#cfd2d9;
+    style KAFKA fill:#2e1f26,stroke:#573a46,stroke-width:1px,color:#cfd2d9;
+    style SCORES fill:#1c2423,stroke:#2e403d,stroke-width:1px,color:#cfd2d9;
+
+    linkStyle default stroke-width:1px,stroke:#5c687a
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="config_reference.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="components/redis_seeder.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
@@ -197,7 +264,7 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="config_reference.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="components/redis_seeder.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 

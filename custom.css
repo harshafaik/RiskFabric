@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100..700;1,100..700&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap');
+
+:root {
+    --font-family: 'IBM Plex Sans', sans-serif !important;
+    --mono-font-family: 'IBM Plex Mono', monospace !important;
+}
+
+body, html, input, button, select, textarea {
+    font-family: 'IBM Plex Sans', sans-serif !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'IBM Plex Sans', sans-serif !important;
+}
+
+code, pre {
+    font-family: 'IBM Plex Mono', monospace !important;
+}
+
+/* d2 diagram sizing: cap width and scale responsively */
+pre:has(svg.d2-svg) {
+    overflow: hidden !important;
+}
+svg.d2-svg {
+    width: 100% !important;
+    max-width: 480px !important;
+    height: auto !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
+.mermaid-breakout {
+    width: 100vw !important;
+    position: relative !important;
+    left: 50% !important;
+    right: 50% !important;
+    margin-left: -50vw !important;
+    margin-right: -50vw !important;
+    display: flex !important;
+    justify-content: center !important;
+}
+
+.mermaid-breakout .mermaid {
+    width: 50% !important;
+}
+

@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Physical World Transformation - RiskFabric Documentation</title>
+        <title>Geospatial Reference Pipeline - RiskFabric Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -29,6 +29,7 @@
         <link rel="stylesheet" href="../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../documentation/custom.css">
 
     </head>
     <body class="sidebar-visible no-js">
@@ -88,7 +89,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="../tutorial_first_run.html"><strong aria-hidden="true">2.</strong> Tutorials</a></li><li class="chapter-item expanded "><a href="../simulation_index.html"><strong aria-hidden="true">3.</strong> Simulation & Generation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/customer_generator.html"><strong aria-hidden="true">3.1.</strong> Customer Generator</a></li><li class="chapter-item expanded "><a href="../components/account_and_card_generator.html"><strong aria-hidden="true">3.2.</strong> Account and Card Generator</a></li><li class="chapter-item expanded "><a href="../components/transaction_generator.html"><strong aria-hidden="true">3.3.</strong> Transaction Generator</a></li><li class="chapter-item expanded "><a href="../components/batch_generator.html"><strong aria-hidden="true">3.4.</strong> Batch Generator</a></li><li class="chapter-item expanded "><a href="../components/streaming_generator.html"><strong aria-hidden="true">3.5.</strong> Streaming Generator</a></li><li class="chapter-item expanded "><a href="../components/adversary_logic_engine.html"><strong aria-hidden="true">3.6.</strong> Adversary Logic Engine</a></li><li class="chapter-item expanded "><a href="../components/central_configuration_engine.html"><strong aria-hidden="true">3.7.</strong> Central Configuration Engine</a></li></ol></li><li class="chapter-item expanded "><a href="../engineering_index.html"><strong aria-hidden="true">4.</strong> Data & Engineering</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/etl_system.html"><strong aria-hidden="true">4.1.</strong> ETL Pipeline System</a></li><li class="chapter-item expanded "><a href="../components/dbt_models.html" class="active"><strong aria-hidden="true">4.2.</strong> Physical World Transformation</a></li><li class="chapter-item expanded "><a href="../components/ingestor_rs.html"><strong aria-hidden="true">4.3.</strong> Data Warehouse Ingestor</a></li><li class="chapter-item expanded "><a href="../components/reference_preparator.html"><strong aria-hidden="true">4.4.</strong> Reference Data Preparator</a></li></ol></li><li class="chapter-item expanded "><a href="../ml_systems_index.html"><strong aria-hidden="true">5.</strong> Machine Learning Systems</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/ml_training.html"><strong aria-hidden="true">5.1.</strong> Training Pipeline</a></li><li class="chapter-item expanded "><a href="../components/realtime_scorer.html"><strong aria-hidden="true">5.2.</strong> Real-Time Scoring Service</a></li></ol></li><li class="chapter-item expanded "><a href="../infrastructure_index.html"><strong aria-hidden="true">6.</strong> Infrastructure & Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/infrastructure.html"><strong aria-hidden="true">6.1.</strong> Infrastructure & Local Stack</a></li><li class="chapter-item expanded "><a href="../components/redis_seeder.html"><strong aria-hidden="true">6.2.</strong> Redis Feature Seeder</a></li></ol></li><li class="chapter-item expanded "><a href="../reference_index.html"><strong aria-hidden="true">7.</strong> Technical Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../data_schema.html"><strong aria-hidden="true">7.1.</strong> Synthetic Data Schema</a></li><li class="chapter-item expanded "><a href="../config_reference.html"><strong aria-hidden="true">7.2.</strong> Configuration Reference</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts_index.html"><strong aria-hidden="true">8.</strong> Conceptual Explanations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../theory_of_operation.html"><strong aria-hidden="true">8.1.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="../fraud_signatures.html"><strong aria-hidden="true">8.2.</strong> Fraud Signatures & Attack Patterns</a></li><li class="chapter-item expanded "><a href="../fraud_profiles.html"><strong aria-hidden="true">8.3.</strong> Synthetic Fraud Profiles</a></li><li class="chapter-item expanded "><a href="../objectives.html"><strong aria-hidden="true">8.4.</strong> Project Goals</a></li></ol></li><li class="chapter-item expanded "><a href="../results_index.html"><strong aria-hidden="true">9.</strong> Results & Monitoring</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ml_metrics.html"><strong aria-hidden="true">9.1.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="../feature_leakage_issues.html"><strong aria-hidden="true">9.2.</strong> Feature Leakage Case Study</a></li><li class="chapter-item expanded "><a href="../performance_benchmarks.html"><strong aria-hidden="true">9.3.</strong> Generation Performance</a></li></ol></li><li class="chapter-item expanded "><a href="../knowledge_index.html"><strong aria-hidden="true">10.</strong> Knowledge Base</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../issues.html"><strong aria-hidden="true">10.1.</strong> Technical Issues & Resolutions</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="../simulation_index.html"><strong aria-hidden="true">2.</strong> Data Generation Modules</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/customer_generator.html"><strong aria-hidden="true">2.1.</strong> Customer Data Generator</a></li><li class="chapter-item expanded "><a href="../components/account_and_card_generator.html"><strong aria-hidden="true">2.2.</strong> Account and Card Data Generator</a></li><li class="chapter-item expanded "><a href="../components/transaction_generator.html"><strong aria-hidden="true">2.3.</strong> Transactional Data Generator</a></li><li class="chapter-item expanded "><a href="../components/batch_generator.html"><strong aria-hidden="true">2.4.</strong> Batch Orchestrator</a></li><li class="chapter-item expanded "><a href="../components/streaming_generator.html"><strong aria-hidden="true">2.5.</strong> Streaming Orchestrator</a></li><li class="chapter-item expanded "><a href="../components/adversary_logic_engine.html"><strong aria-hidden="true">2.6.</strong> Fraud Injector</a></li><li class="chapter-item expanded "><a href="../components/configuration.html"><strong aria-hidden="true">2.7.</strong> Configuration Module</a></li></ol></li><li class="chapter-item expanded "><a href="../engineering_index.html"><strong aria-hidden="true">3.</strong> Data & Engineering</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/etl_system.html"><strong aria-hidden="true">3.1.</strong> Feature Engineering Pipeline</a></li><li class="chapter-item expanded "><a href="../components/dbt_models.html" class="active"><strong aria-hidden="true">3.2.</strong> Geospatial Reference Pipeline</a></li><li class="chapter-item expanded "><a href="../components/reference_preparator.html"><strong aria-hidden="true">3.3.</strong> OSM Reference Extractor</a></li></ol></li><li class="chapter-item expanded "><a href="../ml_systems_index.html"><strong aria-hidden="true">4.</strong> Machine Learning Systems</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/ml_training.html"><strong aria-hidden="true">4.1.</strong> Training Pipeline</a></li><li class="chapter-item expanded "><a href="../components/ml_calibration.html"><strong aria-hidden="true">4.2.</strong> Model Calibration</a></li><li class="chapter-item expanded "><a href="../components/realtime_scorer.html"><strong aria-hidden="true">4.3.</strong> Real-Time Scoring Service</a></li><li class="chapter-item expanded "><a href="../components/ml_explainability.html"><strong aria-hidden="true">4.4.</strong> Model Explainability (SHAP)</a></li><li class="chapter-item expanded "><a href="../components/ml_robustness.html"><strong aria-hidden="true">4.5.</strong> Model Robustness & Drift</a></li><li class="chapter-item expanded "><a href="../ml_analysis_scripts.html"><strong aria-hidden="true">4.6.</strong> Analysis & Utility Scripts</a></li></ol></li><li class="chapter-item expanded "><a href="../infrastructure_index.html"><strong aria-hidden="true">5.</strong> Infrastructure & Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/infrastructure.html"><strong aria-hidden="true">5.1.</strong> Infrastructure & Local Stack</a></li><li class="chapter-item expanded "><a href="../components/case_admin.html"><strong aria-hidden="true">5.2.</strong> Django Case Management UI</a></li><li class="chapter-item expanded "><a href="../components/redis_seeder.html"><strong aria-hidden="true">5.3.</strong> Redis Feature Seeder</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts_index.html"><strong aria-hidden="true">6.</strong> Conceptual Explanations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../theory_of_operation.html"><strong aria-hidden="true">6.1.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="../fraud_signatures.html"><strong aria-hidden="true">6.2.</strong> Fraud Signatures & Attack Patterns</a></li></ol></li><li class="chapter-item expanded "><a href="../results_index.html"><strong aria-hidden="true">7.</strong> Results & Monitoring</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ml_metrics.html"><strong aria-hidden="true">7.1.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="../feature_leakage_issues.html"><strong aria-hidden="true">7.2.</strong> Feature Leakage Case Study</a></li></ol></li><li class="chapter-item expanded "><a href="../defunct_index.html"><strong aria-hidden="true">8.</strong> Defunct Implementations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/defunct/etl_system_shell_pivot.html"><strong aria-hidden="true">8.1.</strong> ETL Pipeline System (Shell-Pivot Variant)</a></li><li class="chapter-item expanded "><a href="../components/defunct/clickhouse_batch_etl.html"><strong aria-hidden="true">8.2.</strong> ClickHouse Batch ETL Architecture</a></li></ol></li><li class="chapter-item expanded "><a href="../decisions_index.html"><strong aria-hidden="true">9.</strong> Decisions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../decisions/ip_device_reputation_removal.html"><strong aria-hidden="true">9.1.</strong> IP and Device Reputation Removal</a></li><li class="chapter-item expanded "><a href="../decisions/storage_architecture_split.html"><strong aria-hidden="true">9.2.</strong> Storage Architecture Split</a></li><li class="chapter-item expanded "><a href="../decisions/deployment_architecture.html"><strong aria-hidden="true">9.3.</strong> Deployment Architecture</a></li><li class="chapter-item expanded "><a href="../decisions/fraud_operations_cost_model.html"><strong aria-hidden="true">9.4.</strong> Fraud Operations Cost Model</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -176,11 +177,21 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="physical-world-transformation"><a class="header" href="#physical-world-transformation">Physical World Transformation</a></h1>
+                        <h1 id="geospatial-reference-pipeline"><a class="header" href="#geospatial-reference-pipeline">Geospatial Reference Pipeline</a></h1>
 <h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
 <p>The <code>warehouse/</code> directory contains the dbt project that transforms raw OSM staging tables into the geographic reference data consumed by the simulation generators. It operates on Postgres with PostGIS and takes <code>raw_residential</code>, <code>raw_merchants</code>, and <code>raw_financial</code> — populated by <code>prepare_refs.rs</code> — as its sources, producing three materialized mart tables (<code>mart_residential</code>, <code>mart_merchants</code>, <code>mart_district_summary</code>) that are serialized to Parquet by <code>export_references.rs</code>. The project contains two staging models, three mart models, and one macro.</p>
 <h2 id="schema"><a class="header" href="#schema">Schema</a></h2>
-<h3 id="stg_residential"><a class="header" href="#stg_residential"><code>stg_residential</code></a></h3>
+<p>The dbt project reads the three <code>raw_*</code> staging sources and produces two staging models and three mart tables. The marts are exported to Parquet for the simulation generators:</p>
+<pre><code class="language-mermaid">erDiagram
+    raw_residential ||--o{ stg_residential : "osm_id"
+    raw_merchants ||--o{ stg_merchants : "osm_id"
+    stg_residential ||--o{ mart_residential : "osm_id"
+    stg_merchants ||--o{ mart_merchants : "osm_id"
+    mart_residential ||--o{ mart_district_summary : "state, district_name"
+    mart_merchants ||--o{ mart_district_summary : "state, district_name"
+</code></pre>
+<details>
+<summary><code>stg_residential</code></summary>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Field Name</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
 <tr><td style="text-align: left"><code>osm_id</code></td><td style="text-align: left"><code>BIGINT</code></td><td style="text-align: left">OSM node identifier, carried from <code>raw_residential</code>.</td></tr>
 <tr><td style="text-align: left"><code>h3_index</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">H3 index at Resolution 8, carried from <code>raw_residential</code>.</td></tr>
@@ -190,8 +201,9 @@
 <tr><td style="text-align: left"><code>postcode</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">Raw postal code from the <code>addr:postcode</code> OSM tag.</td></tr>
 <tr><td style="text-align: left"><code>state_standardized</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">State name normalized via a left join against <code>ref_state_map</code>; falls back to the raw <code>addr:state</code> value, then <code>'Unknown'</code>, if no mapping exists.</td></tr>
 </tbody></table>
-</div>
-<h3 id="stg_merchants"><a class="header" href="#stg_merchants"><code>stg_merchants</code></a></h3>
+</div></details>
+<details>
+<summary><code>stg_merchants</code></summary>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Field Name</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
 <tr><td style="text-align: left"><code>osm_id</code></td><td style="text-align: left"><code>BIGINT</code></td><td style="text-align: left">OSM node identifier, carried from <code>raw_merchants</code>.</td></tr>
 <tr><td style="text-align: left"><code>h3_index</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">H3 index at Resolution 8, carried from <code>raw_merchants</code>.</td></tr>
@@ -204,8 +216,9 @@
 <tr><td style="text-align: left"><code>merchant_category</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">Standardized RiskFabric category joined from <code>ref_category_map</code> on <code>sub_category</code>; defaults to <code>'GENERAL_RETAIL'</code> if no mapping exists.</td></tr>
 <tr><td style="text-align: left"><code>risk_level</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">Risk classification joined from <code>ref_category_map</code>; defaults to <code>'LOW'</code> if no mapping exists.</td></tr>
 </tbody></table>
-</div>
-<h3 id="mart_residential"><a class="header" href="#mart_residential"><code>mart_residential</code></a></h3>
+</div></details>
+<details>
+<summary><code>mart_residential</code></summary>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Field Name</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
 <tr><td style="text-align: left"><code>osm_id</code></td><td style="text-align: left"><code>BIGINT</code></td><td style="text-align: left">OSM node identifier.</td></tr>
 <tr><td style="text-align: left"><code>h3_index</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">H3 index at Resolution 8.</td></tr>
@@ -216,8 +229,9 @@
 <tr><td style="text-align: left"><code>state</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">Official state name derived from a PostGIS <code>ST_Intersects</code> join against <code>ref_boundaries_states</code> (DataMeet boundaries).</td></tr>
 <tr><td style="text-align: left"><code>district_name</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">Official district name derived from a PostGIS <code>ST_Intersects</code> join against <code>ref_boundaries_districts</code> (DataMeet boundaries).</td></tr>
 </tbody></table>
-</div>
-<h3 id="mart_merchants"><a class="header" href="#mart_merchants"><code>mart_merchants</code></a></h3>
+</div></details>
+<details>
+<summary><code>mart_merchants</code></summary>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Field Name</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
 <tr><td style="text-align: left"><code>osm_id</code></td><td style="text-align: left"><code>BIGINT</code></td><td style="text-align: left">OSM node identifier.</td></tr>
 <tr><td style="text-align: left"><code>h3_index</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">H3 index at Resolution 8.</td></tr>
@@ -231,8 +245,9 @@
 <tr><td style="text-align: left"><code>state</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">Official state name from PostGIS spatial join.</td></tr>
 <tr><td style="text-align: left"><code>district_name</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">Official district name from PostGIS spatial join.</td></tr>
 </tbody></table>
-</div>
-<h3 id="mart_district_summary"><a class="header" href="#mart_district_summary"><code>mart_district_summary</code></a></h3>
+</div></details>
+<details>
+<summary><code>mart_district_summary</code></summary>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Field Name</th><th style="text-align: left">Type</th><th style="text-align: left">Description</th></tr></thead><tbody>
 <tr><td style="text-align: left"><code>state</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">State name, coalesced from residential and merchant aggregations.</td></tr>
 <tr><td style="text-align: left"><code>district_name</code></td><td style="text-align: left"><code>TEXT</code></td><td style="text-align: left">District name, coalesced from residential and merchant aggregations.</td></tr>
@@ -242,7 +257,7 @@
 <tr><td style="text-align: left"><code>medium_high_risk_merchants</code></td><td style="text-align: left"><code>INTEGER</code></td><td style="text-align: left">Count of merchants with <code>risk_level = 'HIGH'</code>.</td></tr>
 <tr><td style="text-align: left"><code>merchant_to_residential_ratio</code></td><td style="text-align: left"><code>NUMERIC</code></td><td style="text-align: left">Merchant node count divided by residential node count, rounded to 2 decimal places; 0 if no residential nodes exist.</td></tr>
 </tbody></table>
-</div>
+</div></details>
 <p><strong>Spatial Join Strategy</strong> is the core mechanism used in both mart models to assign authoritative state and district names. Rather than trusting the <code>addr:state</code> OSM tag — which is inconsistently populated and contains a wide variety of spelling and transliteration variants — both <code>mart_residential</code> and <code>mart_merchants</code> perform <code>ST_Intersects</code> operations against official administrative boundary geometries sourced from DataMeet (<code>ref_boundaries_states</code> and <code>ref_boundaries_districts</code>). Every coordinate is point-in-polygon tested against both boundary layers, producing a verified <code>state</code> and <code>district_name</code> for each node regardless of what its OSM address tags contain.</p>
 <p><strong>Category and Risk Mapping</strong> is handled in <code>stg_merchants</code> via a seed-driven lookup table (<code>ref_category_map</code>). Raw OSM <code>sub_category</code> values (e.g., <code>"jewelry"</code>, <code>"electronics"</code>, <code>"fast_food"</code>) are joined against this map to produce a standardized <code>merchant_category</code> and a <code>risk_level</code> classification. Unmatched sub-categories default to <code>'GENERAL_RETAIL'</code> / <code>'LOW'</code>. This separates risk assignment logic from the Rust simulation binaries — the fraud engine selects high-risk merchants by filtering on <code>risk_level</code> in the Parquet file rather than embedding category-level risk decisions in generated code.</p>
 <p><strong>City Normalization</strong> is applied uniformly across both mart models via the <code>normalize_city</code> macro. The macro applies three sequential transformations: it strips common appended state or city names (e.g., <code>" PUNE"</code>, <code>" TELANGANA"</code>) via regex, takes the substring before the first dash to remove postal suffix patterns (e.g., <code>"Secunderabad-26" → "Secunderabad"</code>), and takes the substring before the first comma to drop compound address fragments. The result is uppercased and trimmed. This is a best-effort heuristic rather than a validated normalization — see Known Issues.</p>
@@ -261,7 +276,7 @@
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../components/ingestor_rs.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../components/reference_preparator.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -275,7 +290,7 @@
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../components/ingestor_rs.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../components/reference_preparator.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

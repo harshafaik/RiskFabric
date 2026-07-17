@@ -1,0 +1,354 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Configuration Module - RiskFabric Documentation</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../documentation/custom.css">
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="../simulation_index.html"><strong aria-hidden="true">2.</strong> Data Generation Modules</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/customer_generator.html"><strong aria-hidden="true">2.1.</strong> Customer Data Generator</a></li><li class="chapter-item expanded "><a href="../components/account_and_card_generator.html"><strong aria-hidden="true">2.2.</strong> Account and Card Data Generator</a></li><li class="chapter-item expanded "><a href="../components/transaction_generator.html"><strong aria-hidden="true">2.3.</strong> Transactional Data Generator</a></li><li class="chapter-item expanded "><a href="../components/batch_generator.html"><strong aria-hidden="true">2.4.</strong> Batch Orchestrator</a></li><li class="chapter-item expanded "><a href="../components/streaming_generator.html"><strong aria-hidden="true">2.5.</strong> Streaming Orchestrator</a></li><li class="chapter-item expanded "><a href="../components/adversary_logic_engine.html"><strong aria-hidden="true">2.6.</strong> Fraud Injector</a></li><li class="chapter-item expanded "><a href="../components/configuration.html" class="active"><strong aria-hidden="true">2.7.</strong> Configuration Module</a></li></ol></li><li class="chapter-item expanded "><a href="../engineering_index.html"><strong aria-hidden="true">3.</strong> Data & Engineering</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/etl_system.html"><strong aria-hidden="true">3.1.</strong> Feature Engineering Pipeline</a></li><li class="chapter-item expanded "><a href="../components/dbt_models.html"><strong aria-hidden="true">3.2.</strong> Geospatial Reference Pipeline</a></li><li class="chapter-item expanded "><a href="../components/reference_preparator.html"><strong aria-hidden="true">3.3.</strong> OSM Reference Extractor</a></li></ol></li><li class="chapter-item expanded "><a href="../ml_systems_index.html"><strong aria-hidden="true">4.</strong> Machine Learning Systems</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/ml_training.html"><strong aria-hidden="true">4.1.</strong> Training Pipeline</a></li><li class="chapter-item expanded "><a href="../components/ml_calibration.html"><strong aria-hidden="true">4.2.</strong> Model Calibration</a></li><li class="chapter-item expanded "><a href="../components/realtime_scorer.html"><strong aria-hidden="true">4.3.</strong> Real-Time Scoring Service</a></li><li class="chapter-item expanded "><a href="../components/ml_explainability.html"><strong aria-hidden="true">4.4.</strong> Model Explainability (SHAP)</a></li><li class="chapter-item expanded "><a href="../components/ml_robustness.html"><strong aria-hidden="true">4.5.</strong> Model Robustness & Drift</a></li><li class="chapter-item expanded "><a href="../ml_analysis_scripts.html"><strong aria-hidden="true">4.6.</strong> Analysis & Utility Scripts</a></li></ol></li><li class="chapter-item expanded "><a href="../infrastructure_index.html"><strong aria-hidden="true">5.</strong> Infrastructure & Operations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/infrastructure.html"><strong aria-hidden="true">5.1.</strong> Infrastructure & Local Stack</a></li><li class="chapter-item expanded "><a href="../components/case_admin.html"><strong aria-hidden="true">5.2.</strong> Django Case Management UI</a></li><li class="chapter-item expanded "><a href="../components/redis_seeder.html"><strong aria-hidden="true">5.3.</strong> Redis Feature Seeder</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts_index.html"><strong aria-hidden="true">6.</strong> Conceptual Explanations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../theory_of_operation.html"><strong aria-hidden="true">6.1.</strong> Theory of Operation</a></li><li class="chapter-item expanded "><a href="../fraud_signatures.html"><strong aria-hidden="true">6.2.</strong> Fraud Signatures & Attack Patterns</a></li></ol></li><li class="chapter-item expanded "><a href="../results_index.html"><strong aria-hidden="true">7.</strong> Results & Monitoring</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ml_metrics.html"><strong aria-hidden="true">7.1.</strong> Machine Learning Metrics</a></li><li class="chapter-item expanded "><a href="../feature_leakage_issues.html"><strong aria-hidden="true">7.2.</strong> Feature Leakage Case Study</a></li></ol></li><li class="chapter-item expanded "><a href="../defunct_index.html"><strong aria-hidden="true">8.</strong> Defunct Implementations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/defunct/etl_system_shell_pivot.html"><strong aria-hidden="true">8.1.</strong> ETL Pipeline System (Shell-Pivot Variant)</a></li><li class="chapter-item expanded "><a href="../components/defunct/clickhouse_batch_etl.html"><strong aria-hidden="true">8.2.</strong> ClickHouse Batch ETL Architecture</a></li></ol></li><li class="chapter-item expanded "><a href="../decisions_index.html"><strong aria-hidden="true">9.</strong> Decisions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../decisions/ip_device_reputation_removal.html"><strong aria-hidden="true">9.1.</strong> IP and Device Reputation Removal</a></li><li class="chapter-item expanded "><a href="../decisions/storage_architecture_split.html"><strong aria-hidden="true">9.2.</strong> Storage Architecture Split</a></li><li class="chapter-item expanded "><a href="../decisions/deployment_architecture.html"><strong aria-hidden="true">9.3.</strong> Deployment Architecture</a></li><li class="chapter-item expanded "><a href="../decisions/fraud_operations_cost_model.html"><strong aria-hidden="true">9.4.</strong> Fraud Operations Cost Model</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">RiskFabric Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/harshafaik/riskfabric" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="configuration-module-configrs"><a class="header" href="#configuration-module-configrs">Configuration Module (<code>config.rs</code>)</a></h1>
+<h2 id="what-it-is"><a class="header" href="#what-it-is">What It Is</a></h2>
+<p>RiskFabric's behaviour is fully data-driven. Five YAML files in <code>data/config/</code> describe the population, the transaction stream, the financial products, and the adversary — <code>config.rs</code> loads them at runtime and parses them into a single strongly-typed <code>AppConfig</code> struct that every binary (<code>generate</code>, <code>stream</code>, <code>etl</code>) shares. No recompile is needed to retune the simulation; edit a YAML and rerun.</p>
+<p>The value of this design is <em>consistency</em>. Because the struct hierarchy mirrors the file layout, a generator, the ETL layer, and the ML pipeline all read the same validated world-view. A change to one config key is checked by the Rust compiler everywhere it is consumed.</p>
+<h2 id="how-it-loads"><a class="header" href="#how-it-loads">How It Loads</a></h2>
+<p><code>AppConfig::load()</code> performs five atomic reads, one per file:</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">File</th><th style="text-align: left">Governs</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>customer_config.yaml</code></td><td style="text-align: left">Population size, demographics, financial heuristics, device &amp; ISP profiles</td></tr>
+<tr><td style="text-align: left"><code>transaction_config.yaml</code></td><td style="text-align: left">Transaction volume, timing, geography, merchant universe</td></tr>
+<tr><td style="text-align: left"><code>fraud_rules.yaml</code></td><td style="text-align: left">Global seed, channel shares, fraud profiles &amp; temporal patterns</td></tr>
+<tr><td style="text-align: left"><code>fraud_tuning.yaml</code></td><td style="text-align: left">Anomaly probabilities, campaign parameters, RNG salts</td></tr>
+<tr><td style="text-align: left"><code>product_catalog.yaml</code></td><td style="text-align: left">Account &amp; card product definitions</td></tr>
+</tbody></table>
+</div>
+<p>Each file is parsed independently (<code>serde_yaml::from_str</code>) and the results are merged into one <code>AppConfig</code>. Non-essential keys carry <code>#[serde(default)]</code> fallbacks (e.g. <code>streaming_rate</code> defaults to <code>100</code>), so a missing key degrades gracefully rather than failing the whole load.</p>
+<h2 id="reference"><a class="header" href="#reference">Reference</a></h2>
+<h3 id="customer_configyaml"><a class="header" href="#customer_configyaml"><code>customer_config.yaml</code></a></h3>
+<p>Population, financial heuristics, device profiles, and ISP assignment.</p>
+<p><strong><code>control</code></strong> — run scale.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Key</th><th style="text-align: left">Default</th><th style="text-align: left">Notes</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>customer_count</code></td><td style="text-align: left"><code>3400</code></td><td style="text-align: left">Customers generated per batch run.</td></tr>
+<tr><td style="text-align: left"><code>transactions_per_customer.min</code> / <code>.max</code></td><td style="text-align: left"><code>200</code> / <code>400</code></td><td style="text-align: left">Transaction count range per customer over the lookback window.</td></tr>
+<tr><td style="text-align: left"><code>parallelism.customer_gen_threads</code></td><td style="text-align: left"><code>8</code></td><td style="text-align: left">Rayon threads for the customer pass.</td></tr>
+<tr><td style="text-align: left"><code>parallelism.transaction_gen_threads</code></td><td style="text-align: left"><code>32</code></td><td style="text-align: left">Rayon threads for the transaction pass.</td></tr>
+</tbody></table>
+</div>
+<p><strong><code>financials</code></strong> — spend anchoring by location class.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Key</th><th style="text-align: left">Metro</th><th style="text-align: left">Urban</th><th style="text-align: left">Semi-Urban</th><th style="text-align: left">Rural</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>base_spend</code> (₹/mo)</td><td style="text-align: left"><code>35000</code></td><td style="text-align: left"><code>22000</code></td><td style="text-align: left"><code>15000</code></td><td style="text-align: left"><code>9000</code></td></tr>
+</tbody></table>
+</div>
+<p>Credit score starts at <code>base: 650</code>, shifted by age via <code>age_weight: 1.5</code>, clamped to <code>[min: 300, max: 900]</code>.</p>
+<p><strong><code>registration</code></strong> — <code>lookback_years: 5</code> caps how far back a registration date falls; <code>default_location_type: "Urban"</code> is the fallback when no OSM node matches.</p>
+<p><strong><code>device_profiles.location_shares</code></strong> — OS mix per location type (each row sums to 1.0):</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Location</th><th style="text-align: left">android</th><th style="text-align: left">ios</th><th style="text-align: left">upi_app</th><th style="text-align: left">desktop</th></tr></thead><tbody>
+<tr><td style="text-align: left">Metro</td><td style="text-align: left">0.65</td><td style="text-align: left">0.20</td><td style="text-align: left">0.10</td><td style="text-align: left">0.05</td></tr>
+<tr><td style="text-align: left">Urban</td><td style="text-align: left">0.72</td><td style="text-align: left">0.12</td><td style="text-align: left">0.12</td><td style="text-align: left">0.04</td></tr>
+<tr><td style="text-align: left">Semi-Urban</td><td style="text-align: left">0.82</td><td style="text-align: left">0.04</td><td style="text-align: left">0.12</td><td style="text-align: left">0.02</td></tr>
+<tr><td style="text-align: left">Rural</td><td style="text-align: left">0.82</td><td style="text-align: left">0.04</td><td style="text-align: left">0.12</td><td style="text-align: left">0.02</td></tr>
+</tbody></table>
+</div>
+<p><strong><code>isp_assignment</code></strong> — ISP share per location type plus a <code>subnets</code> map (CIDR prefix → <code>ip_subnet</code>):</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Location</th><th style="text-align: left">Jio</th><th style="text-align: left">Airtel</th><th style="text-align: left">ACT</th><th style="text-align: left">BSNL</th><th style="text-align: left">Others</th></tr></thead><tbody>
+<tr><td style="text-align: left">Metro</td><td style="text-align: left">0.45</td><td style="text-align: left">0.35</td><td style="text-align: left">0.15</td><td style="text-align: left">—</td><td style="text-align: left">0.05</td></tr>
+<tr><td style="text-align: left">Urban</td><td style="text-align: left">0.50</td><td style="text-align: left">0.30</td><td style="text-align: left">—</td><td style="text-align: left">0.15</td><td style="text-align: left">0.05</td></tr>
+<tr><td style="text-align: left">Semi-Urban</td><td style="text-align: left">0.50</td><td style="text-align: left">0.15</td><td style="text-align: left">—</td><td style="text-align: left">0.35</td><td style="text-align: left">—</td></tr>
+<tr><td style="text-align: left">Rural</td><td style="text-align: left">0.50</td><td style="text-align: left">0.15</td><td style="text-align: left">—</td><td style="text-align: left">0.35</td><td style="text-align: left">—</td></tr>
+</tbody></table>
+</div>
+<p>The <code>names</code>, <code>email.domains</code>, and <code>*_ua_pool</code> lists are static selection pools — no tuning needed.</p>
+<h3 id="transaction_configyaml"><a class="header" href="#transaction_configyaml"><code>transaction_config.yaml</code></a></h3>
+<p>The transaction stream's shape: volume, timing, geography, merchant universe.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Key</th><th style="text-align: left">Default</th><th style="text-align: left">Notes</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>transactions.amount_range</code></td><td style="text-align: left"><code>[10.0, 50000.0]</code></td><td style="text-align: left">Pre-fraud amount bounds (₹).</td></tr>
+<tr><td style="text-align: left"><code>transactions.success_rate</code></td><td style="text-align: left"><code>0.96</code></td><td style="text-align: left">Remaining 4% declined.</td></tr>
+<tr><td style="text-align: left"><code>transactions.card_present_probability</code></td><td style="text-align: left"><code>0.35</code></td><td style="text-align: left">P(card_present = true).</td></tr>
+<tr><td style="text-align: left"><code>transactions.lookback_days</code></td><td style="text-align: left"><code>365</code></td><td style="text-align: left">History depth per customer.</td></tr>
+<tr><td style="text-align: left"><code>transactions.geo_bounds</code></td><td style="text-align: left">lat <code>[8.0, 37.0]</code>, long <code>[68.0, 97.0]</code></td><td style="text-align: left">India fallback box.</td></tr>
+</tbody></table>
+</div>
+<p><strong><code>temporal_patterns</code></strong> — relative hourly (24-elem, peak hour 19 @ 4.0) and daily (7-elem, Sat 1.5 / Fri 1.3) weights for timestamp sampling.</p>
+<p><strong><code>merchant_categories</code></strong> — 17 categories, each <code>name</code> + 4-digit <code>mcc</code>: <code>GROCERY (5411)</code>, <code>FOOD_AND_DRINK (5812)</code>, <code>GENERAL_RETAIL (5311)</code>, <code>SERVICES (7299)</code>, <code>ENTERTAINMENT (7999)</code>, <code>ELECTRONICS (5732)</code>, <code>TRAVEL (4722)</code>, <code>MEDICAL (8099)</code>, <code>AUTOMOTIVE (5511)</code>, <code>LUXURY (5944)</code>, <code>B2B_WHOLESALE (5099)</code>, <code>HOME_GARDEN (5200)</code>, <code>TRANSPORT (4111)</code>, <code>CHARITY (8398)</code>, <code>RETAIL (5999)</code>, <code>ALCOHOL (5921)</code>, <code>GAMBLING (7995)</code>.</p>
+<h3 id="fraud_rulesyaml"><a class="header" href="#fraud_rulesyaml"><code>fraud_rules.yaml</code></a></h3>
+<p>Seed, channel economics, and the fraud profile definitions.</p>
+<p><strong><code>global</code></strong> — <code>seed: 5555</code> (RNG reproducibility), <code>base_currency: "INR"</code>, <code>default_country: "IN"</code>.</p>
+<p><strong><code>payment_channels</code></strong> — market share (sums to 1.0) and risk level:</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Channel</th><th style="text-align: left">share</th><th style="text-align: left">risk</th></tr></thead><tbody>
+<tr><td style="text-align: left">upi</td><td style="text-align: left">0.70</td><td style="text-align: left">0.7</td></tr>
+<tr><td style="text-align: left">mobile_wallets</td><td style="text-align: left">0.10</td><td style="text-align: left">0.6</td></tr>
+<tr><td style="text-align: left">cards</td><td style="text-align: left">0.10</td><td style="text-align: left">0.9</td></tr>
+<tr><td style="text-align: left">online</td><td style="text-align: left">0.07</td><td style="text-align: left">0.8</td></tr>
+<tr><td style="text-align: left">mobile_banking</td><td style="text-align: left">0.03</td><td style="text-align: left">0.5</td></tr>
+</tbody></table>
+</div>
+<p><strong><code>fraud_injector</code></strong> — <code>target_share: 0.01</code> (1% of customers are fraud targets), <code>default_fp_rate: 0.005</code> (false-positive noise), <code>default_fn_rate: 0.08</code> (hidden true fraud).</p>
+<p><strong><code>fraud_injector.profiles</code></strong> — five profiles; <code>frequency</code> is a relative weight (sums to 1.0) selecting which profile fires:</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Profile</th><th style="text-align: left">freq</th><th style="text-align: left">geo_anomaly_prob</th><th style="text-align: left">temporal_anomaly_prob</th><th style="text-align: left">Primary channels</th></tr></thead><tbody>
+<tr><td style="text-align: left">upi_scam</td><td style="text-align: left">0.35</td><td style="text-align: left">0.95</td><td style="text-align: left">0.70</td><td style="text-align: left">upi (0.80)</td></tr>
+<tr><td style="text-align: left">account_takeover</td><td style="text-align: left">0.25</td><td style="text-align: left">0.60</td><td style="text-align: left">0.90</td><td style="text-align: left">mobile_banking (0.40), upi (0.30), online (0.30)</td></tr>
+<tr><td style="text-align: left">velocity_abuse</td><td style="text-align: left">0.15</td><td style="text-align: left">0.20</td><td style="text-align: left">0.40</td><td style="text-align: left">upi (0.70), online (0.30)</td></tr>
+<tr><td style="text-align: left">card_not_present</td><td style="text-align: left">0.15</td><td style="text-align: left">0.40</td><td style="text-align: left">0.50</td><td style="text-align: left">online (0.70), cards (0.30)</td></tr>
+<tr><td style="text-align: left">friendly_fraud</td><td style="text-align: left">0.10</td><td style="text-align: left">0.00</td><td style="text-align: left">0.10</td><td style="text-align: left">upi (0.40), cards (0.60)</td></tr>
+</tbody></table>
+</div>
+<p>Each profile also carries <code>amount_pattern</code> (key into <code>fraud_patterns</code>), <code>amount_multiplier</code> (range × customer's normal spend), and <code>merchant_bias</code>. The <code>temporal_patterns</code> block overrides the baseline hourly/daily weights for fraud events — <code>account_takeover</code> concentrates 70%+ in 00:00–04:00.</p>
+<h3 id="fraud_tuningyaml"><a class="header" href="#fraud_tuningyaml"><code>fraud_tuning.yaml</code></a></h3>
+<p>Anomaly probabilities (independent of profile) and campaign knobs.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Key</th><th style="text-align: left">Default</th><th style="text-align: left">Notes</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>probabilities.geo_anomaly</code></td><td style="text-align: left">0.15</td><td style="text-align: left">Any txn gets geo anomaly.</td></tr>
+<tr><td style="text-align: left"><code>probabilities.device_anomaly</code></td><td style="text-align: left">0.10</td><td style="text-align: left">Any txn gets device anomaly.</td></tr>
+<tr><td style="text-align: left"><code>probabilities.ip_anomaly</code></td><td style="text-align: left">0.15</td><td style="text-align: left">Any txn gets IP anomaly.</td></tr>
+<tr><td style="text-align: left"><code>probabilities.failure</code></td><td style="text-align: left">0.15</td><td style="text-align: left">Fraud-targeted txn forced <code>Failed</code>.</td></tr>
+<tr><td style="text-align: left"><code>probabilities.chargeback</code></td><td style="text-align: left">0.08</td><td style="text-align: left">Fraud txn results in chargeback.</td></tr>
+<tr><td style="text-align: left"><code>defaults.geo_anomaly_country</code></td><td style="text-align: left"><code>"PK"</code></td><td style="text-align: left"><code>merchant_country</code> on geo anomaly.</td></tr>
+<tr><td style="text-align: left"><code>defaults.chargeback_days</code></td><td style="text-align: left"><code>30</code></td><td style="text-align: left">Chargeback delay.</td></tr>
+<tr><td style="text-align: left"><code>salts</code></td><td style="text-align: left">injector <code>7</code>, mutator <code>99</code>, campaign <code>555</code></td><td style="text-align: left">RNG salts isolating each pass.</td></tr>
+</tbody></table>
+</div>
+<p><strong><code>campaigns</code></strong> — <code>target_campaign_share: 0.0</code> (disabled; raise to activate). <code>coordinated_scam_ip: "103.21.244.12"</code>, <code>ato_escalation_rate: 0.25</code>.</p>
+<blockquote>
+<p>Campaign profiles (<code>coordinated_attack</code>, <code>sequential_takeover</code>, <code>burst_campaign</code>) are defined in <code>fraud_rules.yaml</code> but never triggered while <code>target_campaign_share</code> is 0. The Silver ETL stage that consumes them (<code>SilverCampaign</code>) is also excluded from the parallel run due to signal reliability — both must be resolved together.</p>
+</blockquote>
+<h3 id="product_catalogyaml"><a class="header" href="#product_catalogyaml"><code>product_catalog.yaml</code></a></h3>
+<p>Account and card product definitions.</p>
+<p><strong><code>accounts</code></strong> — <code>types: [Savings, Current, Credit, Salary]</code>, <code>creation_window_years: 3</code>, <code>bank_id_range: [1000, 9999]</code>, <code>balance_range: [1000.0, 500000.0]</code>.</p>
+<p><strong><code>cards</code></strong> — <code>networks: [VISA, Mastercard, RuPay, Amex]</code>, <code>types: [Debit, Credit, Prepaid]</code>, <code>issue_window_years: 4</code>, <code>expiry_duration_years: 3</code>, <code>activation_delay_days: [2, 5]</code>, <code>active_probability: 0.92</code>.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Card limit key</th><th style="text-align: left">Default</th><th style="text-align: left">Status</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>limits.contactless_default</code></td><td style="text-align: left"><code>"5000"</code></td><td style="text-align: left">Stored as string; <strong>not enforced</strong> at generation.</td></tr>
+<tr><td style="text-align: left"><code>limits.daily_atm_default</code></td><td style="text-align: left"><code>"25000"</code></td><td style="text-align: left">Stored as string; <strong>not enforced</strong>.</td></tr>
+<tr><td style="text-align: left"><code>limits.online_default</code></td><td style="text-align: left"><code>"50000"</code></td><td style="text-align: left">Stored as string; <strong>not enforced</strong>.</td></tr>
+<tr><td style="text-align: left"><code>limits.international_enabled_prob</code></td><td style="text-align: left"><code>0.15</code></td><td style="text-align: left">P(international usage enabled).</td></tr>
+</tbody></table>
+</div>
+<blockquote>
+<p>The three limit values are written to the <code>Card</code> struct but never read by <code>transaction_gen.rs</code>, so transactions are not validated against them — making the fields decorative. Wiring enforcement in would enable realistic "Limit Breach" fraud signals currently absent from the feature set.</p>
+</blockquote>
+<h2 id="known-issues"><a class="header" href="#known-issues">Known Issues</a></h2>
+<p>Two rough edges remain in <code>load()</code>:</p>
+<ul>
+<li><strong>Panic-on-error.</strong> File reads and parses use <code>.expect()</code>, so a missing file or a YAML syntax error aborts the process immediately. Acceptable for a CLI, but returning a <code>Result</code> would allow callers to surface a precise diagnostic instead.</li>
+<li><strong>Hardcoded paths.</strong> All five paths are relative to the project root (<code>data/config/...</code>). Running a binary from another working directory breaks loading; a configurable base path (env var or CLI flag) is needed.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../components/adversary_logic_engine.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../engineering_index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../components/adversary_logic_engine.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../engineering_index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../documentation/mermaid.js"></script>
+
+
+    </div>
+    </body>
+</html>

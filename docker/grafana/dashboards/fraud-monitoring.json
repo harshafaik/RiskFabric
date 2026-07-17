@@ -10,23 +10,46 @@
   "panels": [
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 100,
       "panels": [],
       "title": "Key Performance Indicators",
       "type": "row"
     },
     {
-      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse-riskfabric"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "short"
         }
       },
-      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
       "id": 1,
       "options": {
         "colorMode": "value",
@@ -34,7 +57,13 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "showPercentChange": false,
         "textMode": "auto",
         "wideLayout": true
@@ -42,9 +71,12 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse-riskfabric"
+          },
           "editorType": "sql",
-          "format": "table",
+          "format": 0,
           "rawSql": "SELECT count() AS value FROM riskfabric.fraud_scores WHERE scored_at >= now() - INTERVAL $lookback",
           "refId": "A"
         }
@@ -53,16 +85,34 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse-riskfabric"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "short"
         }
       },
-      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 1 },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
       "id": 2,
       "options": {
         "colorMode": "value",
@@ -70,7 +120,13 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "showPercentChange": false,
         "textMode": "auto",
         "wideLayout": true
@@ -78,9 +134,12 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse-riskfabric"
+          },
           "editorType": "sql",
-          "format": "table",
+          "format": 0,
           "rawSql": "SELECT sum(flagged) AS value FROM riskfabric.fraud_scores WHERE scored_at >= now() - INTERVAL $lookback",
           "refId": "A"
         }
@@ -89,16 +148,34 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse-riskfabric"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
-          "unit": "currencyUSD"
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "INR"
         }
       },
-      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 1 },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
       "id": 3,
       "options": {
         "colorMode": "value",
@@ -106,7 +183,13 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "showPercentChange": false,
         "textMode": "auto",
         "wideLayout": true
@@ -114,9 +197,12 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse-riskfabric"
+          },
           "editorType": "sql",
-          "format": "table",
+          "format": 0,
           "rawSql": "SELECT avg(amount) AS value FROM riskfabric.fraud_scores WHERE scored_at >= now() - INTERVAL $lookback",
           "refId": "A"
         }
@@ -125,16 +211,34 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse-riskfabric"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "ms"
         }
       },
-      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 1 },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
       "id": 4,
       "options": {
         "colorMode": "value",
@@ -142,7 +246,13 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "showPercentChange": false,
         "textMode": "auto",
         "wideLayout": true
@@ -150,9 +260,12 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse-riskfabric"
+          },
           "editorType": "sql",
-          "format": "table",
+          "format": 0,
           "rawSql": "SELECT avg((scored_at - kafka_received_at) * 1000) AS value FROM riskfabric.fraud_scores WHERE scored_at >= now() - INTERVAL $lookback",
           "refId": "A"
         }
@@ -162,17 +275,27 @@
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
       "id": 200,
       "panels": [],
       "title": "Real-Time Charts",
       "type": "row"
     },
     {
-      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse-riskfabric"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
@@ -182,59 +305,116 @@
             "axisPlacement": "auto",
             "fillOpacity": 20,
             "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
             "lineWidth": 2,
             "pointSize": 0,
-            "scaleDistribution": { "type": "linear" },
-            "thresholdsStyle": { "mode": "off" }
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "fraud_count" },
+            "matcher": {
+              "id": "byName",
+              "options": "fraud_count"
+            },
             "properties": [
-              { "id": "custom.lineStyle", "value": { "fill": "solid", "dash": [10, 10] } },
-              { "id": "custom.fillOpacity", "value": 50 },
-              { "id": "custom.lineWidth", "value": 0 }
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid",
+                  "dash": [
+                    10,
+                    10
+                  ]
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 50
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 0
+              }
             ]
           }
         ]
       },
-      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 7 },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
       "id": 5,
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
         "fullHighlight": false,
         "groupWidth": 0.7,
-        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "orientation": "auto",
         "showValue": "auto",
         "stacking": "none",
-        "tooltip": { "hideZeros": false, "mode": "multi", "sort": "none" },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        },
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 0
       },
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse-riskfabric"
+          },
           "editorType": "sql",
-          "format": "time_series",
           "rawSql": "SELECT toStartOfSecond(scored_at) AS time, count() AS tx_count, sum(flagged) AS fraud_count FROM riskfabric.fraud_scores WHERE scored_at >= now() - INTERVAL $lookback GROUP BY time ORDER BY time",
-          "refId": "A"
+          "refId": "A",
+          "queryType": "sql",
+          "format": 1
         }
       ],
       "title": "Throughput & Fraud Detection",
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse-riskfabric"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
@@ -244,31 +424,65 @@
             "axisPlacement": "auto",
             "fillOpacity": 20,
             "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
             "lineWidth": 2,
             "pointSize": 3,
-            "scaleDistribution": { "type": "linear" },
-            "thresholdsStyle": { "mode": "off" }
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "ms"
         }
       },
-      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 7 },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
       "id": 6,
       "options": {
-        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "hideZeros": false, "mode": "multi", "sort": "none" }
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
       },
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse-riskfabric"
+          },
           "editorType": "sql",
-          "format": "time_series",
           "rawSql": "SELECT toStartOfSecond(scored_at) AS time, avg((scored_at - kafka_received_at) * 1000) AS latency FROM riskfabric.fraud_scores WHERE scored_at >= now() - INTERVAL $lookback GROUP BY time ORDER BY time",
-          "refId": "A"
+          "refId": "A",
+          "queryType": "sql",
+          "format": 1
         }
       ],
       "title": "End-to-End Latency Profile",
@@ -276,53 +490,114 @@
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
       "id": 300,
       "panels": [],
       "title": "Flagged Fraud Queue",
       "type": "row"
     },
     {
-      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse-riskfabric"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "custom": {
             "align": "auto",
-            "cellOptions": { "type": "auto" },
+            "cellOptions": {
+              "type": "auto"
+            },
             "inspect": false
           },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "fraud_probability" },
+            "matcher": {
+              "id": "byName",
+              "options": "fraud_probability"
+            },
             "properties": [
-              { "id": "unit", "value": "percentunit" },
-              { "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "gauge" } }
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "amount" },
-            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+            "matcher": {
+              "id": "byName",
+              "options": "amount"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
           }
         ]
       },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 18 },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
       "id": 7,
       "options": {
         "cellHeight": "sm",
-        "footer": { "countRows": false, "enablePagination": false, "fields": "", "reducer": ["sum"], "show": false },
+        "footer": {
+          "countRows": false,
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
         "showHeader": true,
-        "sortBy": [{ "desc": true, "displayName": "scored_at" }]
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "scored_at"
+          }
+        ]
       },
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-riskfabric" },
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse-riskfabric"
+          },
           "editorType": "sql",
-          "format": "table",
+          "format": 0,
           "rawSql": "SELECT transaction_id, card_id, customer_id, amount, timestamp, fraud_probability, scored_at FROM riskfabric.fraud_scores WHERE flagged = 1 AND scored_at >= now() - INTERVAL $lookback ORDER BY scored_at DESC LIMIT 10",
           "refId": "A"
         }
@@ -333,22 +608,50 @@
   ],
   "refresh": "$refresh",
   "schemaVersion": 39,
-  "tags": ["fraud", "riskfabric", "monitoring"],
+  "tags": [
+    "fraud",
+    "riskfabric",
+    "monitoring"
+  ],
   "templating": {
     "list": [
       {
-        "current": { "selected": false, "text": "1m", "value": "1 MINUTE" },
+        "current": {
+          "selected": false,
+          "text": "1m",
+          "value": "1 MINUTE"
+        },
         "hide": 0,
         "includeAll": false,
         "label": "Lookback Window",
         "multi": false,
         "name": "lookback",
         "options": [
-          { "selected": false, "text": "1m", "value": "1 MINUTE" },
-          { "selected": false, "text": "5m", "value": "5 MINUTE" },
-          { "selected": true, "text": "15m", "value": "15 MINUTE" },
-          { "selected": false, "text": "30m", "value": "30 MINUTE" },
-          { "selected": false, "text": "60m", "value": "60 MINUTE" }
+          {
+            "selected": false,
+            "text": "1m",
+            "value": "1 MINUTE"
+          },
+          {
+            "selected": false,
+            "text": "5m",
+            "value": "5 MINUTE"
+          },
+          {
+            "selected": true,
+            "text": "15m",
+            "value": "15 MINUTE"
+          },
+          {
+            "selected": false,
+            "text": "30m",
+            "value": "30 MINUTE"
+          },
+          {
+            "selected": false,
+            "text": "60m",
+            "value": "60 MINUTE"
+          }
         ],
         "query": "1 MINUTE,5 MINUTE,15 MINUTE,30 MINUTE,60 MINUTE",
         "queryValue": "",
@@ -356,17 +659,37 @@
         "type": "custom"
       },
       {
-        "current": { "selected": false, "text": "2s", "value": "2s" },
+        "current": {
+          "selected": false,
+          "text": "2s",
+          "value": "2s"
+        },
         "hide": 0,
         "includeAll": false,
         "label": "Auto-Refresh",
         "multi": false,
         "name": "refresh",
         "options": [
-          { "selected": false, "text": "1s", "value": "1s" },
-          { "selected": true, "text": "2s", "value": "2s" },
-          { "selected": false, "text": "5s", "value": "5s" },
-          { "selected": false, "text": "10s", "value": "10s" }
+          {
+            "selected": false,
+            "text": "1s",
+            "value": "1s"
+          },
+          {
+            "selected": true,
+            "text": "2s",
+            "value": "2s"
+          },
+          {
+            "selected": false,
+            "text": "5s",
+            "value": "5s"
+          },
+          {
+            "selected": false,
+            "text": "10s",
+            "value": "10s"
+          }
         ],
         "query": "1s,2s,5s,10s",
         "queryValue": "",
@@ -375,7 +698,10 @@
       }
     ]
   },
-  "time": { "from": "now-15m", "to": "now" },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "browser",
   "title": "RiskFabric Fraud Monitoring",

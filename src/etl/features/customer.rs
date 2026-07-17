@@ -5,9 +5,19 @@ pub fn transform_customer_features(
     cust_lf: LazyFrame,
     acc_lf: LazyFrame
 ) -> LazyFrame {
-    // 1. Prepare Transactions
+    // Parse timestamp from string
     let tx = tx_lf.with_columns([
-        col("timestamp").alias("ts"),
+        col("timestamp").str().to_datetime(
+            Some(TimeUnit::Milliseconds),
+            None,
+            StrptimeOptions {
+                format: Some("%Y-%m-%dT%H:%M:%S%.f%z".into()),
+                strict: false,
+                cache: true,
+                exact: false,
+            },
+            lit("raise"),
+        ).alias("ts"),
         col("is_fraud").cast(DataType::UInt32),
     ]);
 

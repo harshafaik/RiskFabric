@@ -18,6 +18,7 @@ polars = { version = "0.51.0", features = [
   "lazy",
   "parquet",
   "dtype-struct",
+  "dtype-datetime",
   "serde",
   "temporal",
   "strings",

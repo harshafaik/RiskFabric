@@ -1,23 +1,47 @@
 use polars::prelude::*;
 
 pub fn transform_sequence_features(lf: LazyFrame, fraud_meta_lf: LazyFrame) -> LazyFrame {
-    // 1. Prepare timestamp and initial sort
+    // Parse timestamp string to datetime, cast bools to integer for downstream operations
     let lf = lf
-        .with_column(col("timestamp").cast(DataType::Int64).alias("ts_physical"))
-        .sort(
-            ["customer_id", "ts_physical"],
-            SortMultipleOptions {
-                maintain_order: true,
-                ..Default::default()
-            },
-        );
+        .with_columns([
+            col("timestamp").str().to_datetime(
+                Some(TimeUnit::Milliseconds),
+                None,
+                StrptimeOptions {
+                    format: Some("%Y-%m-%dT%H:%M:%S%.f%z".into()),
+                    strict: false,
+                    cache: true,
+                    exact: false,
+                },
+                lit("raise"),
+            ).alias("timestamp"),
+            col("is_fraud").cast(DataType::UInt32),
+        ])
+        .with_column(col("timestamp").cast(DataType::Int64).alias("ts_physical"));
 
-    // 2. Join with Fraud Metadata
+    // Join with Fraud Metadata BEFORE sort — joins destroy row order
+    let fraud_meta_lf = fraud_meta_lf.with_columns([
+        col("fraud_target").cast(DataType::UInt32),
+        col("geo_anomaly").cast(DataType::UInt32),
+        col("device_anomaly").cast(DataType::UInt32),
+        col("ip_anomaly").cast(DataType::UInt32),
+        col("burst_session").cast(DataType::UInt32),
+    ]);
+
     let lf = lf.join(
         fraud_meta_lf,
         [col("transaction_id")],
         [col("transaction_id")],
         JoinType::Left.into(),
+    );
+
+    // Sort AFTER join so window operations see correct per-customer order
+    let lf = lf.sort(
+        ["customer_id", "ts_physical"],
+        SortMultipleOptions {
+            maintain_order: true,
+            ..Default::default()
+        },
     );
 
     // 3. Block 1: Independent Window and Temporal Features
@@ -62,20 +86,33 @@ pub fn transform_sequence_features(lf: LazyFrame, fraud_meta_lf: LazyFrame) -> L
         // Spatial Distance
         (((col("location_lat") - col("prev_lat")).pow(2.0) + (col("location_long") - col("prev_lon")).pow(2.0)).sqrt() * lit(111.0))
             .alias("distance_km"),
-        // Hour Deviation
-        ((col("txn_hour") - col("txn_hour").mean().over([col("customer_id")])).pow(2.0).sqrt())
-            .alias("hour_deviation_from_norm"),
+        // Hour Deviation (expanding window — no leakage)
+        ({
+            let hour_cnt = col("txn_hour").cum_count(false).over([col("customer_id")]);
+            let hour_mean = col("txn_hour").cum_sum(false).over([col("customer_id")]) / hour_cnt.clone();
+            ((col("txn_hour") - hour_mean).pow(2.0).sqrt()).alias("hour_deviation_from_norm")
+        }),
         // Amount Round Number
         ((col("amount") % lit(1.0)).eq(lit(0.0))
             .or((col("amount") % lit(5.0)).eq(lit(0.0)))
             .or((col("amount") % lit(10.0)).eq(lit(0.0))))
             .cast(DataType::UInt32)
             .alias("amount_round_number_flag"),
-        // Z-score
-        ((col("amount") - col("amount").mean().over([col("customer_id")]))
-            / col("amount").std(1).over([col("customer_id")]))
-            .fill_nan(lit(0.0))
-            .alias("amount_deviation_z_score"),
+        // Z-score (expanding window — no leakage)
+        ({
+            let cnt = col("amount").cum_count(false).over([col("customer_id")]).cast(DataType::Float64);
+            let sum_x = col("amount").cum_sum(false).over([col("customer_id")]);
+            let sum_x2 = col("amount").pow(2.0).cum_sum(false).over([col("customer_id")]);
+            let mean = sum_x.clone() / cnt.clone();
+            let pop_var = sum_x2 / cnt.clone() - mean.clone().pow(2.0);
+            let sample_var = pop_var.clone() * cnt.clone() / (cnt.clone() - lit(1.0));
+            let std_dev = sample_var.sqrt().fill_nan(lit(0.0));
+            when(cnt.clone().lt_eq(lit(1.0)))
+                .then(lit(0.0))
+                .otherwise((col("amount") - mean) / std_dev)
+                .fill_nan(lit(0.0))
+        })
+        .alias("amount_deviation_z_score"),
         // Rapid Fire
         col("time_since_last_transaction").is_not_null()
             .and(col("time_since_last_transaction").lt_eq(lit(300_000)))
@@ -117,10 +154,12 @@ pub fn transform_sequence_features(lf: LazyFrame, fraud_meta_lf: LazyFrame) -> L
         col("card_present"),
         col("user_agent"),
         col("ip_address"),
+        col("location_lat"),
+        col("location_long"),
         col("is_fraud"),
         (col("time_since_last_transaction").cast(DataType::Float64) / lit(1000.0))
             .alias("time_since_last_transaction"),
-        col("transaction_sequence_number").cast(DataType::UInt64),
+        col("transaction_sequence_number").cast(DataType::UInt32),
         lit(0u64).alias("same_day_transaction_count"),
         col("hours_since_midnight"),
         col("is_weekend"),
@@ -135,11 +174,11 @@ pub fn transform_sequence_features(lf: LazyFrame, fraud_meta_lf: LazyFrame) -> L
         lit(0u32).alias("is_foreign"),
         lit(0u32).alias("is_cross_border"),
         lit(0u32).alias("is_ip_mismatch"),
-        col("fraud_target").fill_null(lit(0u32)).cast(DataType::UInt32),
+        col("fraud_target").fill_null(lit(0u32)),
         col("fraud_type").fill_null(lit("none")),
-        col("geo_anomaly").fill_null(lit(0u32)).cast(DataType::UInt32),
-        col("device_anomaly").fill_null(lit(0u32)).cast(DataType::UInt32),
-        col("ip_anomaly").fill_null(lit(0u32)).cast(DataType::UInt32),
+        col("geo_anomaly").fill_null(lit(0u32)),
+        col("device_anomaly").fill_null(lit(0u32)),
+        col("ip_anomaly").fill_null(lit(0u32)),
         col("campaign_id").fill_null(lit(NULL).cast(DataType::String)),
     ])
 }

@@ -5,7 +5,8 @@ WORKDIR /usr/app
 RUN pip install --no-cache-dir \
     dlt[postgres,clickhouse,sql_database,parquet] \
     clickhouse-connect \
-    polars xgboost scikit-learn pyarrow \
-    confluent-kafka redis pandas
+    polars xgboost scikit-learn pyarrow shap \
+    confluent-kafka redis pandas streamlit plotly \
+    psycopg2-binary duckdb
 
 CMD ["/bin/sh"]

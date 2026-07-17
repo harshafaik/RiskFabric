@@ -12,3 +12,22 @@ vale
 index.html
 .cache/
 ingest_datameet.sh
+
+# Terraform files
+**/.terraform/
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/.terraform.lock.hcl
+**/terraform.tfvars
+**/terraform.tfvars.json
+
+# documentation files
+documentation/WRITING_SPEC.md
+
+# medallion pipeline output (runtime artifacts)
+data/bronze/
+data/silver/
+data/gold/
+
+# python virtual environment
+.venv/

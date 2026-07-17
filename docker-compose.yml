@@ -1,24 +1,6 @@
 services:
-  postgres:
-    image: postgis/postgis:15-3.3
-    container_name: riskfabric_postgres
-    shm_size: 1gb
-    environment:
-      - POSTGRES_USER=harshafaik
-      - POSTGRES_PASSWORD=123
-      - POSTGRES_DB=riskfabric
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U harshafaik -d riskfabric"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   clickhouse:
-    image: clickhouse/clickhouse-server:latest
+    image: docker.io/clickhouse/clickhouse-server:latest
     container_name: riskfabric_clickhouse
     environment:
       - CLICKHOUSE_DB=riskfabric
@@ -31,48 +13,21 @@ services:
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - clickhouse_logs:/var/log/clickhouse-server
+      - ./docker/clickhouse/init.sql:/docker-entrypoint-initdb.d/01_fraud_scores.sql
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "localhost:8123/ping"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  dbt:
-    image: ghcr.io/dbt-labs/dbt-postgres:1.8.2
-    container_name: riskfabric_dbt
-    volumes:
-      - ./warehouse:/usr/app:z
-    working_dir: /usr/app
-    environment:
-      - DBT_PROFILES_DIR=.
-    networks:
-      - default
-    depends_on:
-      - postgres
-
-  dlt:
-    image: riskfabric_dlt
-    container_name: riskfabric_dlt
-    volumes:
-      - .:/usr/app:z
-    working_dir: /usr/app
-    environment:
-      - PYTHONUNBUFFERED=1
-    networks:
-      - default
-    profiles: ["cli"]
-    depends_on:
-      - postgres
-      - clickhouse
-
   redpanda:
-    image: docker.redpanda.com/redpandadata/redpanda:v24.1.2
+    image: docker.redpanda.com/redpandadata/redpanda:v23.2.1
     container_name: riskfabric_redpanda
     command:
       - redpanda start
       - --overprovisioned
       - --smp 1
-      - --memory 1G
+      - --memory 512M
       - --reserve-memory 0M
       - --node-id 0
       - --check=false
@@ -88,7 +43,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: docker.io/library/redis:7-alpine
     container_name: riskfabric_redis
     ports:
       - "6379:6379"
@@ -99,7 +54,7 @@ services:
       retries: 5
 
   scorer:
-    image: riskfabric_dlt
+    image: localhost/riskfabric_dlt
     container_name: riskfabric_scorer
     volumes:
       - .:/usr/app:z
@@ -109,73 +64,86 @@ services:
       - REDIS_HOST=redis
       - CLICKHOUSE_HOST=clickhouse
       - PYTHONUNBUFFERED=1
+      - OLTP_POSTGRES_HOST=oltp-postgres
+      - OLTP_POSTGRES_PORT=5432
+      - OLTP_POSTGRES_DB=riskfabric_oltp
+      - OLTP_POSTGRES_USER=riskfabric_oltp_user
+      - OLTP_POSTGRES_PASSWORD=123
     command: python src/ml/scorer.py
     depends_on:
-      - redpanda
-      - redis
-      - clickhouse
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: riskfabric_prometheus
-    volumes:
-      - ./data/config/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    ports:
-      - "9091:9090"
-    networks:
-      - default
+      clickhouse:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      oltp-postgres:
+        condition: service_healthy
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana-oss:latest
     container_name: riskfabric_grafana
-    ports:
-      - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=123
       - GF_INSTALL_PLUGINS=grafana-clickhouse-datasource
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3001:3000"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./data/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./data/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-      - ./data/grafana/dashboards:/etc/grafana/provisioning/dashboards/riskfabric
-    networks:
-      - default
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources:z
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards:z
     depends_on:
-      - prometheus
-      - clickhouse
+      clickhouse:
+        condition: service_healthy
 
-  postgres-exporter:
-    image: prometheuscommunity/postgres-exporter
-    container_name: riskfabric_postgres_exporter
+  oltp-postgres:
+    image: docker.io/library/postgres:15-alpine
+    container_name: riskfabric_oltp_postgres
     environment:
-      - DATA_SOURCE_NAME=postgresql://harshafaik:123@postgres:5432/riskfabric?sslmode=disable
-    networks:
-      - default
-    depends_on:
-      - postgres
+      - POSTGRES_DB=riskfabric_oltp
+      - POSTGRES_USER=riskfabric_oltp_user
+      - POSTGRES_PASSWORD=123
+    ports:
+      - "5433:5432"
+    volumes:
+      - oltp_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U riskfabric_oltp_user -d riskfabric_oltp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  redis-exporter:
-    image: oliver006/redis_exporter
-    container_name: riskfabric_redis_exporter
-    command: --redis.addr=redis:6379
-    networks:
-      - default
+  case-admin:
+    build:
+      context: ./case_admin
+      dockerfile: Dockerfile
+    container_name: riskfabric_case_admin
+    environment:
+      - DB_HOST=oltp-postgres
+      - DB_PORT=5432
+      - DB_NAME=riskfabric_oltp
+      - DB_USER=riskfabric_oltp_user
+      - DB_PASSWORD=123
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_PASSWORD=admin
+      - DJANGO_SUPERUSER_EMAIL=admin@example.com
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./case_admin:/usr/app
     depends_on:
-      - redis
+      oltp-postgres:
+        condition: service_healthy
 
 networks:
   default:
     name: riskfabric_default
 
 volumes:
-  postgres_data:
   clickhouse_data:
   clickhouse_logs:
-  prometheus_data:
+  oltp_postgres_data:
   grafana_data:
+

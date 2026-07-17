@@ -7,7 +7,7 @@ import xgboost as xgb
 import redis
 from confluent_kafka import Consumer, KafkaError
 import clickhouse_connect
-from datetime import datetime
+from datetime import datetime, timezone
 from model_utils import load_model
 
 # --- Constants & Config ---
@@ -185,7 +185,7 @@ def main():
                 print(f"Consumer error: {msg.error()}")
                 continue
             
-            received_at = datetime.now()
+            received_at = datetime.now(timezone.utc)
             tx = json.loads(msg.value().decode('utf-8'))
             
             start_feat = time.time()
@@ -236,7 +236,7 @@ def main():
                 start_sink = time.time()
                 # Sink to ClickHouse
                 ch_batch = []
-                now = datetime.now()
+                now = datetime.now(timezone.utc)
                 for i, prob in enumerate(probs):
                     rec = records[i]
                     raw = rec['raw']

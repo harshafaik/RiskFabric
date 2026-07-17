@@ -17,17 +17,6 @@ code, pre {
     font-family: 'IBM Plex Mono', monospace !important;
 }
 
-/* d2 diagram sizing: cap width and scale responsively */
-pre:has(svg.d2-svg) {
-    overflow: hidden !important;
-}
-svg.d2-svg {
-    width: 100% !important;
-    max-width: 480px !important;
-    height: auto !important;
-    display: block !important;
-    margin: 0 auto !important;
-}
 .mermaid-breakout {
     width: 100vw !important;
     position: relative !important;

@@ -183,12 +183,12 @@
 <h2 id="schema"><a class="header" href="#schema">Schema</a></h2>
 <p>Each transaction execution pass generates a comprehensive transaction record and matching fraud diagnostics metadata:</p>
 <div style="max-width: 400px; margin: 0 auto;">
-<pre><code class="language-d2">Customer -&gt; Account: customer_id
-Account -&gt; Card: account_id
-Card -&gt; Transaction: card_id
-Customer -&gt; Transaction: customer_id
-Account -&gt; Transaction: account_id
-Transaction -&gt; FraudMetadata: transaction_id
+<pre><code class="language-text">Customer ──customer_id──► Account
+Account ──account_id───► Card
+Card ────card_id───────► Transaction
+Customer ──customer_id──► Transaction
+Account ──account_id───► Transaction
+Transaction ─transaction_id──► FraudMetadata
 </code></pre>
 </div>
 <details>

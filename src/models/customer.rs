@@ -64,10 +64,8 @@ impl Customer {
         geo: GeoLocation,
         fin: FinancialProfile,
         device: DeviceProfile,
+        rng: &mut impl Rng,
     ) -> Self {
-        let mut rng = rand::rng();
-
-        // Generate a realistic "First Line" of address
         let house_no: String = BuildingNumber().fake();
         let street: String = StreetName().fake();
         let city_str = geo

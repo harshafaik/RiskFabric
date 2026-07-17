@@ -1,5 +1,5 @@
 use fake::Fake;
-use rand::{Rng, rngs::ThreadRng};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -17,9 +17,7 @@ pub struct Account {
 }
 impl Account {
     #[must_use]
-    pub fn new(customer_id: String) -> Self {
-        let mut rng: ThreadRng = rand::rng();
-
+    pub fn new(customer_id: String, rng: &mut impl Rng) -> Self {
         let types = ["Savings", "Current", "Credit"];
         let selected_type = types[rng.random_range(0..types.len())].to_string();
 

@@ -27,10 +27,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 1. Initial Data Setup (simplified from generate.rs)
     let count = 1000; // Sample population for streaming
-    let customers = customer_gen::generate_customers(count);
+    let seed = config.rules.global.seed as u64;
+    let customers = customer_gen::generate_customers(count, seed);
     let customer_ids: Vec<String> = customers.iter().map(|c| c.customer_id.clone()).collect();
-    let accounts = account_gen::generate_accounts(customer_ids);
-    let cards = card_gen::generate_for_accounts(&accounts);
+    let accounts = account_gen::generate_accounts(customer_ids, seed);
+    let cards = card_gen::generate_for_accounts(&accounts, seed);
     let customer_map: HashMap<String, _> = customers
         .iter()
         .map(|c| (c.customer_id.clone(), c))

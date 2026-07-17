@@ -31,9 +31,7 @@ pub struct Card {
 }
 impl Card {
     #[must_use]
-    pub fn new(account_id: String, customer_id: String, bank_id: String) -> Self {
-        let mut rng = rand::rng();
-
+    pub fn new(account_id: String, customer_id: String, bank_id: String, rng: &mut impl Rng) -> Self {
         let network = ["VISA", "Mastercard", "RuPay"];
         let selected_network = network[rng.random_range(0..network.len())].to_string();
 
@@ -57,7 +55,7 @@ impl Card {
 
         let status_reason = match status {
             "Active" => "Normal usage",
-            "Blocked" => "Suspected Fraud", // Or "Lost/Stolen"
+            "Blocked" => "Suspected Fraud",
             "Expired" => "Card Validity Ended",
             _ => "Unknown",
         };
@@ -78,11 +76,11 @@ impl Card {
             activation_date: activation_dt.format("%Y-%m-%d").to_string(),
             expiry_date: expiry_dt.format("%Y-%m-%d").to_string(),
 
-            contactless_limit: "".to_string(), // Placeholder - will be set properly later
-            daily_atm_limit: "".to_string(),   // Placeholder - will be set properly later
-            online_limit: "".to_string(),      // Placeholder - will be set properly later
+            contactless_limit: "".to_string(),
+            daily_atm_limit: "".to_string(),
+            online_limit: "".to_string(),
 
-            international_usage: "".to_string(), // Placeholder - will be set properly later
+            international_usage: "".to_string(),
             issuing_bank: format!("Bank of {}", bank_id),
             bank_code: bank_id,
         }

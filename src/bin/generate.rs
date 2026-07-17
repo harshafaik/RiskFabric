@@ -16,16 +16,17 @@ fn local_path(s: &str) -> PlPath {
 
 fn main() {
     let config = AppConfig::load();
+    let base_seed = config.rules.global.seed as u64;
     let count = config.customer.control.customer_count;
     let total_start = Instant::now();
 
     fs::create_dir_all("data/output").expect("Could not create the directory");
 
-    println!("🚀 Starting RiskFabric Synthetic Data Generation (Chunked Mode)");
+    println!("🚀 Starting RiskFabric Synthetic Data Generation (seed: {})", base_seed);
 
     // --- 1. Customers ---
     let start = Instant::now();
-    let customers = customer_gen::generate_customers(count);
+    let customers = customer_gen::generate_customers(count, base_seed);
     println!("   -> Customer generation took: {:?}", start.elapsed());
 
     let start_write = Instant::now();
@@ -67,7 +68,7 @@ fn main() {
 
     // --- 2. Accounts ---
     let start = Instant::now();
-    let accounts = account_gen::generate_accounts(customer_ids);
+    let accounts = account_gen::generate_accounts(customer_ids, base_seed);
     println!("   -> Account generation took: {:?}", start.elapsed());
 
     let start_write = Instant::now();
@@ -76,7 +77,7 @@ fn main() {
         "customer_id" => accounts.iter().map(|a| a.customer_id.clone()).collect::<Vec<_>>(),
         "bank_id" => accounts.iter().map(|a| a.bank_id.clone()).collect::<Vec<_>>(),
         "account_no" => accounts.iter().map(|a| a.account_no.clone()).collect::<Vec<_>>(),
-        "account_type" => accounts.iter().map(|a| a.account_no.clone()).collect::<Vec<_>>(),
+        "account_type" => accounts.iter().map(|a| a.account_type.clone()).collect::<Vec<_>>(),
         "balance" => accounts.iter().map(|a| a.balance).collect::<Vec<_>>(),
         "status" => accounts.iter().map(|a| a.account_status.clone()).collect::<Vec<_>>(),
         "creation_date" => accounts.iter().map(|a| a.creation_date.clone()).collect::<Vec<_>>()
@@ -95,7 +96,7 @@ fn main() {
 
     // --- 3. Cards ---
     let start = Instant::now();
-    let cards = card_gen::generate_for_accounts(&accounts);
+    let cards = card_gen::generate_for_accounts(&accounts, base_seed);
     println!("   -> Card generation took: {:?}", start.elapsed());
 
     let start_write = Instant::now();

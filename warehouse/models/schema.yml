@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: stg_merchants
+    description: "Staging model for merchants data from OSM."
+  - name: stg_residential
+    description: "Staging model for residential data from OSM."
+  - name: mart_merchants
+    description: "Mart model enriching merchants with spatial boundaries."
+    depends_on:
+      - ref('stg_merchants')
+  - name: mart_residential
+    description: "Mart model enriching residential areas with spatial boundaries."
+    depends_on:
+      - ref('stg_residential')
+  - name: mart_district_summary
+    description: "Summary model aggregating merchant and residential counts by district."
+    depends_on:
+      - ref('mart_merchants')
+      - ref('mart_residential')

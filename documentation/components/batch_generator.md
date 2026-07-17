@@ -8,12 +8,12 @@ The orchestrator outputs five primary relational tables:
 
 <div style="max-width: 350px; margin: 0 auto;">
 
-```d2
-"Customer" -> "Account": customer_id
-"Account" -> "Card": account_id
-"Card" -> "Transaction": card_id
-"Customer" -> "Card": customer_id
-"Transaction" -> "FraudMetadata": transaction_id
+```text
+Customer ──customer_id──► Account
+Account ──account_id───► Card
+Card ────card_id───────► Transaction
+Customer ──customer_id──► Card
+Transaction ─transaction_id──► FraudMetadata
 ```
 
 </div>

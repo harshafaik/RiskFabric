@@ -9,13 +9,13 @@ Each transaction execution pass generates a comprehensive transaction record and
 
 <div style="max-width: 400px; margin: 0 auto;">
 
-```d2
-Customer -> Account: customer_id
-Account -> Card: account_id
-Card -> Transaction: card_id
-Customer -> Transaction: customer_id
-Account -> Transaction: account_id
-Transaction -> FraudMetadata: transaction_id
+```text
+Customer ──customer_id──► Account
+Account ──account_id───► Card
+Card ────card_id───────► Transaction
+Customer ──customer_id──► Transaction
+Account ──account_id───► Transaction
+Transaction ─transaction_id──► FraudMetadata
 ```
 </div>
 <details>

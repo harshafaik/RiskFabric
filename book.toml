@@ -8,12 +8,6 @@ title = "RiskFabric Documentation"
 command = "mdbook-mermaid"
 optional = true
 
-[preprocessor.d2]
-command = "mdbook-d2"
-optional = true
-theme-id = "0"
-dark-theme-id = "200"
-
 [output.html]
 git-repository-url = "https://github.com/harshafaik/riskfabric"
 additional-js = ["documentation/mermaid.js"]

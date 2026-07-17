@@ -9,10 +9,10 @@ Each customer profile consists of several sub-profiles holding geographical, fin
 
 <div style="max-width: 500px; margin: 0 auto;">
 
-```d2
-Customer <- GeoLocation
-Customer <- FinancialProfile
-Customer <- DeviceProfile
+```text
+Customer ◄── GeoLocation
+Customer ◄── FinancialProfile
+Customer ◄── DeviceProfile
 ```
 </div>
 <details>

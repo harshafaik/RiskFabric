@@ -9,10 +9,10 @@ Each account and card record maintains consistent relations back to the customer
 
 <div style="max-width: 400px; margin: 0 auto;">
 
-```d2
-Customer -> Account: customer_id
-Account -> Card: account_id
-Customer -> Card: customer_id
+```text
+Customer ──customer_id──► Account
+Account ──account_id───► Card
+Customer ──customer_id──► Card
 ```
 </div>
 

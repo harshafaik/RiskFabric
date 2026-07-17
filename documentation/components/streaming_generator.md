@@ -9,17 +9,10 @@ The streaming generator interacts with the following queues, files, and payload 
 
 <div style="max-width: 500px; margin: 0 auto;">
 
-```d2
-Transaction -> UnlabeledTransaction: mirrors, omits labels {
-  style.stroke-dash: 3
-}
-UnlabeledTransaction -> raw_transactions: publishes
-raw_transactions: "Kafka Topic\nraw_transactions"
-
-UnlabeledTransaction -> ground_truth_csv: verification mode {
-  style.stroke-dash: 3
-}
-ground_truth_csv: "Local File\nground_truth.csv"
+```text
+Transaction ─mirrors, omits labels─► UnlabeledTransaction
+UnlabeledTransaction ─publishes──► raw_transactions (Kafka topic)
+UnlabeledTransaction ─verification─► ground_truth.csv (local)
 ```
 </div>
 <details>

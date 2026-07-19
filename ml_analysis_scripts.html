@@ -182,13 +182,17 @@
 <p>Beyond the core training (<code>src/ml/train_xgboost.py</code>) and scoring (<code>src/ml/scorer.py</code>) pipelines, the <code>src/ml/</code> directory contains a suite of analysis, calibration, evaluation, and data generation scripts. Each operates independently against DuckDB/Parquet Gold snapshots or the XGBoost model artifacts in <code>models/</code>.</p>
 <h2 id="script-reference"><a class="header" href="#script-reference">Script Reference</a></h2>
 <h3 id="srcmlcompute_thresholdspy"><a class="header" href="#srcmlcompute_thresholdspy"><code>src/ml/compute_thresholds.py</code></a></h3>
-<p>Calculates precision-recall trade-off operating points for the fraud model. Queries the Gold Parquet snapshot via DuckDB, computes precision-recall curves, and outputs threshold layers at multiple recall-fidelity targets (e.g., 95% precision, 90% recall). These thresholds are consumed by <code>src/ml/scorer.py</code> for real-time decision boundaries.</p>
+<p>Calculates precision-recall trade-off operating points for the fraud model. Queries the Gold Parquet snapshot via DuckDB, loads the isotonic calibrated model, computes precision-recall curves, and writes <code>data/config/runtime_thresholds.json</code> — which contains the <code>flagging_threshold</code> at ~50% recall plus operational layer boundaries — for consumption by <code>src/ml/scorer.py</code>.</p>
 <p><strong>Consumes:</strong> <code>models/calibrated_fraud_model_isotonic.pkl</code>, Gold Parquet snapshot.
-<strong>Produces:</strong> Threshold operating point report.</p>
+<strong>Produces:</strong> <code>data/config/runtime_thresholds.json</code> (runtime config), operational threshold report.</p>
 <h3 id="srcmlverify_leakagepy"><a class="header" href="#srcmlverify_leakagepy"><code>src/ml/verify_leakage.py</code></a></h3>
 <p>Validates that training-serving feature alignment is maintained. Queries the Gold Parquet snapshot via DuckDB, reconstructs features using the same transform pipeline as <code>src/etl/features/</code>, and compares against the stored values. Detects mismatches indicating training-serving skew.</p>
 <p><strong>Consumes:</strong> Latest model JSON from <code>models/</code> (auto-discovered via <code>model_utils</code>), Gold Parquet snapshot.
 <strong>Produces:</strong> Leakage verification report.</p>
+<h3 id="srcmltest_scorer_invariantspy"><a class="header" href="#srcmltest_scorer_invariantspy"><code>src/ml/test_scorer_invariants.py</code></a></h3>
+<p>Pre-deployment invariant tests for the real-time scorer. Four assertions catch silent training-serving skew: (1) every model feature must be produced by the scorer's feature dictionary; (2) <code>time_since_last_transaction</code> must never be negative; (3) <code>time_since_last_transaction</code> must be positive when a prior timestamp exists in Redis; (4) <code>hour_deviation_from_norm</code> must vary with the transaction hour. Uses mocked Redis — no live infrastructure required.</p>
+<p><strong>Consumes:</strong> Latest model JSON from <code>models/</code> (auto-discovered via <code>model_utils</code>).
+<strong>Produces:</strong> Test pass/fail report via pytest.</p>
 <h3 id="srcmltest_modelpy"><a class="header" href="#srcmltest_modelpy"><code>src/ml/test_model.py</code></a></h3>
 <p>Lightweight model smoke test. Loads the trained model, reads the Gold Parquet snapshot via DuckDB, runs inference on the full dataset, and outputs a sklearn <code>classification_report</code> with AUC, confusion matrix, and per-class precision/recall. Used as a sanity check after training or before deploying a new model version.</p>
 <p><strong>Consumes:</strong> Latest model JSON from <code>models/</code> (auto-discovered via <code>model_utils</code>), Gold Parquet snapshot.

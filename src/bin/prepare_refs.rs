@@ -28,7 +28,7 @@ enum Commands {
         #[arg(
             short,
             long,
-            default_value = "postgres://harshafaik:123@localhost:5432/riskfabric"
+            default_value = ""
         )]
         db: String,
     },
@@ -57,7 +57,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::ExtractNodes { pbf, db } => run_extract_nodes(&pbf, &db)?,
+        Commands::ExtractNodes { pbf, db } => {
+            let db_url = if db.is_empty() {
+                std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+                    eprintln!("ERROR: No database URL provided. Set DATABASE_URL or use --db.");
+                    std::process::exit(1);
+                })
+            } else {
+                db
+            };
+            run_extract_nodes(&pbf, &db_url)?
+        }
         Commands::MapCityState { pbf } => run_map_city_state(&pbf)?,
         Commands::ParseDistricts { pbf } => run_parse_districts(&pbf)?,
         Commands::MapStateDistricts { pbf } => run_map_state_districts(&pbf)?,

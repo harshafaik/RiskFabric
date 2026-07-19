@@ -31,3 +31,6 @@ data/gold/
 
 # python virtual environment
 .venv/
+
+# environment files
+.env

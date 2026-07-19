@@ -4,7 +4,9 @@ use std::fs::File;
 use std::path::Path;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut client = Client::connect("postgres://harshafaik:123@localhost:5432/riskfabric", NoTls)?;
+    let db_url = std::env::var("DATABASE_URL")
+        .unwrap_or_else(|_| "postgres://user:pass@localhost:5432/riskfabric".to_string());
+    let mut client = Client::connect(&db_url, NoTls)?;
     let output_dir = Path::new("data/references");
     if !output_dir.exists() {
         std::fs::create_dir_all(output_dir)?;

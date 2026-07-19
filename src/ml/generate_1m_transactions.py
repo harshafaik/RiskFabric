@@ -158,21 +158,6 @@ def main():
         conn.autocommit = True
         cur = conn.cursor()
         
-        # Ensure cases table is created
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS cases (
-                id SERIAL PRIMARY KEY,
-                transaction_id VARCHAR(255) NOT NULL UNIQUE,
-                score DOUBLE PRECISION NOT NULL,
-                status VARCHAR(50) NOT NULL DEFAULT 'pending',
-                flagged_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                reviewed_by VARCHAR(255),
-                reviewed_at TIMESTAMP WITH TIME ZONE,
-                notes TEXT,
-                flag_reasons JSONB
-            );
-        """)
-        
         print("📥 Copying data into PostgreSQL using COPY protocol...")
         cur.copy_from(
             data_buffer, 

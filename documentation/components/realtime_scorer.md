@@ -25,7 +25,7 @@ The scoring service (`scorer.py`) is the real-time inference engine that consume
 | Key Pattern | Type | Description |
 | :--- | :--- | :--- |
 | `cust:{customer_id}:stats` | Hash (`count`, `mean`, `M2`) | Welford accumulator state for per-customer amount z-score computation. |
-| `cust:{customer_id}:agg` | Hash (`night_ratio`, ...) | Pre-seeded customer aggregate features from `seed_redis.py`. |
+| `cust:{customer_id}:agg` | Hash (`night_ratio`, `mean_hour`, ...) | Pre-seeded customer aggregate features from `seed_redis.py`. `mean_hour` is the customer's mean transaction hour, used for `hour_deviation_from_norm`. |
 | `card:{card_id}:last_ts` | String (Unix timestamp) | Timestamp of the card's most recent transaction, used to compute `time_since_last_transaction`. |
 | `card:{card_id}:burst` | Sorted Set (score = Unix timestamp) | Sliding 60-second transaction window per card for rapid-fire detection; entries outside the window are pruned on each update. |
 | `card:{card_id}:history` | List (JSON strings, max 10) | Ring buffer of the last 10 transaction payloads per card, used for `merchant_category_switch_flag` and `escalating_amounts_flag`. |
@@ -41,12 +41,12 @@ The scoring service (`scorer.py`) is the real-time inference engine that consume
 
 **Feature Alignment at Inference Time** prevents training-serving skew. Before calling `predict_proba`, the service reads `model.get_booster().feature_names` and `feature_types` directly from the loaded booster to determine the expected column order and types. Missing feature columns are filled with `0.0`. Each column is then cast to the exact dtype the booster expects (`"c"` → `category`, `"float"` → `float32`, `"int"` → `int32`). The DataFrame is reordered to match `feature_names` before prediction. If inference fails despite alignment, the batch falls back to a probability of `0.0` for all records.
 
+**Config-Driven Threshold** is loaded at startup from `data/config/runtime_thresholds.json`, which is produced by `compute_thresholds.py` from the precision-recall curve on the test set. If the config file is missing or malformed, the scorer falls back to a default of `0.85` and logs a warning. The `compute_thresholds.py` script computes the flagging threshold at ~50% recall and exports it alongside operational layer boundaries (auto-block, manual investigation, passive detection) into the same JSON file.
+
+**Invariant Tests** (`test_scorer_invariants.py`) run before deployment to catch silent training-serving skew. Four assertions are enforced: (1) every model feature must be produced by the scorer's feature dictionary — missing features cause silent 0.0 fill; (2) `time_since_last_transaction` must never be negative (catches clock skew or bad seed data); (3) `time_since_last_transaction` must be positive when a prior timestamp exists in Redis; (4) `hour_deviation_from_norm` must vary with the transaction hour and not be silently zero. These tests caught the `merchant_category` vs `t.merchant_category` naming mismatch at first run.
+
 `scorer.py` is the terminal component of the **Streaming layer**. It consumes from the `raw_transactions` Kafka topic produced by `stream.rs`, reads behavioral context from Redis seeded by `seed_redis.py`, and writes scored decisions to the `fraud_scores` ClickHouse table. It depends on a trained model JSON in `models/` being present and valid before startup.
 
 ## Known Issues
-
-The fraud flagging threshold is hardcoded as `THRESHOLD = 0.85` at the top of the module. This value was not derived from precision-recall analysis on the test set — it is an arbitrary constant. A threshold of 0.85 on a highly imbalanced dataset may produce a very low true positive rate depending on the score distribution. The threshold should be computed from the test set using `compute_thresholds.py` (which exists in `src/ml/`) and loaded from a configuration file rather than hardcoded.
-
-The `hour_deviation_from_norm` feature is returned as a hardcoded `0.0` placeholder from `compute_features`. This feature is one of the 12 in the training feature set, meaning the model was trained on historical values but receives a constant zero at inference time. The temporal aggregation logic needed to compute this value per customer is not yet implemented in `seed_redis.py`. This constitutes a silent training-serving skew — the model's performance in production is degraded relative to offline evaluation without any error or warning.
 
 The `cf_night_tx_ratio` field is fetched from `cust:{customer_id}:agg` in Redis but is not included in the final feature dictionary returned by `compute_features` in a way that is consumed by the model — the training feature set in `train_xgboost.py` does not include `cf_night_tx_ratio` as a named column. This means the Redis fetch is wasted on every transaction. Auditing the full feature alignment between the training feature list and the inference feature dictionary is required to identify and eliminate all such mismatches.

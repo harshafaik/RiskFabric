@@ -12,7 +12,24 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Deploy mdBook](https://github.com/harshafaik/riskfabric/actions/workflows/deploy_book.yml/badge.svg)](https://github.com/harshafaik/riskfabric/actions/workflows/deploy_book.yml)
 
-RiskFabric is a fraud intelligence platform designed for building fraud detection models using synthetic financial records. 
+RiskFabric is a fraud intelligence platform designed for building fraud detection models using synthetic financial records.
+
+## System Pipeline
+
+```mermaid
+flowchart LR
+    classDef stage fill:#1b2a3a,stroke:#378ADD,stroke-width:1.5px,rx:8px,ry:8px,color:#E6F1FB,font-size:16px;
+
+    A["World Building<br/>OSM · PostGIS · dbt"]:::stage
+    B["Simulation Engine<br/>Rust"]:::stage
+    C["Data Pipeline<br/>Bronze → Silver → Gold"]:::stage
+    D["ML Training & Scoring<br/>XGBoost · Calibration"]:::stage
+    E["Case Management<br/>ClickHouse → Postgres → Django"]:::stage
+
+    A --> B --> C --> D --> E
+```
+
+**Figure 1:** System Pipeline — high-level data flow from world building through case management.
 
 ## ✨ Features
 - **Agent-Based Realism**: Simulates the full lifecycle of `Customers`, `Accounts`, and `Cards`, with behavioral spend profiles driven by real-world heuristics and deterministic seeded RNG for reproducibility.
@@ -59,31 +76,46 @@ podman compose exec scorer streamlit run src/ml/dashboard.py
 podman compose up --build -d
 ```
 
-## 🗄️ Case Management OLTP Store
+## 📁 Project Structure
 
-### Architecture (OLTP vs. OLAP)
-RiskFabric separates operational case management workloads (OLTP) from analytical workloads (OLAP) using distinct engines:
-- **ClickHouse (OLAP)**: Optimizes bulk-analytical queries. Stores scored transactions and powers Grafana fraud monitoring dashboards.
-- **PostgreSQL (OLTP)**: Optimizes operational, read-write, single-record transactions for case management.
+### Root Directory
 
-We run a dedicated Postgres service (`oltp-postgres`) separate from ClickHouse to isolate analytical queries from transactional updates.
-
-### Running Locally
-To start the database and the case management admin panel:
-```bash
-podman compose up --build -d
+```
+📁 RiskFabric
+ │
+ ├─ ⚙️ Engine
+ │   ├─ src/ — Rust Core (generators, ETL, pipeline)
+ │   └─ Cargo.toml
+ │
+ ├─ 🧠 ML & Data
+ │   ├─ src/ml/ — Python ML (training, scoring, explainability)
+ │   ├─ models/ — XGBoost artifacts
+ │   ├─ reports/ — SHAP analysis outputs
+ │   ├─ warehouse/ — dbt models + PostGIS refs
+ │   ├─ data/ — Configs, Parquet inputs/outputs
+ │   └─ dlt/ — Data Load Tool pipelines
+ │
+ ├─ ☁️ Ops & Infra
+ │   ├─ case_admin/ — Django admin (case management)
+ │   ├─ deploy/ — Terraform (GCP deployment)
+ │   ├─ docker/ — ClickHouse init, Grafana provisioning
+ │   └─ docker-compose.yml
+ │
+ └─ 📖 Docs (documentation/ — mdBook)
 ```
 
-Once running:
-- **Django Admin Interface**: Accessible at [http://localhost:8001/admin](http://localhost:8001/admin).
-- **Default Credentials**: Username: `admin`, Password: `admin`.
+## Modules
 
-### Ingestion Path Simulation
-To simulate operational ingestion of flagged transactions into the case store, run:
-```bash
-podman compose exec scorer python src/ml/ingest_cases.py
-```
-This script pulls flagged transactions from ClickHouse's `fraud_scores` table (seeded by the scorer on startup) and upserts them into the Postgres `cases` table.
+- [Data Generation Modules](documentation/simulation_index.md)
+- [Data & Engineering](documentation/engineering_index.md)
+- [Machine Learning Systems](documentation/ml_systems_index.md)
+- [Infrastructure & Operations](documentation/infrastructure_index.md)
+- [Conceptual Explanations](documentation/concepts_index.md)
+- [Results & Monitoring](documentation/results_index.md)
+- [Decisions](documentation/decisions_index.md)
+- [Defunct Implementations](documentation/defunct_index.md)
+- [Codebase Components](documentation/components/index.md)
 
 ---
+
 *Developed by harshafaik*

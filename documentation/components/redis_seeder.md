@@ -23,7 +23,7 @@ flowchart LR
 | Key Pattern | Redis Type | Fields Written | Source Query |
 | :--- | :--- | :--- | :--- |
 | `cust:{customer_id}:stats` | Hash | `count`, `mean`, `M2` | Per-customer `count()`, `avg(amount)`, `sum((amount - mean)²)` from `fact_transactions_gold`. |
-| `cust:{customer_id}:agg` | Hash | `fraud_rate`, `night_ratio` | Per-customer `cf_fraud_rate`, `cf_night_tx_ratio` from `fact_transactions_gold`. |
+| `cust:{customer_id}:agg` | Hash | `fraud_rate`, `night_ratio`, `mean_hour` | Per-customer `cf_fraud_rate`, `cf_night_tx_ratio`, and `avg(hour(timestamp))` from `fact_transactions_gold`. |
 | `merch:{merchant_id}:agg` | Hash | `fraud_rate` | Per-merchant `avg(is_fraud)` from `fact_transactions_gold`. |
 | `card:{card_id}:history` | List | JSON objects: `transaction_id`, `merchant_category`, `amount`, `timestamp`, `location_lat`, `location_long` | Last 10 transactions per card ordered by `timestamp DESC`, via window function `row_number()`. |
 | `card:{card_id}:last_ts` | String | Unix timestamp of most recent transaction | Written only for `rn = 1` (the latest transaction per card). |
@@ -38,7 +38,7 @@ flowchart LR
 
 **Windowed Card History via Row Number** selects the last 10 transactions per card using a `row_number() OVER (PARTITION BY card_id ORDER BY timestamp DESC)` window function and filters to `rn <= 10`. The results are written as JSON strings to a Redis List at `card:{card_id}:history` via `RPUSH`. Location and timestamp state (`card:{card_id}:last_ts`, `card:{card_id}:loc`) are written only for the row where `rn = 1`, ensuring that the scorer's initial velocity and time-since calculations are anchored to the most recent known transaction per card.
 
-**Fault-Tolerant Query Execution** wraps each of the five seeding queries in a `try/except` block that prints a warning and continues rather than aborting. This means the seeder will complete successfully even if `fact_transactions_gold` is partially populated or missing certain columns, leaving the corresponding Redis keys unseeded. The `scorer.py` handles missing Redis keys by defaulting to zero values for the affected features.
+**Fault-Tolerant Query Execution** wraps each of the six seeding queries in a `try/except` block that prints a warning and continues rather than aborting. This means the seeder will complete successfully even if `fact_transactions_gold` is partially populated or missing certain columns, leaving the corresponding Redis keys unseeded. The `scorer.py` handles missing Redis keys by defaulting to zero values for the affected features.
 
 `seed_redis.py` is a one-shot synchronization utility that bridges the **Data layer** (Gold Parquet snapshot via DuckDB) and the **Scoring layer** (Redis). It has no upstream or downstream runtime dependency beyond requiring the Gold Parquet snapshot to exist and Redis to be available. It does not need to be re-run unless the Gold snapshot is rebuilt or Redis is flushed.
 

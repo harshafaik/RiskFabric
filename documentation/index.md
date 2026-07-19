@@ -1,27 +1,79 @@
 # RiskFabric
 
-RiskFabric is an end-to-end fraud intelligence platform that generates synthetic financial data, trains XGBoost detection models, and scores transactions in real time against live behavioral patterns. It simulates the full lifecycle of customers, accounts, cards, and transactions with geographic fidelity sourced from OpenStreetMap, injects realistic fraud signatures, and surfaces flagged cases to analysts through a Django case management interface.
+![Rust](https://img.shields.io/badge/language-Rust-orange.svg)
+![Python](https://img.shields.io/badge/language-Python-blue.svg)
+![Polars](https://img.shields.io/badge/engine-Polars%200.51.0-blue.svg)
+![XGBoost](https://img.shields.io/badge/ML-XGBoost-36A0A0.svg)
+![ClickHouse](https://img.shields.io/badge/analytics-ClickHouse-yellow.svg)
+![Grafana](https://img.shields.io/badge/monitoring-Grafana-F46800.svg)
+![Redpanda](https://img.shields.io/badge/streaming-Redpanda-red.svg)
+![Redis](https://img.shields.io/badge/store-Redis-red.svg)
+![Podman](https://img.shields.io/badge/container-Podman-892CA0.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+RiskFabric is a fraud intelligence platform designed for building fraud detection models using synthetic financial records.
+
+## System Pipeline
+
+```mermaid
+flowchart LR
+    classDef stage fill:#1b2a3a,stroke:#378ADD,stroke-width:1.5px,rx:8px,ry:8px,color:#E6F1FB,font-size:16px;
+
+    A["World Building<br/>OSM · PostGIS · dbt"]:::stage
+    B["Simulation Engine<br/>Rust"]:::stage
+    C["Data Pipeline<br/>Bronze → Silver → Gold"]:::stage
+    D["ML Training & Scoring<br/>XGBoost · Calibration"]:::stage
+    E["Case Management<br/>ClickHouse → Postgres → Django"]:::stage
+
+    A --> B --> C --> D --> E
+```
+
+**<a id="fig-1"></a>Figure 1:** System Pipeline — high-level data flow from world building through case management.
 
 ## ✨ Features
-- **Synthetic Data Generation**: Rust-based generators create realistic customer profiles, accounts, cards, and transactions at scale, with configurable behavioral spend profiles and geographic distributions.
-- **Geographic Realism**: OpenStreetMap reference points and H3 hexagonal indexing drive residential and merchant placement, with location-type-aware clustering (Metro/Urban/Rural) and ~500m spatial jitter to prevent coordinate clumping.
-- **Fraud Injection Engine**: Simulates UPI scams, Account Takeover (ATO), and Card Not Present (CNP) fraud using configurable signatures that corrupt transaction metadata, amounts, channels, and temporal patterns (coordinated campaigns yet to be implemented).
-- **Real-Time Scoring Pipeline**: Kafka consumer reads transaction streams, enriches with Redis feature lookups, runs XGBoost inference, and writes fraud scores to ClickHouse — all visible on Grafana dashboards with sub-second latency.
-- **ML Training & Evaluation**: DuckDB queries against Gold Parquet tables feed XGBoost training with Platt/Isotonic calibration, SHAP feature analysis, data drift simulation, and leakage audits.
-- **Analyst Case Management**: Flagged transactions are ingested into a PostgreSQL-backed Django admin with a state-machine review workflow (pending → investigating → confirmed fraud / cleared / false positive), notes, and SHAP explanations.
+- **Agent-Based Realism**: Simulates the full lifecycle of `Customers`, `Accounts`, and `Cards`, with behavioral spend profiles driven by real-world heuristics and deterministic seeded RNG for reproducibility.
+- **Geographic Fidelity**: Integrates **OpenStreetMap (OSM)** and **H3** hexagonal indexing for realistic spatial spend patterns and location anomalies.
+- **Sophisticated Fraud Injection**: Includes signatures for UPI Scams, Account Takeover (ATO), Card Not Present (CNP) fraud, friendly fraud, velocity abuse, and coordinated campaigns via the adversary logic engine.
+- **Real-time Scoring**: Kafka/Redpanda consumer with Redis feature store, XGBoost inference, and ClickHouse persistence.
+- **Model Explainability**: SHAP global and per-profile analysis, calibration (Platt/Isotonic), drift simulation, and a Streamlit evaluation dashboard.
+- **Case Management**: Django admin panel backed by a dedicated PostgreSQL OLTP store for investigator review workflows.
+- **Parquet-native ETL**: Medallion architecture (bronze → silver → gold) with no-leak expanding-window features and dbt analytical models.
 
 ## 🛠️ Tech Stack
-- **Core Engine**: Rust (Tokio, Polars, rdkafka, h3o, osmpbf, Rayon, serde, clap)
-- **Real-time Streaming**: Redpanda (Kafka-compatible)
-- **Data Processing**: Polars (batch ETL), DuckDB (embedded training queries), dbt + PostGIS (OSM enrichment)
-- **Data Stores**: PostgreSQL + PostGIS (spatial staging), ClickHouse (real-time fraud scores), Redis (feature store), Parquet (Bronze/Silver/Gold)
-- **Data Ingestion**: dlt (reference data export from Postgres to Parquet)
-- **Machine Learning**: XGBoost (classifier), scikit-learn (evaluation, calibration), SHAP (feature explanation), NumPy, pandas
-- **Real-time Scoring**: Kafka consumer → Redis lookups → XGBoost inference → ClickHouse writes
-- **Dashboards**: Grafana (ClickHouse-backed)
-- **Case Management**: Django 4.2 + Jazzmin — analyst review UI for investigating flagged transactions, updating case statuses, and recording dispositions
-- **Infrastructure**: Docker Compose (7 services), Podman, Terraform (AWS)
-- **Documentation**: mdBook
+- **Core Engine**: Rust (generators, ETL, pipeline, streaming)
+- **Real-time Streaming**: Redpanda (Kafka-compatible), `rdkafka`, and Tokio async runtime
+- **Data Processing**: Polars (batch/streaming feature engineering)
+- **Data Warehouse**: Parquet (medallion ETL via Polars) → DuckDB (embedded training query engine) → dbt (analytical enrichment)
+- **Analytical Store**: ClickHouse (fraud scores, Grafana dashboards)
+- **Operational Store**: PostgreSQL (case management OLTP)
+- **Feature Store**: Redis (real-time feature serving)
+- **Machine Learning**: XGBoost (training, inference), SHAP (explainability), Scikit-learn (calibration), Streamlit (evaluation dashboard)
+- **Infrastructure**: Podman/Docker Compose, Terraform (GCP deployment)
+- **Docs**: mdBook (published via GitHub Actions)
+
+## 🚀 Quick Start
+
+```bash
+# Build
+cargo build --release
+
+# Generate synthetic data (customers, accounts, cards, transactions)
+cargo run --bin generate
+
+# Run the Parquet-native ETL pipeline (bronze → silver → gold)
+cargo run --bin riskfabric-etl silver-all
+cargo run --bin riskfabric-etl gold-master
+
+# Train + evaluate the XGBoost model
+python src/ml/train_xgboost.py
+python src/ml/test_model.py
+
+# Launch the Streamlit evaluation dashboard
+podman compose exec scorer streamlit run src/ml/dashboard.py
+
+# Start the full stack (ClickHouse, Redpanda, Redis, scorer, case-admin, Grafana)
+podman compose up --build -d
+```
 
 ## 📁 Project Structure
 
@@ -51,3 +103,18 @@ RiskFabric is an end-to-end fraud intelligence platform that generates synthetic
  └─ 📖 Docs (documentation/ — mdBook)
 ```
 
+## Modules
+
+- [Data Generation Modules](simulation_index.md)
+- [Data & Engineering](engineering_index.md)
+- [Machine Learning Systems](ml_systems_index.md)
+- [Infrastructure & Operations](infrastructure_index.md)
+- [Conceptual Explanations](concepts_index.md)
+- [Results & Monitoring](results_index.md)
+- [Decisions](decisions_index.md)
+- [Defunct Implementations](defunct_index.md)
+- [Codebase Components](components/index.md)
+
+---
+
+*Developed by harshafaik*

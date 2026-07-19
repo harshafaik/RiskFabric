@@ -16,7 +16,22 @@ REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST", "localhost")
 TOPIC = "raw_transactions"
 GROUP_ID = "fraud_scorer_v1"
-THRESHOLD = 0.85
+
+DEFAULT_THRESHOLD = 0.85
+
+def _load_threshold():
+    config_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "config", "runtime_thresholds.json")
+    try:
+        with open(config_path) as f:
+            config = json.load(f)
+        threshold = float(config.get("flagging_threshold", DEFAULT_THRESHOLD))
+        print(f"   -> Loaded flagging threshold from config: {threshold:.4f}")
+        return threshold
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, ValueError) as e:
+        print(f"   ⚠️ Could not load runtime_thresholds.json ({e}), using default threshold {DEFAULT_THRESHOLD}")
+        return DEFAULT_THRESHOLD
+
+THRESHOLD = _load_threshold()
 
 CATEGORIES = {
     "merchant_category": [
@@ -28,7 +43,13 @@ CATEGORIES = {
 }
 
 # --- State Management (Redis) ---
-r = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
+_r = None
+
+def _get_redis():
+    global _r
+    if _r is None:
+        _r = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
+    return _r
 
 class WelfordState:
     """Maintains running mean/std for Z-score calculation."""
@@ -48,14 +69,14 @@ class WelfordState:
         variance = self.M2 / self.count if self.count > 1 else 0.0
         return self.mean, math.sqrt(variance)
 
-def get_customer_stats(customer_id):
-    stats = r.hgetall(f"cust:{customer_id}:stats")
+def get_customer_stats(customer_id, redis_client):
+    stats = redis_client.hgetall(f"cust:{customer_id}:stats")
     if not stats:
         return WelfordState()
     return WelfordState(int(stats['count']), float(stats['mean']), float(stats['M2']))
 
-def save_customer_stats(customer_id, state):
-    r.hset(f"cust:{customer_id}:stats", mapping={
+def save_customer_stats(customer_id, state, redis_client):
+    redis_client.hset(f"cust:{customer_id}:stats", mapping={
         "count": state.count,
         "mean": state.mean,
         "M2": state.M2
@@ -72,11 +93,11 @@ def compute_features(tx, redis_client):
     ts_unix = ts.timestamp()
 
     # 1. Z-Score (Welford's)
-    state = get_customer_stats(customer_id)
+    state = get_customer_stats(customer_id, redis_client)
     mean, std = state.get_stats()
     z_score = (amount - mean) / std if std > 0 else 0.0
     state.update(amount)
-    save_customer_stats(customer_id, state)
+    save_customer_stats(customer_id, state, redis_client)
 
     # 2. Time Since Last (per card)
     last_ts = redis_client.get(f"card:{card_id}:last_ts")
@@ -85,39 +106,39 @@ def compute_features(tx, redis_client):
 
     # 3. Burst Detection (Rapid Fire)
     burst_window = 60 # seconds
-    r.zadd(f"card:{card_id}:burst", {tx['transaction_id']: ts_unix})
-    r.zremrangebyscore(f"card:{card_id}:burst", 0, ts_unix - burst_window)
-    burst_count = r.zcard(f"card:{card_id}:burst")
+    redis_client.zadd(f"card:{card_id}:burst", {tx['transaction_id']: ts_unix})
+    redis_client.zremrangebyscore(f"card:{card_id}:burst", 0, ts_unix - burst_window)
+    burst_count = redis_client.zcard(f"card:{card_id}:burst")
     rapid_fire = 1 if burst_count > 3 else 0
 
     # 4. History (Sequence & Category Switch)
     history_key = f"card:{card_id}:history"
-    last_tx_raw = r.lindex(history_key, 0)
+    last_tx_raw = redis_client.lindex(history_key, 0)
     prev_tx = json.loads(last_tx_raw) if last_tx_raw else None
     
     cat_switch = 1 if prev_tx and prev_tx['merchant_category'] != tx['merchant_category'] else 0
     escalating = 1 if prev_tx and tx['amount'] > prev_tx['amount'] else 0
     
-    r.lpush(history_key, json.dumps(tx))
-    r.ltrim(history_key, 0, 9) # Keep last 10
+    redis_client.lpush(history_key, json.dumps(tx))
+    redis_client.ltrim(history_key, 0, 9) # Keep last 10
     
-    seq_num = r.incr(f"card:{card_id}:seq")
+    seq_num = redis_client.incr(f"card:{card_id}:seq")
 
     # 5. Spatial Velocity
-    prev_loc = r.hgetall(f"card:{card_id}:loc")
+    prev_loc = redis_client.hgetall(f"card:{card_id}:loc")
     velocity = 0.0
     if prev_loc and time_since > 0:
         dist = math.sqrt((tx['location_lat'] - float(prev_loc['lat']))**2 + 
                          (tx['location_long'] - float(prev_loc['lon']))**2) * 111.0
         velocity = dist / (time_since / 3600.0)
-    r.hset(f"card:{card_id}:loc", mapping={"lat": tx['location_lat'], "lon": tx['location_long']})
+    redis_client.hset(f"card:{card_id}:loc", mapping={"lat": tx['location_lat'], "lon": tx['location_long']})
 
     # 6. Customer & Merchant Aggregate Features (from Redis)
-    cf_stats = r.hgetall(f"cust:{customer_id}:agg")
-    mf_stats = r.hgetall(f"merch:{merchant_id}:agg")
+    cf_stats = redis_client.hgetall(f"cust:{customer_id}:agg")
+    mf_stats = redis_client.hgetall(f"merch:{merchant_id}:agg")
 
     return {
-        "t.merchant_category": tx['merchant_category'], # Match Gold table name
+        "merchant_category": tx['merchant_category'],
         "transaction_channel": tx['transaction_channel'],
         "card_present": 1 if tx['card_present'] else 0,
         "time_since_last_transaction": time_since,
@@ -128,7 +149,7 @@ def compute_features(tx, redis_client):
         "amount_deviation_z_score": z_score,
         "spatial_velocity": min(velocity, 1000.0),
         "cf_night_tx_ratio": float(cf_stats.get('night_ratio', 0.0)),
-        "hour_deviation_from_norm": 0.0 # Placeholder if not in Redis yet
+        "hour_deviation_from_norm": abs(ts.hour - float(cf_stats.get('mean_hour', 0.0)))
     }
 
 # --- Main Scorer ---
@@ -189,7 +210,7 @@ def main():
             tx = json.loads(msg.value().decode('utf-8'))
             
             start_feat = time.time()
-            features = compute_features(tx, r)
+            features = compute_features(tx, _get_redis())
             feat_latency = (time.time() - start_feat) * 1000 # ms
             
             records.append({

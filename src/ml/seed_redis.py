@@ -62,6 +62,17 @@ def seed():
     for row in result:
         r.hset(f"cust:{row[0]}:agg", mapping={"fraud_rate": row[1] or 0.0, "night_ratio": row[2] or 0.0})
 
+    # 2b. Customer mean transaction hour (for hour_deviation_from_norm)
+    print("   -> Seeding customer mean transaction hour...")
+    result = conn.execute(f"""
+        SELECT customer_id, avg(hour(timestamp)) as mean_hour
+        FROM '{gold_path}'
+        GROUP BY customer_id
+    """).fetchall()
+
+    for row in result:
+        r.hset(f"cust:{row[0]}:agg", "mean_hour", row[1] or 0.0)
+
     # 3. Merchant aggregate features (fraud_rate)
     print("   -> Seeding merchant aggregate features...")
     result = conn.execute(f"""

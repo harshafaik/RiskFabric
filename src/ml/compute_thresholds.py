@@ -2,6 +2,7 @@ import polars as pl
 import xgboost as xgb
 import numpy as np
 import os
+import json
 import pickle
 from ml_utils import load_gold_dataframe
 
@@ -126,6 +127,42 @@ def compute_threshold_layers():
     print(f"   -> Total System Alerts: {l123_cnt/total_txns:.3%} of total traffic.")
     print(f"   -> Overall System Precision: {l123_fraud/l123_cnt:.2%}")
     print("="*70)
+
+    # --- Export runtime config ---
+    from sklearn.metrics import precision_recall_curve
+    precisions, recalls, thresholds = precision_recall_curve(y, y_prob)
+
+    # Compute threshold at ~50% recall for default flagging boundary
+    target_recall = 0.50
+    idx = np.argmin(np.abs(recalls - target_recall))
+    if idx < len(thresholds):
+        flagging_threshold = round(float(thresholds[idx]), 4)
+        flagging_precision = float(precisions[idx])
+        flagging_recall = float(recalls[idx])
+    else:
+        flagging_threshold = 0.85
+        flagging_precision = 0.0
+        flagging_recall = 0.0
+
+    config = {
+        "flagging_threshold": flagging_threshold,
+        "flagging_threshold_precision": round(flagging_precision, 4),
+        "flagging_threshold_recall": round(flagging_recall, 4),
+        "operational_layers": {
+            "auto_blocking": {"min_prob": 0.90, "max_prob": 1.00},
+            "manual_investigation": {"min_prob": 0.30, "max_prob": 0.90},
+            "passive_detection": {"min_prob": 0.05, "max_prob": 0.30},
+        },
+        "computed_at": str(np.datetime64("now")),
+    }
+
+    os.makedirs("data/config", exist_ok=True)
+    config_path = "data/config/runtime_thresholds.json"
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=2)
+    print(f"\n💾 Runtime thresholds written to {config_path}")
+    print(f"   flagging_threshold: {flagging_threshold:.4f} (precision={flagging_precision:.2%}, recall={flagging_recall:.2%})")
+
 
 if __name__ == "__main__":
     compute_threshold_layers()

@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Load Mermaid via script tag
   const script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
+  script.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
   script.onload = () => {
     const getMermaidTheme = () => {
       const theme = document.documentElement.className;

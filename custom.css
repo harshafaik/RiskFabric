@@ -17,18 +17,18 @@ code, pre {
     font-family: 'IBM Plex Mono', monospace !important;
 }
 
-.mermaid-breakout {
-    width: 100vw !important;
-    position: relative !important;
-    left: 50% !important;
-    right: 50% !important;
-    margin-left: -50vw !important;
-    margin-right: -50vw !important;
+.mermaid {
     display: flex !important;
     justify-content: center !important;
+    align-items: center !important;
+    margin: 1.25rem auto !important;
+    background: transparent !important;
 }
 
-.mermaid-breakout .mermaid {
-    width: 50% !important;
+.mermaid svg {
+    max-width: 100% !important;
+    min-width: 400px !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 auto !important;
 }
-

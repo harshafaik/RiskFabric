@@ -6,12 +6,12 @@ import os
 import pickle
 import glob
 import argparse
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
     brier_score_loss
 )
+from ml_utils import split_by_timestamp
 
 RNG_SEED = 42
 
@@ -87,16 +87,13 @@ def run_drift_simulation():
     if string_cols:
         df = df.with_columns([pl.col(c).cast(pl.Categorical).to_physical().alias(c) for c in string_cols])
 
-    X = df.select(feature_cols)
-    y = df.select(target_col).to_numpy().flatten()
-
     print("🧠 Loading Isotonic Calibrated Model...")
     with open("models/calibrated_fraud_model_isotonic.pkl", "rb") as f:
         cal_model = pickle.load(f)
 
-    _, X_eval, _, y_eval = train_test_split(
-        X, y, test_size=0.5, random_state=args.seed, stratify=y
-    )
+    _, df_eval = split_by_timestamp(df, test_size=0.5)
+    X_eval = df_eval.select(feature_cols)
+    y_eval = df_eval[target_col].to_numpy().flatten()
 
     fraud_mask = (y_eval == 1)
 

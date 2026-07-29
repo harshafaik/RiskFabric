@@ -6,7 +6,6 @@ import os
 import pickle
 import glob
 from model_utils import load_model, get_model_features
-from sklearn.model_selection import train_test_split
 from sklearn.calibration import CalibratedClassifierCV, calibration_curve
 from sklearn.frozen import FrozenEstimator
 from sklearn.metrics import (
@@ -15,6 +14,7 @@ from sklearn.metrics import (
     brier_score_loss
 )
 from argparse import ArgumentParser
+from ml_utils import split_by_timestamp
 
 
 def calculate_ece(y_true, y_prob, n_bins=10):
@@ -73,19 +73,21 @@ def calibrate_and_evaluate():
         print(f"   ⚠️ Model expects features not in Gold: {missing}")
 
     string_cols = [c for c in feature_cols if df[c].dtype == pl.String]
-    if string_cols:
-        df = df.with_columns([pl.col(c).cast(pl.Categorical).to_physical().alias(c) for c in string_cols])
-
-    X = df.select(feature_cols).to_pandas()
-    y = df.select(target_col).to_numpy().flatten()
 
     print("🧠 Loading Pre-trained Model...")
-    base_model = load_model()
+    base_model = load_model(enable_categorical=True)
 
-    print("✂️ Splitting data into Calibration and Evaluation sets...")
-    X_cal, X_eval, y_cal, y_eval = train_test_split(
-        X, y, test_size=0.5, random_state=42, stratify=y
-    )
+    print("✂️ Splitting data chronologically into Calibration and Evaluation sets...")
+    df_cal, df_eval = split_by_timestamp(df, test_size=0.5)
+
+    X_cal = df_cal.select(feature_cols).to_pandas()
+    y_cal = df_cal[target_col].to_numpy().flatten()
+    X_eval = df_eval.select(feature_cols).to_pandas()
+    y_eval = df_eval[target_col].to_numpy().flatten()
+
+    for c in string_cols:
+        X_cal[c] = X_cal[c].astype("category")
+        X_eval[c] = X_eval[c].astype("category")
 
     print(f"   -> Calibration Set Size:  {len(y_cal):,}")
     print(f"   -> Evaluation Set Size:   {len(y_eval):,}")

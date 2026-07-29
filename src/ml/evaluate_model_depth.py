@@ -11,7 +11,7 @@ from sklearn.metrics import (
 )
 from sklearn.calibration import calibration_curve
 from model_utils import load_model, get_model_features
-from ml_utils import load_gold_dataframe
+from ml_utils import load_gold_dataframe, split_by_timestamp
 
 
 def run_deep_evaluation():
@@ -22,17 +22,22 @@ def run_deep_evaluation():
     feature_cols = get_model_features()
     feature_cols = [c for c in feature_cols if c in df.columns]
 
-    # Cast categoricals
     string_cols = [c for c in feature_cols if df[c].dtype == pl.String]
-    if string_cols:
-        df = df.with_columns([pl.col(c).cast(pl.Categorical).to_physical().alias(c) for c in string_cols])
+
+    _, test_df = split_by_timestamp(df, test_size=0.2)
+    test_start = test_df["timestamp"].min()
+    test_end = test_df["timestamp"].max()
+    print(f"   Evaluating on held-out test period: {test_start} → {test_end} ({len(test_df):,} rows)")
 
     print("🧠 Loading model...")
-    model = load_model()
+    model = load_model(enable_categorical=True)
 
-    X = df.select(feature_cols)
-    y = df.select(target_col).to_numpy().flatten()
-    fraud_types = df.select("fraud_type").to_numpy().flatten()
+    X = test_df.select(feature_cols).to_pandas()
+    y = test_df.select(target_col).to_numpy().flatten()
+    fraud_types = test_df.select("fraud_type").to_numpy().flatten()
+
+    for c in string_cols:
+        X[c] = X[c].astype("category")
 
     print("🔮 Generating Predictions & Probabilities...")
     y_prob = model.predict_proba(X)[:, 1]
@@ -132,8 +137,8 @@ def run_deep_evaluation():
     baselines = {}
     for col in continuous_features:
         baselines[col] = {
-            'mean': float(df.filter(none_mask)[col].mean()),
-            'std': float(df.filter(none_mask)[col].std()) or 1.0
+            'mean': float(test_df.filter(none_mask)[col].mean()),
+            'std': float(test_df.filter(none_mask)[col].std()) or 1.0
         }
         
     # Table headers
@@ -147,7 +152,7 @@ def run_deep_evaluation():
         for s in unique_scenarios:
             s_tp_mask = (fraud_types == s) & (y_prob >= 0.5)
             if np.sum(s_tp_mask) > 0:
-                s_mean = df.filter(s_tp_mask)[col].mean()
+                s_mean = test_df.filter(s_tp_mask)[col].mean()
                 z_score = (s_mean - baselines[col]['mean']) / baselines[col]['std']
                 print(f" {z_score:>11.2f}", end="")
             else:
@@ -169,12 +174,12 @@ def run_deep_evaluation():
     print("\n" + "-" * (42 + 12 * len(unique_scenarios)))
     
     for col in flag_features:
-        base_rate = df.filter(none_mask)[col].mean()
+        base_rate = test_df.filter(none_mask)[col].mean()
         print(f"{col:<30} {base_rate:>11.2%}", end="")
         for s in unique_scenarios:
             s_tp_mask = (fraud_types == s) & (y_prob >= 0.5)
             if np.sum(s_tp_mask) > 0:
-                s_rate = df.filter(s_tp_mask)[col].mean()
+                s_rate = test_df.filter(s_tp_mask)[col].mean()
                 print(f" {s_rate:>11.2%}", end="")
             else:
                 print(f" {'N/A':>11}", end="")

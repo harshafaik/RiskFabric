@@ -2,12 +2,15 @@ import polars as pl
 import xgboost as xgb
 import duckdb
 import numpy as np
-from sklearn.model_selection import train_test_split
+import yaml
 from sklearn.metrics import roc_auc_score
 import os
 import glob
 from datetime import datetime
 from argparse import ArgumentParser
+from ml_utils import split_by_timestamp
+
+DEFAULT_TUNING_PATH = "data/config/ml_tuning.yaml"
 
 
 def find_gold_snapshot(snapshot: str | None = None) -> str:
@@ -60,17 +63,15 @@ def train_model():
     print(f"🧠 Training on {len(feature_cols)} features:")
     print(f"   {feature_cols}")
 
-    train_idx, test_idx = train_test_split(
-        range(len(df)),
-        test_size=0.2,
-        random_state=42,
-        stratify=df[target_col],
-    )
+    train_df, test_df = split_by_timestamp(df, test_size=0.2)
 
-    train_df = df[train_idx]
-    test_df = df[test_idx]
+    train_start = train_df["timestamp"].min()
+    train_end = train_df["timestamp"].max()
+    test_start = test_df["timestamp"].min()
+    test_end = test_df["timestamp"].max()
 
-    print(f"   Train: {len(train_df):,} rows, Test: {len(test_df):,} rows (stratified split)")
+    print(f"   Train: {len(train_df):,} rows ({train_start} → {train_end})")
+    print(f"   Test:  {len(test_df):,} rows ({test_start} → {test_end})")
 
     X_train = train_df.select(feature_cols).to_pandas()
     y_train = train_df[target_col].to_numpy()
@@ -89,16 +90,23 @@ def train_model():
     scale_pos_weight = legitimate_count / fraud_count
     print(f"⚖️ Scale positive weight: {scale_pos_weight:.4f}")
 
+    # Load hyperparameters from config (with fallback defaults)
+    if os.path.exists(DEFAULT_TUNING_PATH):
+        with open(DEFAULT_TUNING_PATH) as f:
+            tuning = yaml.safe_load(f) or {}
+    else:
+        tuning = {}
+
     model = xgb.XGBClassifier(
-        n_estimators=100,
-        max_depth=6,
-        learning_rate=0.1,
-        objective="binary:logistic",
-        tree_method="hist",
-        enable_categorical=True,
-        random_state=42,
+        n_estimators=tuning.get("n_estimators", 100),
+        max_depth=tuning.get("max_depth", 6),
+        learning_rate=tuning.get("learning_rate", 0.1),
+        objective=tuning.get("objective", "binary:logistic"),
+        tree_method=tuning.get("tree_method", "hist"),
+        enable_categorical=tuning.get("enable_categorical", True),
+        random_state=tuning.get("random_state", 42),
         scale_pos_weight=scale_pos_weight,
-        eval_metric="aucpr",
+        eval_metric=tuning.get("eval_metric", "aucpr"),
     )
 
     print("🚀 Training Model...")

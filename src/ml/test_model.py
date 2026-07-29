@@ -3,7 +3,7 @@ import xgboost as xgb
 from sklearn.metrics import classification_report, roc_auc_score, confusion_matrix
 import os
 from model_utils import load_model, get_model_features
-from ml_utils import load_gold_dataframe
+from ml_utils import load_gold_dataframe, split_by_timestamp
 
 
 def test_model():
@@ -13,16 +13,22 @@ def test_model():
     target_col = 'is_fraud'
     feature_cols = get_model_features()
     feature_cols = [c for c in feature_cols if c in df.columns]
+
+    _, test_df = split_by_timestamp(df, test_size=0.2)
+    test_start = test_df["timestamp"].min()
+    test_end = test_df["timestamp"].max()
+    print(f"   Evaluating on held-out test period: {test_start} → {test_end} ({len(test_df):,} rows)")
     
-    string_cols = [c for c in feature_cols if df[c].dtype == pl.String]
-    if string_cols:
-        df = df.with_columns([pl.col(c).cast(pl.Categorical).to_physical().alias(c) for c in string_cols])
+    string_cols = [c for c in feature_cols if test_df[c].dtype == pl.String]
 
     print(f"🧠 Loading Model ({len(feature_cols)} features)")
-    model = load_model()
+    model = load_model(enable_categorical=True)
 
-    X_test = df.select(feature_cols)
-    y_test = df.select(target_col).to_numpy().flatten()
+    X_test = test_df.select(feature_cols).to_pandas()
+    y_test = test_df.select(target_col).to_numpy().flatten()
+
+    for c in string_cols:
+        X_test[c] = X_test[c].astype("category")
 
     print("🔮 Running Predictions...")
     y_prob = model.predict_proba(X_test)[:, 1]

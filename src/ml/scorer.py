@@ -148,7 +148,6 @@ def compute_features(tx, redis_client):
         "merchant_category_switch_flag": cat_switch,
         "amount_deviation_z_score": z_score,
         "spatial_velocity": min(velocity, 1000.0),
-        "cf_night_tx_ratio": float(cf_stats.get('night_ratio', 0.0)),
         "hour_deviation_from_norm": abs(ts.hour - float(cf_stats.get('mean_hour', 0.0)))
     }
 

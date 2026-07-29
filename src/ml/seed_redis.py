@@ -51,16 +51,16 @@ def seed():
     for row in result:
         r.hset(f"cust:{row[0]}:stats", mapping={"count": row[1], "mean": row[2], "M2": row[3] if row[3] else 0.0})
 
-    # 2. Customer aggregate features (fraud_rate, night_ratio)
+    # 2. Customer aggregate features (fraud_rate)
     print("   -> Seeding customer aggregate features...")
     result = conn.execute(f"""
-        SELECT customer_id, cf_fraud_rate, cf_night_tx_ratio
+        SELECT customer_id, cf_fraud_rate
         FROM '{gold_path}'
-        GROUP BY customer_id, cf_fraud_rate, cf_night_tx_ratio
+        GROUP BY customer_id, cf_fraud_rate
     """).fetchall()
 
     for row in result:
-        r.hset(f"cust:{row[0]}:agg", mapping={"fraud_rate": row[1] or 0.0, "night_ratio": row[2] or 0.0})
+        r.hset(f"cust:{row[0]}:agg", mapping={"fraud_rate": row[1] or 0.0})
 
     # 2b. Customer mean transaction hour (for hour_deviation_from_norm)
     print("   -> Seeding customer mean transaction hour...")

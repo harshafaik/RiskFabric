@@ -22,6 +22,15 @@ fn main() {
 
     fs::create_dir_all("data/output").expect("Could not create the directory");
 
+    if let Ok(threads_str) = std::env::var("RAYON_NUM_THREADS") {
+        if let Ok(num) = threads_str.parse::<usize>() {
+            rayon::ThreadPoolBuilder::new()
+                .num_threads(num)
+                .build_global()
+                .expect("Failed to set RAYON_NUM_THREADS");
+        }
+    }
+
     println!("🚀 Starting RiskFabric Synthetic Data Generation (seed: {})", base_seed);
 
     // --- 1. Customers ---

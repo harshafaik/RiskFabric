@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 from django.contrib import admin
 from django.contrib.admin import AdminSite
@@ -9,6 +10,8 @@ from django.db.models import Count
 from django.http import HttpRequest
 import json
 from .models import Case
+
+logger = logging.getLogger(__name__)
 
 
 class RiskFabricAdminSite(AdminSite):
@@ -46,8 +49,8 @@ class RiskFabricAdminSite(AdminSite):
                 'false_positive_cases': false_positive,
                 'false_positive_rate': fpr_display,
             })
-        except Exception as e:
-            print("Dashboard calculation error:", e)
+        except Exception:
+            logger.exception("Dashboard calculation error")
 
         return super().index(request, extra_context)
 
@@ -56,18 +59,13 @@ admin_site = RiskFabricAdminSite(name='riskfabric_admin')
 
 
 class CaseAdmin(admin.ModelAdmin):
-    list_display = ('id', 'transaction_id', 'score_badge', 'status', 'flagged_at', 'reviewer', 'reviewed_at', 'notes')
-
-    list_editable = ('status', 'notes')
-
+    list_display = ('transaction_id', 'score_badge', 'status', 'flagged_at', 'reviewer', 'reviewed_at', 'notes')
+    list_editable = ('status',)
     list_filter = ('status', 'flagged_at')
-
     search_fields = ('transaction_id', 'notes', 'reviewer__username')
-
     date_hierarchy = 'flagged_at'
-
+    list_select_related = ('reviewer',)
     readonly_fields = ('flagged_at', 'reviewed_at', 'reviewer', 'flag_reasons_rendered')
-
     autocomplete_fields = ('reviewer',)
 
     fieldsets = (
@@ -82,22 +80,24 @@ class CaseAdmin(admin.ModelAdmin):
         }),
     )
 
+    actions = ['mark_investigating', 'mark_cleared']
+
     def score_badge(self, obj: Case) -> str:
         score_val = obj.score_float
         if score_val >= 0.90:
-            color = '#dc3545'
+            css_class = 'high'
             label = 'High Risk'
         elif score_val >= 0.70:
-            color = '#fd7e14'
+            css_class = 'medium'
             label = 'Medium Risk'
         else:
-            color = '#28a745'
+            css_class = 'low'
             label = 'Low Risk'
 
         score_percent = f"{score_val:.2%}"
         return format_html(
-            '<span class="badge" style="background-color: {0}; color: #fff; padding: 5px 8px; font-weight: bold;">{1} ({2})</span>',
-            color, score_percent, label
+            '<span class="score-badge {}">{}</span>',
+            css_class, f"{score_percent} — {label}"
         )
     score_badge.short_description = 'Fraud Score'
     score_badge.admin_order_field = 'score'
@@ -111,31 +111,49 @@ class CaseAdmin(admin.ModelAdmin):
             if isinstance(data, str):
                 data = json.loads(data)
 
-            html = '<div style="max-width: 600px; margin-top: 5px;">'
-            html += '<table class="table table-bordered table-striped" style="margin-bottom: 0;">'
-            html += '<thead><tr style="background-color: #343a40; color: #fff;"><th>Feature/Trigger</th><th>Value</th></tr></thead>'
-            html += '<tbody>'
+            rows = []
             for key, val in data.items():
                 if key == 'amount':
-                    val_str = f"<strong>${val:,.2f}</strong>"
+                    val_str = format_html('<strong>\u20b9{:,.2f}</strong>', val)
                 elif key == 'score_threshold_crossed':
-                    badge_color = 'danger' if val else 'success'
-                    val_str = f'<span class="badge badge-{badge_color}">{val}</span>'
+                    badge_class = 'danger' if val else 'success'
+                    val_str = format_html('<span class="badge badge-{}">{}</span>', badge_class, val)
                 else:
                     val_str = str(val)
+                    if len(val_str) > 60:
+                        val_str = format_html(
+                            '<span class="shap-truncated" title="{}">{}</span>',
+                            str(val), val_str[:57] + '...'
+                        )
 
-                html += f'<tr><td><code>{key}</code></td><td>{val_str}</td></tr>'
-            html += '</tbody></table></div>'
-            return format_html(html)
+                rows.append(format_html(
+                    '<tr><td><code>{}</code></td><td>{}</td></tr>',
+                    key, val_str
+                ))
+
+            html = format_html(
+                '<div class="shap-table"><table class="table table-bordered table-striped"><thead><tr><th>Feature / Trigger</th><th>Value</th></tr></thead><tbody>{}</tbody></table></div>',
+                ''.join(rows) if rows else '<tr><td colspan="2">No triggers</td></tr>'
+            )
+            return html
         except Exception as e:
-            return f"Error parsing triggers: {e}"
+            return format_html('<span class="text-danger">Error parsing triggers: {}</span>', str(e))
     flag_reasons_rendered.short_description = "Fraud Analysis Indicators"
 
+    @admin.action(description="Mark selected as Investigating")
+    def mark_investigating(self, request, queryset):
+        updated = queryset.filter(status='pending').update(status='investigating')
+        self.message_user(request, f"{updated} case(s) moved to Investigating.")
+
+    @admin.action(description="Mark selected as Cleared")
+    def mark_cleared(self, request, queryset):
+        updated = queryset.filter(status='investigating').update(status='cleared')
+        self.message_user(request, f"{updated} case(s) marked as Cleared.")
+
     def save_model(self, request: HttpRequest, obj: Case, form: object, change: bool) -> None:
-        if change:
-            if obj.reviewer is None:
-                obj.reviewer = request.user
-                obj.reviewed_at = timezone.now()
+        if change and obj.reviewer is None:
+            obj.reviewer = request.user
+            obj.reviewed_at = timezone.now()
         super().save_model(request, obj, form, change)
 
 

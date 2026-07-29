@@ -39,5 +39,8 @@ else:
     print(f'Superuser {username} already exists.')
 "
 
-echo "Starting gunicorn..."
-exec python -m gunicorn case_admin.wsgi:application --bind 0.0.0.0:8000 --workers 4 --access-logfile -
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
+
+echo "Starting Django dev server..."
+exec python manage.py runserver 0.0.0.0:8000

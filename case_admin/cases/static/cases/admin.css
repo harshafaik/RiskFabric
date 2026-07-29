@@ -1,0 +1,218 @@
+.kpi-cards {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -8px;
+    margin-left: -8px;
+    margin-bottom: 24px;
+}
+
+.kpi-card {
+    flex: 1 1 auto;
+    min-width: 180px;
+    padding: 0 8px;
+    margin-bottom: 16px;
+}
+
+.kpi-card .small-box {
+    border-radius: 10px;
+    padding: 20px 18px;
+    position: relative;
+    margin-bottom: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: default;
+    overflow: hidden;
+}
+
+.kpi-card .small-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.kpi-card .kpi-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    line-height: 1.1;
+}
+
+.kpi-card .kpi-label {
+    margin: 0;
+    font-weight: 500;
+    font-size: 0.9rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.kpi-card .kpi-icon {
+    position: absolute;
+    top: 12px;
+    right: 18px;
+    font-size: 2.8rem;
+    opacity: 0.18;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.kpi-card .small-box:hover .kpi-icon {
+    opacity: 0.28;
+}
+
+.kpi-card .kpi-subtext {
+    margin: 4px 0 0 0;
+    font-size: 0.78rem;
+    opacity: 0.7;
+    font-weight: 400;
+}
+
+.kpi-card.total .small-box {
+    background: linear-gradient(135deg, #3a7bd5, #3a6073);
+    color: #fff;
+}
+
+.kpi-card.pending .small-box {
+    background: linear-gradient(135deg, #f2994a, #f2c94c);
+    color: #1f2d3d;
+}
+
+.kpi-card.pending .kpi-label {
+    color: #4a3502;
+}
+
+.kpi-card.investigating .small-box {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    color: #fff;
+}
+
+.kpi-card.confirmed .small-box {
+    background: linear-gradient(135deg, #cb2d3e, #ef473a);
+    color: #fff;
+}
+
+.kpi-card.cleared .small-box {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    color: #fff;
+}
+
+.kpi-card.fpr .small-box {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+}
+
+.score-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #fff;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    white-space: nowrap;
+}
+
+.score-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.score-badge.high {
+    background-color: #dc3545;
+}
+
+.score-badge.medium {
+    background-color: #fd7e14;
+}
+
+.score-badge.low {
+    background-color: #28a745;
+}
+
+.shap-table {
+    max-width: 650px;
+    margin-top: 6px;
+}
+
+.shap-table .table {
+    margin-bottom: 0;
+    font-size: 0.88rem;
+}
+
+.shap-table .table thead th {
+    background-color: var(--dark, #343a40);
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    padding: 8px 12px;
+}
+
+.shap-table .table tbody td {
+    padding: 7px 12px;
+    vertical-align: middle;
+}
+
+.shap-table .table tbody td:first-child {
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--cyan, #17a2b8);
+}
+
+.shap-table .shap-truncated {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    cursor: help;
+}
+
+.progress-container {
+    background-color: #343a40;
+    border-radius: 10px;
+    padding: 20px 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    border: 1px solid #4b545c;
+    margin-bottom: 24px;
+}
+
+.progress-container .progress-title {
+    margin: 0 0 14px 0;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.progress-custom {
+    height: 30px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #4b545c;
+    display: flex;
+    font-size: 0.75rem;
+}
+
+.progress-custom .progress-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3%;
+    font-weight: 600;
+    transition: width 0.4s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 4px;
+}
+
+@media (max-width: 768px) {
+    .kpi-card {
+        min-width: 140px;
+    }
+    .kpi-card .kpi-value {
+        font-size: 1.6rem;
+    }
+    .kpi-card .kpi-icon {
+        font-size: 2rem;
+        right: 12px;
+    }
+}

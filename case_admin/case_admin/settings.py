@@ -4,9 +4,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-oltp-case-management-secret-key-for-local-dev'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-oltp-case-management-secret-key-for-local-dev')
 
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = ['*']
 
@@ -114,10 +114,11 @@ JAZZMIN_SETTINGS = {
 
 JAZZMIN_UI_TWEAKS = {
     "theme": "darkly",
-    "dark_mode_theme": "darkly",
     "navbar-theme": "navbar-dark",
     "sidebar": "sidebar-dark-primary",
     "sidebar_nav_child_indent": True,
     "navbar": "navbar-dark navbar-navy",
-    "brand_colour": "navbar-navy",
+    "brand_colour": "bg-navy",
 }
+
+STATIC_ROOT = os.getenv('STATIC_ROOT', os.path.join(BASE_DIR, 'staticfiles'))

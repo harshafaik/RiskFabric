@@ -18,8 +18,8 @@ Both calibrators use `FrozenEstimator` to prevent the base XGBoost model from be
 ## Pipeline
 
 1. **Load gold master** from DuckDB/Parquet snapshot, deriving features from the model via `get_model_features()`.
-2. **Split 50/50** into calibration and evaluation sets with `stratify` on `is_fraud`.
-3. **Load the frozen base model** using `model_utils.load_model()`.
+2. **Split chronologically 50/50** into calibration and evaluation sets using `split_by_timestamp()` (sorted by timestamp, first 50% = cal, last 50% = eval).
+3. **Load the frozen base model** using `model_utils.load_model(enable_categorical=True)`.
 4. **Fit Platt and Isotonic calibrators** on the calibration split.
 5. **Evaluate** on the held-out evaluation split, comparing raw vs. Platt vs. Isotonic across four metrics.
 6. **Save** both calibrators to `models/`.
@@ -51,7 +51,3 @@ The script also prints a per-bin breakdown showing predicted probability vs. act
 ## Relationship to Training
 
 Calibration is a distinct post-training stage, not embedded in the training pipeline. The separation is intentional: training produces a ranker (optimized for AUC), calibration makes its probabilities trustworthy (optimized for ECE). Changing the base model or retraining on new data requires re-running calibration, but hyperparameter tuning on the base model does not invalidate a calibrator — so long as the feature set is unchanged, the calibration mapping remains valid.
-
-## Known Issues
-
-The calibration script casts categorical features to Polars `Categorical` type without calling `.to_physical()`, while training produces integer ordinals via `.cast(pl.Categorical).to_physical()`. The model was trained with `enable_categorical=False` and expects numeric input — passing categorical-typed data will cause prediction failures. A shared encoding pipeline or a standardised `.to_physical()` call across training, calibration, and inference is required.

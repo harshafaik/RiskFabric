@@ -43,11 +43,9 @@ Global feature importance tells you `spatial_velocity` is important. Local SHAP 
 
 | Script | Consumes |
 | :--- | :--- |
-| `shap_analysis.py` | Latest model JSON (via `model_utils`), ClickHouse gold master |
-| `local_shap_explanation.py` | Latest model JSON (via `model_utils`), `models/calibrated_fraud_model_isotonic.pkl`, ClickHouse gold master |
+| `shap_analysis.py` | Latest model JSON (via `model_utils`), Gold Parquet snapshot |
+| `local_shap_explanation.py` | Latest model JSON (via `model_utils`), `models/calibrated_fraud_model_isotonic.pkl`, Gold Parquet snapshot |
 
-## Known Issues
+## Current Limitations
 
-Both scripts cast categorical features via `.cast(pl.Categorical)` without `.to_physical()`, matching the calibration pipeline but not the training pipeline's integer-ordinal encoding. The model was trained with `enable_categorical=False` and expects numeric input. Predictions may fail or produce incorrect SHAP values.
-
-`local_shap_explanation.py` filters on `fraud_type` to find representative transactions per profile — if a profile has zero true positives in the gold master, it is silently skipped with a warning but no error.
+`local_shap_explanation.py` silently skips fraud profiles with zero true positives in the gold master (warning only, no error). It also calls `load_model()` without `enable_categorical=False`, which may use a different default than the training pipeline.

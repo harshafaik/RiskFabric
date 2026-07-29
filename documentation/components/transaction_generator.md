@@ -5,19 +5,7 @@ The transaction generator module `transaction_gen.rs` is responsible for simulat
 
 ## Schema
 
-Each transaction execution pass generates a comprehensive transaction record and matching fraud diagnostics metadata:
-
-<div style="max-width: 400px; margin: 0 auto;">
-
-```text
-Customer ──customer_id──► Account
-Account ──account_id───► Card
-Card ────card_id───────► Transaction
-Customer ──customer_id──► Transaction
-Account ──account_id───► Transaction
-Transaction ─transaction_id──► FraudMetadata
-```
-</div>
+The entity model follows the canonical [entity ERD](../theory_of_operation.md#2-the-deterministic-lifecycle) (Customer → Account → Card → Transaction → Merchant → FraudMetadata). Each transaction execution pass generates a comprehensive transaction record and matching fraud diagnostics metadata:
 <details>
 <summary><code>Transaction</code></summary>
 
@@ -82,7 +70,6 @@ For spatial realism, merchants are selected based on a probabilistic proximity m
 
 `transaction_gen.rs` is the central module consumed by both the Batch Generator (`generate.rs`) and the Streaming Generator (`stream.rs`),  consuming configuration, spatial reference structures, and entity mappings as inputs, producing vectors of `Transaction` and `FraudMetadata` structures. These outputs are serialized to parquet datasets or piped directly into streams.
 
-## Known Issues
-Timestamp generation is implemented by sorting a local vector of dates for each card. While this ensures that transactions are chronologically ordered *per card*, it does not guarantee a global chronological order across the entire dataset during batch generation. ClickHouse is currently used to perform the final global sort. 
+## Current Limitations
 
-Additionally, the spatial distribution weights (80/15/3/2) are hardcoded directly into the logic. Moving these to `transaction_config.yaml` would allow users to simulate different mobility profiles—for example, a "commuter" population would require a higher Res 4 weight compared to a "rural" population.
+Timestamp generation sorts locally per card but does not produce a global chronological order across the batch. A Polars-level global sort pass would fix this. Spatial distribution weights (80/15/3/2) are hardcoded; moving them to `transaction_config.yaml` would allow simulating different mobility profiles.

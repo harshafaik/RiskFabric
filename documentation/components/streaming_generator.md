@@ -7,14 +7,17 @@ The streaming generator module `stream.rs` is responsible for producing unlabele
 
 The streaming generator interacts with the following queues, files, and payload definitions:
 
-<div style="max-width: 500px; margin: 0 auto;">
 
-```text
-Transaction ─mirrors, omits labels─► UnlabeledTransaction
-UnlabeledTransaction ─publishes──► raw_transactions (Kafka topic)
-UnlabeledTransaction ─verification─► ground_truth.csv (local)
+```mermaid
+flowchart LR
+    classDef store fill:#1b2a3a,stroke:#304e70,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    classDef script fill:#22252a,stroke:#4d535b,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    TXN[Transaction]:::script -->|"mirrors, omits labels"| UNLABELED[UnlabeledTransaction]:::script
+    UNLABELED -->|"publishes"| KAFKA[("raw_transactions\nKafka topic")]:::store
+    UNLABELED -->|"verification"| CSV[("ground_truth.csv\nlocal")]:::store
 ```
-</div>
+
+**<a id="fig-3"></a>Figure 3:** Streaming Generator Data Flow
 <details>
 <summary>Interfaces & payloads</summary>
 
@@ -36,5 +39,6 @@ The rate limiter targets configurable throughput (default 100 tx/s) using a self
 
 The merchant population is loaded from `data/references/ref_merchants.parquet` and indexed at H3 resolutions 4 and 6 for spatial locality lookups during generation.
 
-## Known Issues
-The population size is hardcoded to 1,000 customers, decoupled from the batch pipeline's 10,000 customer population. This should be moved to the configuration to ensure that the Redis seeding and streaming population are consistent.
+## Current Limitations
+
+The population size is hardcoded to 1,000 customers, decoupled from the batch pipeline's 10,000 customer population. Moving it to config would keep Redis seeding and streaming populations consistent.

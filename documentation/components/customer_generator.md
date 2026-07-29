@@ -7,14 +7,52 @@ The customer generator module `customer_gen.rs` is responsible for generating a 
 
 Each customer profile consists of several sub-profiles holding geographical, financial, and device metadata:
 
-<div style="max-width: 500px; margin: 0 auto;">
 
-```text
-Customer ◄── GeoLocation
-Customer ◄── FinancialProfile
-Customer ◄── DeviceProfile
+```mermaid
+erDiagram
+    Customer ||--|| GeoLocation : embeds
+    Customer ||--|| FinancialProfile : embeds
+    Customer ||--|| DeviceProfile : embeds
+
+    Customer {
+        string customer_id PK
+        string name
+        u8 age
+        string email
+        string registration_date
+        i32 registration_year
+        u32 registration_month
+        u32 registration_day
+    }
+
+    GeoLocation {
+        string location
+        string city
+        string state
+        string location_type
+        string postcode
+        f64 home_latitude
+        f64 home_longitude
+        string home_h3r5
+        string home_h3r7
+    }
+
+    FinancialProfile {
+        u16 credit_score
+        f64 monthly_spend
+        f32 customer_risk_score
+        bool is_fraud
+    }
+
+    DeviceProfile {
+        string primary_ua
+        string secondary_ua
+        string isp
+        string ip_subnet
+    }
 ```
-</div>
+
+**<a id="fig-2"></a>Figure 2:** Customer Entity Schema
 <details>
 <summary><code>Customer</code></summary>
 
@@ -82,5 +120,6 @@ The module's decision to pick a residential location from the exported residenti
 
 `customer_gen.rs` acts as the first stage of the data generation pipeline. It uses the `ref_residential.parquet` file for referencing residential nodes and the `customer_config.yaml` configuration for referencing customer behavior. The generated dataset is passed downstream to the account and card generators to complete the entity hierarchy.
 
-## Known Issues
-The entire residential reference dataset is currently loaded into memory using Polars' `ParquetReader` for every generation run. While efficient for populations up to 100,000 customers, this creates a significant memory bottleneck when scaling to millions of agents. Moving to a chunked or streaming approach for reading reference data is required. Additionally, the jitter range (0.005) is currently hardcoded in the source code; moving this to the configuration would allow for different levels of spatial precision.
+## Current Limitations
+
+The entire residential reference dataset is loaded into memory via Polars on every run — fine for 100K customers, a bottleneck at millions. A chunked streaming approach is required. The jitter range (0.005) is hardcoded; moving it to config would allow tuning spatial precision.

@@ -103,69 +103,9 @@ The ETL pipeline system (`etl.rs` and `src/etl/`) is the transformation engine t
 
 ## Pipeline Flow
 
-```mermaid
-%%{init: {
-  'themeVariables': {
-    'fontFamily': '"JetBrains Mono", monospace',
-    'fontSize': '18px',
-    'subgraphFontSize': '22px'
-  }
-}}%%
-flowchart TD
-    %% Node Class Definitions
-    classDef bronze fill:#1b2a3a,stroke:#304e70,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
-    classDef silver fill:#22252a,stroke:#4d535b,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
-    classDef disabled fill:#2e1f26,stroke:#573a46,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
-    classDef gold fill:#182d24,stroke:#2b5443,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+See the [ClickHouse Batch ETL Architecture](clickhouse_batch_etl.md) for the complete defunct architecture diagram (⚠️ SUPERSEDED).
 
-    subgraph BRONZE_GRP["🥉 Bronze (Input)"]
-        direction TB
-        BR_TX["fact_transactions_bronze"]:::bronze
-        BR_FM["fact_fraud_metadata_bronze"]:::bronze
-        DIM_C["dim_customers"]:::bronze
-        DIM_A["dim_accounts"]:::bronze
-    end
-
-    subgraph SILVER_GRP["🥈 Silver — Parallel (rayon)"]
-        direction TB
-        SC["SilverCustomer<br/>→ customer_features_silver"]:::silver
-        SM["SilverMerchant<br/>→ merchant_features_silver"]:::silver
-        SS["SilverSequence<br/>→ fact_transactions_silver"]:::silver
-    end
-
-    subgraph DISABLED_GRP["⚠️ Silver — Disabled"]
-        direction LR
-        D1["🚫 SilverCampaign"]:::disabled
-        D2["🚫 SilverDeviceIP"]:::disabled
-        D3["🚫 SilverNetwork"]:::disabled
-    end
-
-    subgraph GOLD_GRP["🥇 Gold — Staged Construction"]
-        direction TB
-        GS1["Stage 1<br/>materialize gold_stage_1"]:::gold
-        GS2["Stage 2<br/>LEFT JOIN customer + merchant features"]:::gold
-        GOLD["✅ fact_transactions_gold"]:::gold
-    end
-
-    BR_TX & BR_FM & DIM_C & DIM_A --> SC & SM & SS
-    SC & SM & SS --> GS1 --> GS2 --> GOLD
-
-    %% Layout Constraints to keep disabled group below Gold
-    GOLD ~~~ DISABLED_GRP
-
-    %% Subgraph Styling
-    style BRONZE_GRP fill:#1e232e,stroke:#333e54,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-    style SILVER_GRP fill:#22252a,stroke:#4d535b,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-    style DISABLED_GRP fill:#2e1f26,stroke:#573a46,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-    style GOLD_GRP fill:#1c241e,stroke:#304033,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-
-    style GOLD fill:#1c241e,stroke:#304033,stroke-width:1.5px,color:#cfd2d9;
-    style D1 fill:#2e1f26,stroke:#573a46,stroke-width:1px,stroke-dasharray: 4 4,color:#cfd2d9;
-    style D2 fill:#2e1f26,stroke:#573a46,stroke-width:1px,stroke-dasharray: 4 4,color:#cfd2d9;
-    style D3 fill:#2e1f26,stroke:#573a46,stroke-width:1px,stroke-dasharray: 4 4,color:#cfd2d9;
-```
-
-## Known Issues
+## Current Limitations
 
 The pipeline routes all ClickHouse I/O through `podman exec` shell invocations rather than a native client library. This creates a hard dependency on the local container runtime and shell environment, makes error handling coarse-grained (any non-zero exit code surfaces as a generic string error), and prevents connection pooling or query retries. Migrating to `clickhouse-rs` or an equivalent native Rust client will make the pipeline portable across deployment environments and enable proper query-level error propagation.
 

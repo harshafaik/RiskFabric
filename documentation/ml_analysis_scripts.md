@@ -6,7 +6,7 @@ Beyond the core training (`src/ml/train_xgboost.py`) and scoring (`src/ml/scorer
 ## Script Reference
 
 ### `src/ml/compute_thresholds.py`
-Calculates precision-recall trade-off operating points for the fraud model. Queries the Gold Parquet snapshot via DuckDB, loads the isotonic calibrated model, computes precision-recall curves, and writes `data/config/runtime_thresholds.json` — which contains the `flagging_threshold` at ~50% recall plus operational layer boundaries — for consumption by `src/ml/scorer.py`.
+Calculates precision-recall trade-off operating points for the fraud model. Uses `split_by_timestamp()` to isolate a held-out chronological test set (last 20%), loads the isotonic calibrated model, computes precision-recall curves on the calibrated probabilities, and writes `data/config/runtime_thresholds.json` with the flagging threshold matching the precision-first posture (~80% precision) plus operational layer boundaries and calibration metadata.
 
 **Consumes:** `models/calibrated_fraud_model_isotonic.pkl`, Gold Parquet snapshot.
 **Produces:** `data/config/runtime_thresholds.json` (runtime config), operational threshold report.
@@ -24,7 +24,7 @@ Pre-deployment invariant tests for the real-time scorer. Four assertions catch s
 **Produces:** Test pass/fail report via pytest.
 
 ### `src/ml/test_model.py`
-Lightweight model smoke test. Loads the trained model, reads the Gold Parquet snapshot via DuckDB, runs inference on the full dataset, and outputs a sklearn `classification_report` with AUC, confusion matrix, and per-class precision/recall. Used as a sanity check after training or before deploying a new model version.
+Lightweight model smoke test. Loads the trained model, reads the Gold Parquet snapshot via DuckDB, splits chronologically using `split_by_timestamp()`, runs inference on the held-out test set (last 20%), and outputs a sklearn `classification_report` with AUC, confusion matrix, and per-class precision/recall. Used as a sanity check after training or before deploying a new model version.
 
 **Consumes:** Latest model JSON from `models/` (auto-discovered via `model_utils`), Gold Parquet snapshot.
 **Produces:** Classification report.
@@ -48,9 +48,10 @@ Replaced by Grafana (`docker/grafana/dashboards/fraud-monitoring.json`). Reads f
 **Produces:** Grafana web dashboard on port 3000 (replaced Streamlit on port 8501).
 
 ### `src/ml/dump_model.py`
-Inspects a trained XGBoost model to verify the feature schema before deployment. Reads the latest model JSON from `models/` via `model_utils`, prints `feature_names` and `feature_types` from the booster object, and extracts categorical level encodings from the JSON.
+Inspects a trained XGBoost model to verify the feature schema before deployment. Reads the latest model JSON from `models/` via `model_utils`, prints `feature_names` and `feature_types` from the booster object, extracts categorical level encodings via proper JSON path traversal (not regex), and exports a structured `models/schema.json` with feature names, types, indices, and categorical mappings.
 
 **Consumes:** Latest model JSON from `models/` (auto-discovered via `model_utils`).
+**Produces:** `models/schema.json` (feature schema for deployment verification).
 
 ## Pipeline Position
 All analysis scripts read from Gold Parquet snapshots via DuckDB and the trained model artifacts in `models/`. They operate independently of the streaming pipeline and do not write back to Redis. The `generate_and_score_transactions.py` and `generate_1m_transactions.py` scripts are the exception — they write directly to Postgres and Redis for integration testing and load testing.

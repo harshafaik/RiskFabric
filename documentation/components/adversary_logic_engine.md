@@ -13,5 +13,5 @@ To simulate **Stateful Attacks**, the `apply_campaign_logic` function is used. T
 ## System Integration
 `fraud.rs` is a stateless logic provider consumed by the `transaction_gen.rs` module. It acts as a specialized "mutation filter" that takes a completed transaction and a fraud profile and returns a set of behavioral anomalies.
 
-## Known Issues
-String-based matching (e.g., `f_type == "account_takeover"`) is currently used to determine which mutation logic to apply. This is a fragile pattern that could lead to silent failures if a typo is introduced in the YAML configuration. Refactoring these into a proper `Enum` would ensure compile-time safety and better performance. Additionally, the `calculate_fraud_timestamp` logic is currently limited to two specific fraud types; generalizing this to support a wider range of temporal attack patterns is needed.
+## Current Limitations
+String-based matching (`f_type == "account_takeover"`) determines fraud mutation logic — a typo in the YAML silently falls through. Refactoring to an enum would give compile-time safety. `calculate_fraud_timestamp` is also limited to two fraud types; generalizing to more temporal attack patterns is needed.

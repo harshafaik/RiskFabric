@@ -18,24 +18,29 @@ ClickHouse served as the central analytical store for the entire pipeline — ba
 
 ## Architecture diagram (defunct)
 
+```mermaid
+flowchart TD
+    classDef script fill:#22252a,stroke:#4d535b,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    classDef store fill:#1b2a3a,stroke:#304e70,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    GEN[generate.rs]:::script --> PARQUET[Parquet]:::store
+    PARQUET --> INGEST[ingest.rs]:::script
+    STREAM[stream.rs]:::script --> KAFKA[Kafka / Redpanda]:::store
+    INGEST --> CH[(ClickHouse)]:::store
+    KAFKA --> CH
+    subgraph CH_TABLES["ClickHouse Tables"]
+        BRONZE["Bronze\nSilver\nGold"]:::store
+        SCORES["fraud_scores\n(live)"]:::store
+    end
+    CH --> BRONZE
+    CH --> SCORES
+    BRONZE --> ETL[etl.rs\nfeature engineering]:::script
+    ETL --> BRONZE
+    BRONZE --> PYTHON[Python ML\nclickhouse_connect]:::script
+
+    style CH_TABLES fill:#2e1f26,stroke:#573a46,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9
 ```
-[generate.rs]                    [stream.rs]
-     │                                │
-     ▼                                ▼
-  Parquet ──► ingest.rs ──► ClickHouse ◄── Kafka/Redpanda
-     │              │            │  ▲
-     │    Bronze/Silver/Gold     │  │
-     │         tables            │  │
-     ▼                           ▼  │
-feature engineering          fraud_scores
- (etl.rs)                       (live)
-     │
-     ▼
-ClickHouse Gold table
-     │
-     ▼
-Python ML (clickhouse_connect)
-```
+
+**<a id="fig-15"></a>Figure 15:** ClickHouse Batch ETL Architecture (Defunct)
 
 ## Tables (defunct)
 

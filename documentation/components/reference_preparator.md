@@ -2,82 +2,67 @@
 
 ## Overview
 
-The reference data preparator (`prepare_refs.rs`) is the world-building binary that converts raw OpenStreetMap (OSM) PBF data into the structured geographic staging tables used by the simulation generators. It exposes six subcommands — `extract-nodes`, `map-city-state`, `parse-districts`, `map-state-districts`, `normalize-states`, and `compare-city-district` — which collectively produce three Postgres staging tables (`raw_residential`, `raw_merchants`, `raw_financial`) populated from the India OSM PBF file. These tables are consumed by `export_references.rs`, which serializes them to Parquet for use by `generate.rs`, `stream.rs`, and `customer_gen.rs`.
+`prepare_refs.rs` converts the India OSM PBF file into three Postgres staging tables (`raw_residential`, `raw_merchants`, `raw_financial`) consumed by `export_references.rs` → Parquet for `generate.rs`, `stream.rs`, and `customer_gen.rs`. Six subcommands: `extract-nodes`, `map-city-state`, `parse-districts`, `map-state-districts`, `normalize-states`, `compare-city-district`.
 
 ## Schema
 
-The preparator produces three Postgres staging tables from the India OSM PBF file, each sourced from an internal extraction struct:
-
 ```mermaid
-erDiagram
-    raw_residential ||--o{ raw_merchants : "shares osm_id, h3_index"
-    raw_residential ||--o{ raw_financial : "shares osm_id, h3_index"
-    raw_merchants ||--o{ raw_financial : "shares osm_id, h3_index"
+flowchart LR
+    classDef script fill:#22252a,stroke:#4d535b,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    classDef store fill:#1b2a3a,stroke:#304e70,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    subgraph EXTRACT["prepare_refs.rs"]
+        OSM["India OSM PBF"]:::store --> RAW_R["raw_residential"]:::store
+        OSM --> RAW_M["raw_merchants"]:::store
+        OSM --> RAW_F["raw_financial"]:::store
+    end
+    subgraph DBT["dbt Models"]
+        RAW_R --> STG_R["stg_residential"]:::script
+        RAW_M --> STG_M["stg_merchants"]:::script
+        STG_R --> MART_R["mart_residential"]:::script
+        STG_M --> MART_M["mart_merchants"]:::script
+        MART_R --> MART_D["mart_district_summary"]:::script
+        MART_M --> MART_D
+    end
+    subgraph EXPORT["export_references.rs"]
+        MART_R --> REF_R[("ref_residential.parquet")]:::store
+        MART_M --> REF_M[("ref_merchants.parquet")]:::store
+    end
+    style EXTRACT fill:#26231b,stroke:#474130,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9
+    style DBT fill:#26231b,stroke:#474130,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9
+    style EXPORT fill:#1c241e,stroke:#304033,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9
 ```
 
+**<a id="fig-6"></a>Figure 6:** OSM Reference Extraction Pipeline
+
 <details>
-<summary><code>raw_residential</code> &larr; <code>ResidentialPoint</code></summary>
+<summary>Staging tables</summary>
 
-| Field Name | Type | Description |
-| :--- | :--- | :--- |
-| `osm_id` | `i64` | OSM node identifier for the residential point. |
-| `h3_index` | `String` | H3 index at Resolution 8, computed from the node's latitude and longitude. |
-| `lat` | `f64` | Latitude coordinate of the node. |
-| `lon` | `f64` | Longitude coordinate of the node. |
-| `city` | `Option<String>` | City name extracted from the `addr:city` OSM tag; null if the tag is absent. |
-| `postcode` | `Option<String>` | Postal code extracted from the `addr:postcode` OSM tag; null if the tag is absent. |
-| `state` | `Option<String>` | State name extracted from the `addr:state` OSM tag; null if the tag is absent. |
+| Table | Struct | Key fields | Classification rules |
+| :--- | :--- | :--- | :--- |
+| `raw_residential` | `ResidentialPoint` | `osm_id`, `h3_index` (res 8), `lat`, `lon`, `city`, `postcode`, `state` | `building=residential` / `landuse=residential`, or `addr:housenumber` / `addr:street` present |
+| `raw_merchants` | `MerchantPoint` | `osm_id`, `h3_index` (res 8), `name`, `category`, `sub_category`, `lat`, `lon`, `city`, `postcode`, `state` | `shop=*` (all), `amenity` (restaurant/cafe/fast_food/bar/pub/fuel/cinema/pharmacy), `tourism` (hotel/motel/guest_house) |
+| `raw_financial` | `FinancialPoint` | `osm_id`, `h3_index` (res 8), `kind` (atm/bank), `operator`, `lat`, `lon` | `amenity=atm` / `amenity=bank` |
 
-A node is classified as residential if it carries a `building=residential` or `landuse=residential` tag, or if it has either `addr:housenumber` or `addr:street` present and is not already classified as a merchant.
+All three tables share `osm_id` and `h3_index`. The detailed dbt pipeline is in [Geospatial Reference Pipeline](dbt_models.md).
 
 </details>
 
-<details>
-<summary><code>raw_merchants</code> &larr; <code>MerchantPoint</code></summary>
+## Architecture
 
-| Field Name | Type | Description |
-| :--- | :--- | :--- |
-| `osm_id` | `i64` | OSM node identifier for the merchant point. |
-| `h3_index` | `String` | H3 index at Resolution 8, computed from the node's latitude and longitude. |
-| `name` | `String` | Merchant name from the `name` OSM tag; defaults to `"Unknown Merchant"` if absent. |
-| `category` | `String` | Top-level OSM tag type: `"shop"`, `"amenity"`, or `"tourism"`. |
-| `sub_category` | `String` | Raw OSM tag value (e.g., `"jewelry"`, `"restaurant"`, `"hotel"`), used by dbt for risk level mapping. |
-| `lat` | `f64` | Latitude coordinate of the node. |
-| `lon` | `f64` | Longitude coordinate of the node. |
-| `city` | `Option<String>` | City name from `addr:city`; null if absent. |
-| `postcode` | `Option<String>` | Postal code from `addr:postcode`; null if absent. |
-| `state` | `Option<String>` | State name from `addr:state`; null if absent. |
+### Parallel Map-Reduce Extraction
+The `osmpbf` library's `par_map_reduce` distributes OSM node processing across CPU cores via `rayon`. Each thread produces `ResidentialPoint`, `MerchantPoint`, and `FinancialPoint` records merged on completion.
 
-Merchant classification matches `shop=*` nodes (all sub-categories), `amenity` nodes restricted to `restaurant`, `cafe`, `fast_food`, `bar`, `pub`, `fuel`, `cinema`, and `pharmacy`, and `tourism` nodes restricted to `hotel`, `motel`, and `guest_house`.
+### Binary Copy Insertion
+Records are written to Postgres via `BinaryCopyInWriter` in a single `COPY FROM STDIN BINARY` operation — bypasses SQL parsing and keeps insert time proportional to record count.
 
-</details>
+### H3 Indexing at Resolution 8
+`h3o` converts each `(lat, lon)` to an H3 cell (~0.74 km²) at extraction time. The index flows through all downstream tables and Parquet files, enabling proximity-based merchant selection without runtime coordinate re-computation.
 
-<details>
-<summary><code>raw_financial</code> &larr; <code>FinancialPoint</code></summary>
+### State Normalization Utilities
+`map-city-state` produces ranked city-to-state frequency reports. `parse-districts` extracts India admin level-5 relations. Intermediate report files feed normalization rules applied in dbt staging.
 
-| Field Name | Type | Description |
-| :--- | :--- | :--- |
-| `osm_id` | `i64` | OSM node identifier for the financial point. |
-| `h3_index` | `String` | H3 index at Resolution 8, computed from the node's latitude and longitude. |
-| `kind` | `String` | Entity type: `"atm"` or `"bank"`, derived from the `amenity` OSM tag. |
-| `operator` | `Option<String>` | Institution name from the `operator` or `brand` OSM tag; null if both are absent. |
-| `lat` | `f64` | Latitude coordinate of the node. |
-| `lon` | `f64` | Longitude coordinate of the node. |
+## Current Limitations
 
-</details>
+`extract-nodes` loads entire dataset into three `Arc<Mutex<Vec<_>>>` collections before writing — millions of records in RAM, OOM mid-extraction loses all state. Periodic chunked flushes would bound peak memory.
 
-**Parallel Map-Reduce Extraction** is the core performance mechanism of the `extract-nodes` subcommand. The `osmpbf` library's `par_map_reduce` function distributes OSM node processing across all available CPU cores using `rayon`. Each thread processes a local batch of `ResidentialPoint`, `MerchantPoint`, and `FinancialPoint` records, and the results are merged into a single collection after all threads complete. This allows the full India PBF file (several gigabytes) to be scanned in minutes rather than hours on a multi-core workstation.
-
-**Binary Copy Insertion** is used to write extracted records into Postgres. Rather than issuing individual `INSERT` statements, the preparator uses `postgres::binary_copy::BinaryCopyInWriter` to stream all records for each table in a single `COPY FROM STDIN BINARY` operation. This bypasses SQL parsing overhead entirely and is the dominant factor in keeping Postgres insert time proportional to record count rather than to number of statements.
-
-**H3 Indexing at Resolution 8** is assigned to every extracted node at extraction time, not deferred to the dbt layer. The `h3o` library converts each node's `(lat, lon)` pair into an H3 cell at Resolution 8 (~0.74 km² average area). This index is carried through all downstream tables and Parquet files, enabling the simulation generators to perform proximity-based merchant selection using H3 parent cell lookups without re-computing coordinates at runtime.
-
-**State Normalization Utilities** are provided as separate subcommands (`map-city-state`, `parse-districts`, `normalize-states`) rather than being integrated into the main extraction pass. `map-city-state` produces a ranked city-to-state frequency report from `addr:city`/`addr:state` tag co-occurrences across the full PBF. `parse-districts` extracts India administrative level-5 relations using `ISO3166-2` and `is_in:state` tags. These utilities produce intermediate report files that inform manual or automated normalization rules, which are then applied in the dbt `staging` layer.
-
-`prepare_refs.rs` is a standalone Level 0 utility and is the first step in the reference data pipeline. It must be run before `export_references.rs` and before any dbt models. Its outputs — `raw_residential`, `raw_merchants`, and `raw_financial` — are the primary inputs to the dbt `staging` models, which apply spatial joins and risk categorization before producing the final `mart_residential` and `mart_merchants` tables. The `--db` parameter for `extract-nodes` defaults to the `DATABASE_URL` environment variable; a `.env.example` file with a template connection string is provided at the repository root.
-
-## Known Issues
-
-The `extract-nodes` subcommand loads the entire extracted dataset into memory inside three `Arc<Mutex<Vec<_>>>` collections before writing to Postgres. For the India PBF file, this can accumulate millions of residential and merchant records simultaneously, with no streaming or chunked flush to Postgres during the scan. On systems with limited RAM, this creates a risk of OOM termination partway through extraction with no partial state recoverable. Switching to periodic flushes — writing to Postgres every N records and clearing the in-memory buffer — would bound the peak memory footprint regardless of dataset size.
-
-The `prepare_refs.rs` binary stops at Postgres population and has no built-in export step. Producing the final Parquet files requires running `export_references.rs` as a separate binary after all dbt models have been executed. This two-binary, three-step workflow (prepare → dbt run → export) has no orchestration layer to enforce ordering or detect if any step was skipped. A single unified subcommand, or a lightweight pipeline runner, is needed to make the end-to-end world-building process reliable and repeatable.
+The workflow (prepare → dbt run → export) requires three separately-invoked binaries with no orchestration. A unified subcommand or pipeline runner is needed.

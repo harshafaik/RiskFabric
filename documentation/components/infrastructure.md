@@ -2,77 +2,68 @@
 
 ## Overview
 
-The local service stack (`docker-compose.yml`) defines the environment that RiskFabric runs against. It provisions ClickHouse for warehouse storage, Redpanda (a Kafka-compatible event broker) for the streaming pipeline, Redis for the real-time feature store, an OLTP Postgres for the case-management database, a long-lived scorer container running `scorer.py`, a Grafana dashboard container, and a Django case-management container running `case_admin`. All containers are connected on a shared network named `riskfabric_default`. The stack is the mandatory runtime dependency for all Rust binaries and Python ML services.
+The local service stack (`docker-compose.yml`) provisions 7 services on `riskfabric_default`: ClickHouse, Redpanda, Redis, OLTP Postgres, scorer (`scorer.py`), Grafana, and Django case-admin. Mandatory runtime dependency for all Rust binaries and Python ML services. A separate Postgres instance (not in this compose file) handles world-building for `prepare_refs.rs` and `export_references.rs`.
 
 ## Schema
 
-The stack provisions seven services on a shared `riskfabric_default` network:
+<div style="max-width: 400px; margin: 0 auto;">
 
 ```mermaid
 flowchart TB
-    subgraph Storage
-        CH[(ClickHouse\nwarehouse)]
-        RP[(Redpanda\nKafka)]
-        RD[(Redis\nfeature store)]
-        PG[(Postgres\nOLTP / cases)]
+    classDef script fill:#22252a,stroke:#4d535b,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    classDef store fill:#1b2a3a,stroke:#304e70,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    classDef ui fill:#251e36,stroke:#483a68,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    subgraph Host["Host Machine"]
+        STREAM["stream.rs\n(host binary)"]:::script
     end
-    scorer["scorer.py"]
-    dashboard["Grafana"]
-    caseadmin["case_admin (Django)"]
-
-    RP -->|raw_transactions| scorer
-    scorer -->|fraud_scores| CH
-    scorer -->|cases| caseadmin
+    subgraph Stack["Docker Compose (riskfabric_default)"]
+        RP[(Redpanda\n:9092 :29092)]:::store
+        RD[(Redis\n:6379)]:::store
+        CH[(ClickHouse\n:8123 :9000)]:::store
+        PG[(oltp-postgres\n:5432)]:::store
+        scorer[scorer.py]:::script
+        grafana[Grafana\n:3000]:::ui
+        caseadmin[case_admin\nDjango :8000]:::ui
+    end
+    STREAM -->|"localhost:9092"| RP
+    RP -->|"raw_transactions"| scorer
+    scorer -->|"fraud_scores"| CH
+    scorer -->|"cases"| caseadmin
     caseadmin --> PG
-    RD <-.->|feature state| scorer
-    CH <-.->|gold/features| scorer
+    RD <-.->|"feature state"| scorer
+    CH --> grafana
+
+    style Host fill:#1e232e,stroke:#333e54,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9
+    style Stack fill:#1c241e,stroke:#304033,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9
 ```
+</div>
 
-<details>
-<summary>Service Inventory</summary>
+**<a id="fig-8"></a>Figure 8:** Infrastructure Service Stack
 
-| Service | Container Name | Image | Exposed Ports | Persistence |
-| :--- | :--- | :--- | :--- | :--- |
-| `clickhouse` | `riskfabric_clickhouse` | `clickhouse/clickhouse-server:latest` | `8123` (HTTP), `9000` (native) | Named volumes: `clickhouse_data`, `clickhouse_logs` |
-| `redpanda` | `riskfabric_redpanda` | `docker.redpanda.com/redpandadata/redpanda:v23.2.1` | `9092` (external Kafka), `29092` (internal Kafka) | No volume — ephemeral |
-| `redis` | `riskfabric_redis` | `redis:7-alpine` | `6379` | No volume — ephemeral |
-| `scorer` | `riskfabric_scorer` | `localhost/riskfabric_dlt` | None | Mounts workspace at `/usr/app` |
-| `grafana` | `riskfabric_grafana` | `grafana/grafana-oss:latest` | `3000` (Grafana) | Named volume: `grafana_data` |
-| `oltp-postgres` | `riskfabric_oltp_postgres` | `postgres:15-alpine` | `5433` (host) → `5432` | Named volume: `oltp_postgres_data` |
-| `case-admin` | `riskfabric_case_admin` | built from `case_admin/Dockerfile` | `8001` (host) → `8000` | Mounts `case_admin/` at `/usr/app` |
+| Service | Image | Ports | Persistence |
+| :--- | :--- | :--- | :--- |
+| `clickhouse` | `clickhouse/clickhouse-server:latest` | `8123`, `9000` | `clickhouse_data`, `clickhouse_logs` |
+| `redpanda` | `redpandadata/redpanda:v23.2.1` | `9092` (ext), `29092` (int) | None (ephemeral) |
+| `redis` | `redis:7-alpine` | `6379` | None (ephemeral) |
+| `scorer` | `localhost/riskfabric_dlt` | — | Workspace mount `/usr/app` |
+| `grafana` | `grafana/grafana-oss:latest` | `3000` | `grafana_data` |
+| `oltp-postgres` | `postgres:15-alpine` | `5433`→host | `oltp_postgres_data` |
+| `case-admin` | built from `case_admin/Dockerfile` | `8001`→host | `case_admin/` mount |
 
-</details>
+## Architecture
 
-<details>
-<summary>Redpanda Configuration</summary>
+### Multi-Model Database Strategy
+ClickHouse for append-heavy analytical queries (fraud scores), Redpanda for Kafka-compatible streaming, Redis for sub-millisecond per-card/customer state (verified: p50 120–261 µs, p99 ≤509 µs across all operations) [[See benchmarks](performance.md)], Postgres for OLTP case management.
 
-| Parameter | Value | Description |
-| :--- | :--- | :--- |
-| `--smp` | `1` | Single CPU core allocated. |
-| `--memory` | `512M` | Maximum memory cap. |
-| `--reserve-memory` | `0M` | No memory reserved for the OS. |
-| `--overprovisioned` | _(flag)_ | Disables CPU pinning checks for non-dedicated hardware. |
-| `--node-id` | `0` | Single-node cluster identifier. |
-| `--check` | `false` | Disables startup checks for non-dedicated hardware. |
-| `--kafka-addr` | `PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092` | Dual listener: internal (`29092`) for container-to-container traffic, external (`9092`) for host access. |
-| `--advertise-kafka-addr` | `PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092` | Advertised listeners for internal vs. host access. |
+### Health-Check Gating
+All data services health-checked (ClickHouse via `wget`, Redpanda via `rpk`, Redis via `redis-cli`, Postgres via `pg_isready`). `scorer`, `grafana`, and `case-admin` wait for `service_healthy` before startup. 5s interval, 5 retries.
 
-</details>
+### Dual Kafka Listener
+Redpanda exposes port `29092` for container-to-container traffic and `9092` for host access (`stream.rs`). `scorer` connects via `KAFKA_BOOTSTRAP_SERVERS=redpanda:29092`.
 
-**Multi-Model Database Strategy** is the primary architectural decision. ClickHouse is used for columnar storage of high-volume transaction, feature, and score tables — its MergeTree engine is optimized for append-heavy analytical workloads. Redpanda provides Kafka-compatible event streaming for the real-time transaction path without requiring a full Kafka + ZooKeeper deployment. Redis provides O(1) per-key lookups for per-card and per-customer behavioral state that cannot be satisfied by ClickHouse at sub-millisecond latency. Postgres (`oltp-postgres`) holds the OLTP case-management database used by `case_admin` and is part of this stack — note this is distinct from the separate Postgres instance used in the world-building phase by `prepare_refs.rs` and `export_references.rs`, which is run separately before those binaries.
+### Workspace Volume Mounts
+`scorer` mounts entire project at `/usr/app`, `case-admin` mounts `case_admin/` at `/usr/app`. Source changes take effect on container restart without image rebuild. The scorer image must be built from `Dockerfile.dlt` before first run.
 
-**Health-Check Gating** is applied to all three data services (ClickHouse, Redpanda, Redis) and the `oltp-postgres` service, and enforced as a startup dependency for the `scorer`, `grafana`, and `case-admin` containers. ClickHouse is checked via `wget --spider localhost:8123/ping`, Redpanda via `rpk cluster health`, Redis via `redis-cli ping`, and Postgres via `pg_isready`. All use a 5-second interval with 5 retries. The `scorer` container's `depends_on` block requires ClickHouse, Redpanda, Redis, and `oltp-postgres` to report `service_healthy` before `scorer.py` starts, preventing connection-refused failures during cold-start.
+## Current Limitations
 
-**Dual Kafka Listener** is configured on Redpanda to support both container-internal and host-external access on separate ports. The `PLAINTEXT` listener on port `29092` is advertised as `redpanda:29092` for container-to-container traffic (e.g., `scorer.py` connecting from within the `riskfabric_default` network). The `OUTSIDE` listener on port `9092` is advertised at `localhost:9092` for host-level tooling (e.g., `rpk` CLI or `stream.rs` running on the host). The `scorer` service is wired to the internal listener via `KAFKA_BOOTSTRAP_SERVERS=redpanda:29092`.
-
-**Workspace Volume Mount** is used for the `scorer` and `case-admin` containers instead of baking the Python source into the image. The `scorer` container mounts the entire project directory at `/usr/app` with the `z` SELinux label; `case-admin` mounts `case_admin/` at `/usr/app`. This means changes to `scorer.py`, `case_admin/`, or any model JSON in `models/` take effect on the next container restart without rebuilding the image — important during iterative development. The `scorer` image (`localhost/riskfabric_dlt`) must be built locally from `Dockerfile.dlt` before the stack can start.
-
-`docker-compose.yml` is the foundational layer that all other components depend on. It must be started before any Rust binary or Python script that connects to ClickHouse, Redpanda, Redis, or the OLTP Postgres. The separate Postgres instance used by `prepare_refs.rs` and `export_references.rs` for world-building is not managed by this file and must be run separately.
-
-## Known Issues
-
-Redpanda is configured with no persistent volume, meaning all Kafka topic data — including the `raw_transactions` topic — is lost on every container restart. This prevents replay testing and means that if the `scorer` container crashes mid-stream, all in-flight transactions are unrecoverable. Adding a named volume for Redpanda's data directory would make the streaming state persistent across restarts without requiring a multi-node configuration.
-
-The ClickHouse password (`123`) is hardcoded directly in `docker-compose.yml` as an environment variable, and the same credential is repeated as a plaintext string in `ingest.rs`, `etl.rs`, `train_xgboost.py`, `scorer.py`, and `seed_redis.py`. The OLTP Postgres password (`123`) is similarly hardcoded in `docker-compose.yml` and `ingest_cases.py`. There is no `.env` file and no secret management. Moving all credentials to a `.env` file and referencing them via `${VAR}` substitution in both the Compose file and Python scripts is required before the stack can be safely committed to a shared or public repository.
-
-The `scorer` container references `localhost/riskfabric_dlt` as its image, which must be built locally from `Dockerfile.dlt` before the stack can start. There is no `build:` directive in the Compose file to trigger this automatically. A developer encountering a `image not found` error has no in-file indication of how to build the prerequisite image, as there is no `Makefile` or `README` section that documents the build step adjacent to the compose file.
+Redpanda is ephemeral — all topic data lost on restart, preventing replay testing. Passwords hardcoded in `docker-compose.yml` and repeated across Python scripts with no `.env` support. No `build:` directive for the scorer image.

@@ -28,27 +28,37 @@ Redpanda: streaming message broker (unchanged)
 
 Feature engineering moves from ClickHouse-backed ETL to a direct Parquet pipeline:
 
-```
-generate.rs → data/bronze/{date}/*.parquet
-                   ↓
-             Polars (reads Bronze, computes features) → data/silver/{date}/*.parquet
-                   ↓
-             DuckDB (joins Silver tables) → data/gold/{snapshot}/*.parquet
-                   ↓
-             train_xgboost.py (reads Gold via DuckDB)
+```mermaid
+flowchart TB
+    classDef script fill:#22252a,stroke:#4d535b,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    classDef store fill:#1b2a3a,stroke:#304e70,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    classDef ui fill:#251e36,stroke:#483a68,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    subgraph BATCH["Batch Pipeline (Parquet)"]
+        GEN[generate.rs]:::script --> BRONZE[("data/bronze/{date}/*.parquet")]:::store
+        BRONZE --> POLARS["Polars\nfeature engineering"]:::script
+        POLARS --> SILVER[("data/silver/{date}/*.parquet")]:::store
+        SILVER --> DUCKDB["DuckDB\njoins Silver tables"]:::script
+        DUCKDB --> GOLD[("data/gold/{snapshot}/*.parquet")]:::store
+        GOLD --> TRAIN[train_xgboost.py]:::script
+    end
+    subgraph STREAM["Streaming Pipeline (unchanged)"]
+        STREAM_RS[stream.rs]:::script --> RP[Redpanda]:::store
+        RP --> SCORER[scorer.py]:::script
+        SCORER --> CH[(ClickHouse\nfraud_scores)]:::store
+        CH --> GRAFANA[Grafana]:::ui
+    end
+
+    style BATCH fill:#231e2d,stroke:#3f3354,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9
+    style STREAM fill:#1c2423,stroke:#2e403d,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9
 ```
 
-ClickHouse handles only the live path:
-
-```
-stream.rs → Redpanda → scorer.py → ClickHouse fraud_scores → Grafana
-```
+**<a id="fig-16"></a>Figure 16:** Storage Architecture Split — Parquet Pipeline
 
 ## Why this direction was chosen
 
 **ClickHouse was the wrong tool for batch training data.** A columnar OLAP engine optimized for append-heavy analytical queries was being used as a mutable feature store. ClickHouse's slow/async ALTER TABLE UPDATE semantics and lack of point-in-time correctness make it unsuitable for reproducible training sets and correct backfills. The medallion architecture (Bronze → Silver → Gold) materialized three full copies of transaction data inside ClickHouse — data already stored as Parquet on disk from the generator — purely to satisfy an ETL pipeline that ran SQL against the database rather than Polars against files.
 
-**DuckDB eliminates operational overhead for batch queries.** DuckDB is an embedded, in-process library, not a server. It reads Parquet natively with zero-copy columnar execution. There is no daemon to run, no port to expose, no container to maintain, and no connection pooling to configure. Training queries (full-table scans across 30+ feature columns) are a columnar workload — DuckDB handles them at performance comparable to ClickHouse but with zero infrastructure cost. And it supports point-in-time snapshots naturally: each training run points at a dated Parquet directory, making reproducibility trivial.
+**DuckDB eliminates operational overhead for batch queries.** DuckDB is an embedded, in-process library, not a server. It reads Parquet natively with zero-copy columnar execution. There is no daemon to run, no port to expose, no container to maintain, and no connection pooling to configure. Training queries (full-table scans across 30+ feature columns) are a columnar workload — DuckDB handles them at performance comparable to ClickHouse (DuckDB p50: 1,616 ms vs ClickHouse p50: 2,039 ms on a 1.54M-row Parquet extraction query) — and with zero infrastructure cost. [[See benchmarks](performance.md)] And it supports point-in-time snapshots naturally: each training run points at a dated Parquet directory, making reproducibility trivial.
 
 **Parquet-first pipeline removes wasted I/O.** The generator already writes Parquet to `data/output/`. The current pipeline then ingests those files into ClickHouse, reads them back into Polars for feature computation, and writes the result back to ClickHouse. The new pipeline cuts ClickHouse out of the loop entirely: Polars reads Bronze Parquet directly, computes features, and writes Gold Parquet. Bronze and Silver become files on disk rather than database tables, consistent with data lake patterns used in production data engineering.
 
@@ -93,7 +103,7 @@ stream.rs → Redpanda → scorer.py → ClickHouse fraud_scores → Grafana
 
 **Polars feature extraction must be extracted from etl.rs.** The current feature transforms in `src/etl/features/` are coupled to ClickHouse I/O. Extraction into standalone Polars functions reading/writing Parquet is a refactor, not a rewrite — the transform logic itself is portable — but it requires careful validation against existing Gold output to ensure feature parity.
 
-**DuckDB join performance must be validated.** The current Gold master uses ClickHouse SQL with `join_algorithm = 'partial_merge'`. DuckDB's join performance is excellent on Parquet but should be benchmarked against the existing ClickHouse path before the switch is finalized.
+**DuckDB vs ClickHouse benchmarked.** [[See measured comparison](performance.md)] DuckDB query (p50: 1,616 ms) is slightly faster than ClickHouse (p50: 2,039 ms) on the equivalent Gold Parquet extraction query — with zero infrastructure overhead (no daemon, no port, no container). The Gold join is now in Rust/Polars (`etl.rs`); this benchmark validates the training-data extraction path.
 
 **Parquet snapshot storage must be durable.** Training snapshots must live on persistent storage, not ephemeral temp directories. Local development uses a `data/gold/{date}/` directory. Cloud deployment uses S3 with lifecycle policies (hot → warm → cold tiering).
 

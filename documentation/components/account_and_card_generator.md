@@ -5,16 +5,7 @@ The account and card generator modules `account_gen.rs` and `card_gen.rs` are re
 
 ## Schema
 
-Each account and card record maintains consistent relations back to the customer profile:
-
-<div style="max-width: 400px; margin: 0 auto;">
-
-```text
-Customer ──customer_id──► Account
-Account ──account_id───► Card
-Customer ──customer_id──► Card
-```
-</div>
+The entity hierarchy follows the canonical [entity model](../theory_of_operation.md#2-the-deterministic-lifecycle). Each account and card record maintains consistent relations back to the customer profile:
 
 <details>
 <summary><code>Account</code></summary>
@@ -65,7 +56,6 @@ In `card_gen.rs`, an **Account-Driven Mapping** strategy is used. The card gener
 
 `account_gen.rs` and `card_gen.rs` act as the second stage of the generation pipeline. They consume the generated `Customer` vector produced by `customer_gen.rs` and construct matching financial accounts and credit/debit cards. The resulting vectors of `Account` and `Card` structs are materialized into Parquet files by `generate.rs` and passed downstream to the transaction simulation engine.
 
-## Known Issues
-The probability of secondary account creation is currently hardcoded to 50% directly inside the generation logic. This makes it impossible to configure custom account densities dynamically. Moving this threshold check to `customer_config.yaml` is required.
+## Current Limitations
 
-Furthermore, card limit metadata parameters (`contactless_limit`, `daily_atm_limit`, and `online_limit`) are currently initialized as empty strings. This prevents downstream transaction engines from enforcing realistic "Limit Breaches" during transaction scoring. A "Product Catalog" lookup is required to assign realistic limit boundaries based on the account profile type.
+The probability of secondary account creation is hardcoded to 50%. Moving this to `customer_config.yaml` is required. Card limit metadata fields (`contactless_limit`, `daily_atm_limit`, `online_limit`) are initialized as empty strings — a product catalog lookup is needed to assign realistic limits and enable Limit Breach fraud signals.

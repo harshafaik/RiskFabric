@@ -32,10 +32,12 @@
 - [Conceptual Explanations](concepts_index.md)
     - [Theory of Operation](theory_of_operation.md)
     - [Fraud Signatures & Attack Patterns](fraud_signatures.md)
+    - [Diagram Glossary](diagrams_glossary.md)
 
 - [Results & Monitoring](results_index.md)
     - [Machine Learning Metrics](ml_metrics.md)
     - [Feature Leakage Case Study](feature_leakage_issues.md)
+    - [Performance Benchmarks](performance.md)
 
 - [Defunct Implementations](defunct_index.md)
     - [ETL Pipeline System (Shell-Pivot Variant)](components/defunct/etl_system_shell_pivot.md)

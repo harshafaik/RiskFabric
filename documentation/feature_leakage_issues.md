@@ -393,3 +393,60 @@ Polars joins do not preserve input row order. The `.sort()` was called before `.
 3. **AUC barely moved** — the old AUC was modestly inflated by the model picking up correlative patterns in the scrambled ordering artifact. The correct model at 0.786 is honest, with behavioral features carrying all the signal.
 
 4. **This bug was present across every snapshot generated so far.** All previous feature importance distributions, SHAP analyses, and threshold calculations were computed against data where `spatial_velocity`, `time_since_last_transaction`, `escalating_amounts_flag`, `merchant_category_switch_flag`, and `rapid_fire_transaction_flag` were systematically miscomputed for ~0.27% of rows across 70% of customers. The impact on aggregate metrics was muted because the corruption was diluted across the full dataset, but any per-customer trace or investigation would have shown incorrect feature values.
+
+---
+
+## 7. Time-Based vs Random Split Data Leakage (2026-07-20)
+
+**Finding:** After fixing the join ordering bug, all evaluation metrics were still optimistically biased by a random 80/20 train/test split on a 365-day time-series dataset. A chronological split reveals the true generalization gap.
+
+### Root Cause
+
+`train_xgboost.py`, `calibrate_model.py`, `drift_simulation.py`, `test_model.py`, and `evaluate_model_depth.py` all used `sklearn.model_selection.train_test_split` with `random_state=42, stratify=y`. On a 365-day dataset this means a transaction from day 300 could land in training while a transaction from day 50 lands in the test set. The model sees fraud campaign patterns that haven't happened yet chronologically, inflating every metric.
+
+### Fix
+
+Added `split_by_timestamp()` to `ml_utils.py` — sorts by `timestamp` ascending and splits at the chronological 80/20 boundary. All 5 scripts now use it. Train covers days ~1–290, test covers days ~290–365.
+
+### Post-fix retraining (same seed, same features, same snapshot)
+
+| Metric | Random split | Time-based split | Δ |
+|---|---|---|---|
+| ROC-AUC | 0.7855 | 0.7622 | −0.0233 |
+| PR-AUC | 0.3376 | 0.3293 | −0.0083 |
+| Brier Loss | 0.1346 | 0.1385 | +0.0039 |
+| ECE | 0.3335 | 0.3375 | +0.0040 |
+
+The 2.3-point ROC-AUC gap is the optimistic bias from future data leakage. Time-based 0.7622 is the model's true generalization performance.
+
+A random split makes the model appear both more discriminative and better calibrated — neither is real.
+
+### Calibration Fix
+
+With raw (uncalibrated) probabilities on the time-based split, ECE was 0.3516. After Isotonic calibration (fit on middle 10% chronological, evaluated on completely held-out last 20%), ECE dropped to **0.0003**. This was verified on unseen data — not overfitting.
+
+| ECE measured on | Raw | Platt | Isotonic |
+|---|---|---|---|
+| Calibration set (middle 10%) | 0.3435 | 0.0034 | 0.0000 |
+| **Held-out test (last 20%)** | **0.3516** | **0.0036** | **0.0003** |
+
+### Precision-First Operating Point
+
+The original "0.85 threshold → 97.5% precision / 28.3% recall" operating point was a product of random-split leakage. Under honest chronological evaluation with calibrated probabilities, the model cannot achieve 97.5% precision. The closest precision-first posture is **~80% precision**:
+
+| Threshold | Precision | Recall | Fraud caught | Alerts/100k/day |
+|---|---|---|---|---|
+| 0.885 | **80%** | 1.5% | 64/4,385 | 25.9 |
+| 0.128 | 50% | 38.2% | 1,674/4,385 | 1,096.3 |
+
+The 80%-precision threshold (0.885) is the nearest honest replacement for the original narrative. At ~80% precision, 4 of 5 flagged transactions are genuine fraud, catching ~1.5% of total fraud with very low alert volume.
+
+### Updated Validated AUC
+
+| Fix stage | AUC | Notes |
+|---|---|---|
+| Target encoding leakage removed | 0.798 | Still scrambled join order |
+| Join ordering (chronological) | 0.786 | Still random split leakage |
+| **Time-based split (current)** | **0.7622** | True generalization performance |
+
+All further metrics, thresholds, and calibration reports should reference 0.7622 as the validated AUC under chronological evaluation.

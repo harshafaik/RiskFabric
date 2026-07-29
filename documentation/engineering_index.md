@@ -4,44 +4,22 @@ This section documents the ETL pipelines, warehouse ingestion utilities, and geo
 
 ## Rust Core Engine (`src/`)
 
+```mermaid
+flowchart LR
+    classDef script fill:#22252a,stroke:#4d535b,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    classDef config fill:#182d24,stroke:#2b5443,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    CONFIG["config.rs"]:::config
+    CONFIG --> GEN["generators"]:::script
+    CONFIG --> MOD["models"]:::script
+    CONFIG --> ETL["etl"]:::script
+    CONFIG --> PIPE["pipeline"]:::script
+    GEN --> BATCH["generate.rs"]:::script
+    PIPE --> STREAM["stream.rs"]:::script
+    ETL --> ETL_BIN["etl.rs"]:::script
+    BATCH --> PREP["prepare_refs / export_refs"]:::script
 ```
-config.rs (YAML Config Loader)
-          │
-          ▼
-┌─────────────────────────────────┐
-│  📦 Library Modules             │
-│                                 │
-│  generators/                    │
-│    Customer, Account, Card,     │
-│    Transaction + Fraud          │
-│                                 │
-│  models/                        │
-│    Data Structures              │
-│    + FraudMetadata              │
-│                                 │
-│  etl/                           │
-│    Bronze → Silver →            │
-│    Gold (7 stages)              │
-│                                 │
-│  pipeline/                      │
-│    Runner, Events,              │
-│    Stream Handle                │
-│                                 │
-│  summary/                       │
-│    Parquet + CH Stats           │
-└───────────────┬─────────────────┘
-                │  (uses)
-                ▼
-┌─────────────────────────────────┐
-│  ⚡ CLI Binaries                 │
-│                                 │
-│  generate.rs    Batch → parquet │
-│  stream.rs      Kafka → Redpanda│
-│  etl.rs         ETL subcommands │
-│  prepare_refs   OSM → PostGIS   │
-│  export_refs    dbt → Parquet   │
-└─────────────────────────────────┘
-```
+
+**<a id="fig-4"></a>Figure 4:** Rust Core Engine Module Map
 
 ## Modules
 

@@ -5,102 +5,7 @@ This document explains the underlying philosophy, architecture, and logic of the
 ## 1. Agent-Based Simulation (ABM) Philosophy
 RiskFabric functions as an **Agent-Based Simulator** rather than a simple random data generator. 
 
-```mermaid
-%%{init: {
-  'themeVariables': {
-    'fontFamily': '"JetBrains Mono", monospace'
-  }
-}}%%
-flowchart TD
-    %% Node Class Definitions
-    classDef script fill:#22252a,stroke:#4d535b,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
-    classDef store fill:#1b2a3a,stroke:#304e70,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
-    classDef config fill:#182d24,stroke:#2b5443,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
-    classDef stream fill:#2e1f26,stroke:#573a46,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
-    classDef ui fill:#251e36,stroke:#483a68,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
-
-    subgraph WB["🌍 World Building"]
-        OSM["🗺️ OSM PBF"]:::store
-        PR["⚙️ prepare_refs.rs"]:::script
-        PG[("🗄️ Postgres / PostGIS")]:::store
-        DBT["📊 dbt models"]:::script
-        ER["⚙️ export_references.rs"]:::script
-        REF[("📂 Reference Parquet")]:::store
-
-        OSM --> PR --> PG --> DBT --> ER --> REF
-    end
-
-    subgraph CFG["⚙️ Configuration"]
-        YAML["📄 YAML Configs"]:::store
-        CFG_RS["⚙️ config.rs"]:::script
-
-        YAML --> CFG_RS
-    end
-
-    subgraph SIM["⚡ Simulation Engine"]
-        CUST["👤 customer_gen.rs"]:::script
-        ACC["💳 account_gen.rs / card_gen.rs"]:::script
-        TXN["💸 transaction_gen.rs"]:::script
-        ALE["🤖 fraud.rs"]:::script
-        BATCH["📦 batch generator"]:::script
-        STREAM["📥 stream generator"]:::script
-
-        CFG_RS --> CUST
-        CFG_RS --> ACC
-        CFG_RS --> TXN
-        CFG_RS --> ALE
-
-        REF --> CUST
-        REF --> ACC
-
-        CUST --> ACC
-        ACC --> TXN
-        ALE --> TXN
-
-        TXN --> BATCH
-        TXN --> STREAM
-    end
-
-    subgraph WH["🏛️ Data Pipeline (Parquet)"]
-        BRONZE[("🥉 Bronze Parquet")]:::store
-        ETL["⚙️ etl.rs"]:::script
-        SILVER[("🥈 Silver Parquet")]:::store
-        GOLD[("🥇 Gold Parquet")]:::store
-
-        BATCH --> BRONZE --> ETL --> SILVER --> GOLD
-    end
-
-    subgraph ML["🧠 ML & Scoring"]
-        TRAIN["🏋️ ml_training"]:::script
-        MODEL["🎯 fraud model"]:::store
-        SCORER["⚡ realtime_scorer"]:::script
-        KAFKA[("📨 Redpanda (Kafka)")]:::stream
-        SEED["🌱 redis_seeder"]:::script
-        REDIS[("🔴 Redis Cache")]:::store
-        SCORES[("📊 ClickHouse Scores")]:::store
-
-        GOLD --> TRAIN --> MODEL --> SCORER
-        STREAM --> KAFKA --> SCORER
-        SEED --> REDIS --> SCORER
-        SCORER --> SCORES
-    end
-
-    subgraph CM["📋 Case Management"]
-        IC["⚙️ ingest_cases"]:::script
-        PGO[("🗄️ Postgres (OLTP)")]:::store
-        DJANGO["💻 Django Case Admin"]:::ui
-
-        SCORES --> IC --> PGO --> DJANGO
-    end
-
-    %% Subgraph Styling
-    style WB fill:#26231b,stroke:#474130,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-    style CFG fill:#1e232e,stroke:#333e54,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-    style SIM fill:#1c241e,stroke:#304033,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-    style WH fill:#231e2d,stroke:#3f3354,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-    style ML fill:#28201b,stroke:#4c392c,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-    style CM fill:#1c2423,stroke:#2e403d,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-```
+For a visual overview of the complete system, see the [System Architecture Overview](concepts_index.md#system-architecture-overview) diagram in the Concepts Index.
 
 - **The Agent**: The primary agent, the `Customer`, drives the logic.
 - **The World**: **OpenStreetMap (OSM)** reference nodes (Residential and Merchant points) across India define the physical world.
@@ -110,26 +15,25 @@ Unlike statistical generators that sample from distributions to create flat tabl
 
 
 ## 2. The Deterministic Lifecycle
-To ensure consistency across 10M rows and all tables, RiskFabric follows a strict creation order:
+To ensure consistency across 10M rows and all tables, RiskFabric follows a strict creation order: (measured at 176K tx/s for 4.47M txn from 10K customers; 10M rows would take ~57s at that rate) [[See benchmarks](performance.md)]
+
+<div style="max-width: 350px; margin: 0 auto;">
 
 ```mermaid
-%%{init: {
-  'themeVariables': {
-    'fontFamily': '"JetBrains Mono", monospace'
-  }
-}}%%
-graph LR
-    Cust["👤 Customer"] -->|1:N| Acc["🏦 Account"]
-    Acc -->|1:N| Card["💳 Card"]
-    Card -->|1:N| Tx["💸 Transaction"]
-    Tx -->|linked| Merch["🏪 Merchant"]
-
-    style Cust fill:#1e232e,stroke:#333e54,stroke-width:1px,color:#cfd2d9
-    style Acc fill:#1e232e,stroke:#333e54,stroke-width:1px,color:#cfd2d9
-    style Card fill:#1e232e,stroke:#333e54,stroke-width:1px,color:#cfd2d9
-    style Tx fill:#28201b,stroke:#4c392c,stroke-width:1px,color:#cfd2d9
-    style Merch fill:#231e2d,stroke:#3f3354,stroke-width:1px,color:#cfd2d9
+%%{init: {'themeVariables': {'fontSize': '11px'}, 'er': {'diagramPadding': 2, 'entityPadding': 8}}}%%
+erDiagram
+    Customer ||--o{ Account : "customer_id"
+    Customer ||--o{ Card : "customer_id"
+    Account ||--o{ Card : "account_id"
+    Card ||--o{ Transaction : "card_id"
+    Customer ||--o{ Transaction : "customer_id"
+    Account ||--o{ Transaction : "account_id"
+    Transaction ||--|| Merchant : "merchant_id"
+    Transaction ||--o{ FraudMetadata : "transaction_id"
 ```
+</div>
+
+**<a id="fig-13"></a>Figure 13:** Entity Lifecycle Schema
 
 1.  **Customer Birth**: The generator assigns each customer a name, age, and a **Home Coordinate** based on real residential OSM nodes.
 2.  **Financial Anchoring**: The system assigns one or more `Accounts` to every customer.
@@ -141,9 +45,9 @@ graph LR
 Traditional simulators often use multiple passes (e.g., Pass 1: Generate legitimate data, Pass 2: Inject fraud). This approach increases latency and memory usage.
 
 RiskFabric uses a **One-Pass Architecture** in Rust:
-- **Parallelization**: The engine uses the `Rayon` library to process thousands of entities simultaneously across all CPU cores.
+- **Parallelization**: The engine uses the `Rayon` library to process thousands of entities simultaneously across all CPU cores. At 3,400 customers, thread-count scaling shows no benefit (overhead dominates); at 10K customers, throughput reaches 176K tx/s. [[See benchmarks](performance.md)]
 - **Unified Logic**: Merchant selection, amount calculation, fraud injection, and campaign coordination occur in a **single loop**.
-- **Memory Efficiency**: By using "Batched Generation" (5,000 entities per cycle), the engine maintains a constant memory footprint whether generating 1M or 10M rows.
+- **Memory Efficiency**: By using "Batched Generation" (5,000 entities per cycle), the engine maintains a bounded per-chunk memory footprint. Peak RSS is 3.6 GB at 3,400 customers and 6.5 GB at 10,000 customers — the final Parquet merge materializes the full dataset, so memory grows with total volume. 100K customers OOMed a 15 GB machine. [[See benchmarks](performance.md)]
 
 
 ## 4. Spatial Realism & H3 Indexing
@@ -177,4 +81,4 @@ To support real-time fraud detection, RiskFabric includes a dedicated **Streamin
 - **One-Pass Consistency**: The streaming engine reuses the exact same logic as the batch pipeline but operates on a continuous loop, producing transactions at a configurable rate (default 100 tx/s).
 - **Type-Level Safety (Unlabeled Output)**: To prevent "label leakage" during live scoring, the system uses a specialized `UnlabeledTransaction` struct. This mirrors the standard transaction but programmatically omits all ground-truth and labeling fields (`is_fraud`, `chargeback`, etc.), ensuring the Kafka payload is consistent with a real production stream.
 - **Verification Mode**: While in verification mode, the generator writes the "Ground Truth" of every streaming transaction to `ground_truth.csv`. This allows for a post-hoc join against real-time model scores to measure precision and recall in a simulated production environment.
-- **Self-Correcting Rate Limiter**: The generator measures actual Kafka broker latency for every message sent. It dynamically adjusts its sleep interval to compensate for network jitter, ensuring steady, drift-free throughput over long durations.
+- **Self-Correcting Rate Limiter**: The generator measures actual Kafka broker latency for every message sent. It dynamically adjusts its sleep interval to compensate for network jitter, delivering steady throughput — measured at ~88 tx/s against a 100 tx/s target over 120s. [[See benchmarks](performance.md)]

@@ -147,7 +147,7 @@ Account and card product definitions.
 
 > The three limit values are written to the `Card` struct but never read by `transaction_gen.rs`, so transactions are not validated against them — making the fields decorative. Wiring enforcement in would enable realistic "Limit Breach" fraud signals currently absent from the feature set.
 
-## Known Issues
+## Current Limitations
 
 Two rough edges remain in `load()`:
 

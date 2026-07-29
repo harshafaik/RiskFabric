@@ -2,71 +2,57 @@
 
 High-level documentation explaining the underlying philosophy, architectural strategies, and simulation logic of RiskFabric.
 
-## End-to-End Data Flow
+## System Architecture Overview
 
 ```mermaid
-%%{init: {
-  'themeVariables': {
-    'fontFamily': '"JetBrains Mono", monospace'
-  }
-}}%%
-flowchart LR
-    %% Node Class Definitions
-    classDef defaultNode fill:#22252a,stroke:#4d535b,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
-    classDef inputNode fill:#1b2a3a,stroke:#304e70,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
-    classDef dbNode fill:#1c2423,stroke:#2e403d,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
-
-    subgraph INPUT["📥 Input"]
-        OSM["OSM PBF Data"]:::inputNode
-        YAML["YAML Configs"]:::inputNode
+flowchart TB
+    classDef script fill:#22252a,stroke:#4d535b,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9
+    classDef store fill:#1b2a3a,stroke:#378ADD,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9
+    classDef config fill:#182d24,stroke:#1D9E75,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9
+    classDef stream fill:#2e1f26,stroke:#D4537E,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9
+    classDef ui fill:#251e36,stroke:#7F77DD,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9
+ 
+    subgraph WB["World Building"]
+        OSM["OSM PBF"]:::store --> PREP["prepare_refs.rs"]:::script --> PG[("Postgres / PostGIS")]:::store --> DBT["dbt models<br/>(ST_Intersects spatial joins)"]:::script --> REF[("Reference Parquet")]:::store
     end
-
-    subgraph WB["🌍 World Building"]
-        OSM --> REF["Reference Parquet<br/>Merchants, Residential"]:::defaultNode
+ 
+    subgraph SIM["Simulation Engine"]
+        YAML["YAML Configs"]:::config --> CUST["customer_gen.rs"]:::script --> ACC["account_gen / card_gen"]:::script --> TXN["transaction_gen.rs"]:::script
+        TXN --> BATCH["Batch Output"]:::script
+        TXN --> STREAM["Stream Generator"]:::script
     end
-
-    subgraph GEN["⚙️ Generation"]
-        YAML --> GEN_RS["batch_generator.rs"]:::defaultNode
-        REF --> GEN_RS
-        GEN_RS --> TXN_PQ["Parquet: Transactions +<br/>Customers + Accounts + Cards"]:::defaultNode
+ 
+    subgraph ETL["Data Pipeline"]
+        BRONZE[("Bronze Parquet")]:::store --> ET["etl.rs"]:::script --> SILVER[("Silver Parquet")]:::store
     end
-
-    subgraph FE["🔧 Feature Engineering"]
-        TXN_PQ --> ETL_RS["etl_system"]:::defaultNode
-        ETL_RS --> GOLD[("Gold Parquet\nSnapshot")]:::dbNode
+ 
+    subgraph ML["ML Training & Scoring"]
+        GOLD[("Gold Parquet")]:::store --> TRAIN["train_xgboost.py"]:::script --> MODEL[("fraud_model_v4.json")]:::store
+        STREAM --> KAFKA[("Redpanda")]:::stream --> SCORER["scorer.py"]:::script
+        SEED["redis_seeder.py"]:::script --> REDIS[("Redis")]:::store --> SCORER
+        MODEL --> SCORER
+        SCORER --> SCORES[("ClickHouse Scores")]:::store
     end
-
-    subgraph ML_TRAIN["🧠 ML Training"]
-        GOLD --> TRAIN_PY["ml_training"]:::defaultNode
-        TRAIN_PY --> MODEL["fraud_model_v4.json"]:::defaultNode
+ 
+    subgraph CM["Case Management"]
+        INGEST["ingest_cases.py"]:::script --> OLTP[("Postgres OLTP")]:::store --> DJANGO["Django Admin"]:::ui
     end
-
-    subgraph RT["⚡ Real-Time Scoring"]
-        YAML --> STREAM_RS["streaming_generator"]:::defaultNode
-        STREAM_RS --> KAFKA[("Redpanda")]:::dbNode
-        KAFKA --> SCORER_PY["realtime_scorer"]:::defaultNode
-        MODEL --> SCORER_PY
-        SEED_PY["redis_seeder"]:::defaultNode
-        REDIS[("Redis")]:::dbNode
-        REDIS --> SCORER_PY
-        SCORER_PY --> SCORES[("ClickHouse\nfraud_scores")]:::dbNode
-    end
-
-    %% Subgraph Styling
-    style INPUT fill:#1e232e,stroke:#333e54,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-    style WB fill:#26231b,stroke:#474130,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-    style GEN fill:#1c241e,stroke:#304033,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-    style FE fill:#231e2d,stroke:#3f3354,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-    style ML_TRAIN fill:#28201b,stroke:#4c392c,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-    style RT fill:#1c2423,stroke:#2e403d,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9;
-
-    %% Node Specific Styling Override to match theme
-    style REF fill:#1b2a3a,stroke:#304e70,stroke-width:1px,color:#cfd2d9;
-    style GOLD fill:#1c2423,stroke:#2e403d,stroke-width:1px,color:#cfd2d9;
-    style MODEL fill:#1c241e,stroke:#304033,stroke-width:1px,color:#cfd2d9;
-    style REDIS fill:#2e1f26,stroke:#573a46,stroke-width:1px,color:#cfd2d9;
-    style KAFKA fill:#2e1f26,stroke:#573a46,stroke-width:1px,color:#cfd2d9;
-    style SCORES fill:#1c2423,stroke:#2e403d,stroke-width:1px,color:#cfd2d9;
-
-    linkStyle default stroke-width:1px,stroke:#5c687a
+ 
+    REF --> CUST
+    BATCH --> BRONZE
+    SILVER --> GOLD
+    SCORES --> INGEST
+ 
+    style WB fill:#26231b,stroke:#EF9F27,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9
+    style SIM fill:#1c241e,stroke:#1D9E75,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9
+    style ML fill:#28201b,stroke:#7F77DD,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9
+    style ETL fill:#231e2d,stroke:#D85A30,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9
+    style CM fill:#1c2423,stroke:#7F77DD,stroke-width:1px,stroke-dasharray: 3 3,color:#cfd2d9
 ```
+
+**<a id="fig-12"></a>Figure 12:** System Architecture Overview
+
+## Modules
+
+- [Theory of Operation](theory_of_operation.md)
+- [Fraud Signatures & Attack Patterns](fraud_signatures.md)

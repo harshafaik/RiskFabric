@@ -6,40 +6,7 @@ Run RiskFabric on a single EC2 instance via Docker Compose, with RDS for Postgre
 
 ## Local development
 
-Everything runs on a single machine via Docker Compose. The Rust `stream.rs` binary runs on the host (outside containers), producing to Redpanda on `localhost:9092`.
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  Local Machine                                          │
-│                                                         │
-│  stream.rs (host binary) ──produces──▶ localhost:9092   │
-│                                             │           │
-│  ┌──────────────────────────────────────────┼─────────┐ │
-│  │  Docker Compose (riskfabric_default)      │         │ │
-│  │                                           ▼         │ │
-│  │  ┌──────────┐  ┌──────────┐  ┌───────────────┐    │ │
-│  │  │ Redpanda │  │  Redis   │  │  ClickHouse   │    │ │
-│  │  │ :9092    │  │  :6379   │  │  :8123, :9000 │    │ │
-│  │  └────┬─────┘  └────┬─────┘  └───────┬───────┘    │ │
-│  │       │             │               │             │ │
-│  │       ▼             ▼               ▲             │ │
-│  │  ┌─────────┐   ┌─────────┐   ┌────────────┐      │ │
-│  │  │ scorer  │──▶│  Redis  │   │  grafana   │      │ │
-│  │  │(Python) │   │ (cache) │   │(Grafana)│  :3000│      │ │
-│  │  └─────────┘   └─────────┘   └────────────┘      │ │
-│  │                                                   │ │
-│  │  ┌───────────────┐   ┌───────────────┐            │ │
-│  │  │ oltp-postgres │◀──│  case-admin   │            │ │
-│  │  │ :5433→host    │   │  :8001→host   │            │ │
-│  │  └───────────────┘   └───────────────┘            │ │
-│  └───────────────────────────────────────────────────┘ │
-│                                                         │
-│  Batch pipeline (runs on host, outside containers):     │
-│  generate.rs → data/bronze/*.parquet                    │
-│      → Polars → data/gold/{snapshot}/*.parquet          │
-│      → DuckDB → train_xgboost.py                        │
-└─────────────────────────────────────────────────────────┘
-```
+The local Docker Compose stack is documented in detail in [Infrastructure & Local Service Stack](../components/infrastructure.md). Key additions to note for deployment:
 
 ### Services (all in Docker Compose)
 
@@ -153,7 +120,7 @@ Local dev machine:
 
 **RDS for Postgres ($16/mo)** provides automated backups, point-in-time recovery, minor version patching, and multi-AZ failover. Postgres is the system's transactional backbone — case state, investigator notes, and training metadata are records that must not be lost. At $16/month for a `db.t4g.micro`, managed Postgres is cheaper than the operational cost of self-managing backups and recovery on the EC2 instance.
 
-**Redis on EC2** provides sub-millisecond lookups for running statistical aggregates (Welford mean/std, card velocity). Redis data is cacheable and recomputable — it can be lost and rebuilt from Parquet snapshots. ElastiCache starts at ~$12/month for a `t3.micro` and adds no value over the Redis container already running in Docker Compose. The container uses <100MB RAM at project throughput.
+**Redis on EC2** provides sub-millisecond lookups for running statistical aggregates (Welford mean/std, card velocity) — verified at p50: 120–261 µs across all 13 operations, max p99: 509 µs. [[See benchmarks](performance.md)] Redis data is cacheable and recomputable — it can be lost and rebuilt from Parquet snapshots. ElastiCache starts at ~$12/month for a `t3.micro` and adds no value over the Redis container already running in Docker Compose. The container uses <100MB RAM at project throughput.
 
 **Redpanda on EC2** provides Kafka-compatible streaming at 100 tx/s. MSK serverless has a minimum base charge of $0.75/hour ($540/month) before a single message is sent. At the project's throughput, this is a 27× cost multiplier over self-hosting with no architectural benefit. Redpanda runs in a single container with negligible resource consumption.
 

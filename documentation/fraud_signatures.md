@@ -50,7 +50,7 @@ Beyond standalone profiles, RiskFabric can coordinate multiple transactions into
 
 **Sequential Takeover** — a single card experiences progressive escalation. Each step's amount escalates by `amount_escalation` (default `0.30`) from the previous, and the location "sticks" to the attacker's coordinate across the whole sequence, producing a persistent anomalous footprint rather than isolated spikes.
 
-## 3. Known Limitations
+## 3. Current Limitations
 
-- **No traveling-customer model.** Legitimate spatial anomalies come only from instantaneous coordinate jumps on fraud injection. Without a model of normal user travel, legitimate trips can produce velocity spikes that mimic fraud — inflating false-positive rates in spatial anomaly detectors.
-- **Campaigns are network/IP + coordinate only.** No Account-to-Account (A2A) graph signals or multi-hop money-laundering (mule chains) yet. Supporting graph neural networks or flow-based detection would require explicit destination-account entities and graph topology in `fraud.rs`.
+- **No traveling-customer model.** Legitimate trips produce velocity spikes indistinguishable from fraud, inflating false positives in spatial anomaly detectors.
+- **Campaigns are network/IP + coordinate only.** No A2A graph signals or mule chains. Supporting graph-based detection requires destination-account entities and graph topology in `fraud.rs`.

@@ -8,7 +8,7 @@ Two scripts evaluate how the model behaves outside ideal training conditions. `d
 
 ### What It Tests
 
-Loads the isotonic-calibrated model and evaluates it on the held-out 50% evaluation split under three conditions:
+Loads the isotonic-calibrated model and evaluates it on the held-out test split under three conditions:
 
 | Scenario | Manipulation | What It Simulates |
 | :--- | :--- | :--- |
@@ -43,13 +43,11 @@ The script was originally designed to iterate through `max_depth` values 3–8, 
 
 | Script | Consumes |
 | :--- | :--- |
-| `drift_simulation.py` | `models/calibrated_fraud_model_isotonic.pkl`, ClickHouse gold master |
-| `evaluate_model_depth.py` | Latest model JSON (via `model_utils`), ClickHouse gold master |
+| `drift_simulation.py` | `models/calibrated_fraud_model_isotonic.pkl`, Gold Parquet snapshot via DuckDB |
+| `evaluate_model_depth.py` | Latest model JSON (via `model_utils`), Gold Parquet snapshot via DuckDB |
 
-## Known Issues
+Both scripts use `split_by_timestamp()` to evaluate on a held-out chronological test set rather than the full dataset or a random split.
 
-Both scripts include `suspicious_cluster_member` in their feature lists despite it being excluded from training (`train_xgboost.py` uses 11 features, not 12). This column is caught by the `if c in df.columns` filter and silently dropped before inference, meaning the scripts produce correct predictions but the feature list in the source code is misleading.
+## Current Limitations
 
-`evaluate_model_depth.py` casts categoricals via `.cast(pl.Categorical)` without `.to_physical()`, same as calibration and SHAP scripts. The model was trained on integer ordinals and expects numeric input.
-
-The depth sweep that gives the script its name is not implemented. The file should either be renamed or the sweep loop restored to fulfill its documented purpose.
+`evaluate_model_depth.py` is named for a depth sweep loop that was removed during refactoring. The script should be renamed or the sweep restored.

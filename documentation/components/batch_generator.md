@@ -4,19 +4,8 @@
 The batch generator module `generate.rs` serves as the primary orchestration engine for synthetic datasets.
 
 ## Schema
-The orchestrator outputs five primary relational tables:
 
-<div style="max-width: 350px; margin: 0 auto;">
-
-```text
-Customer ──customer_id──► Account
-Account ──account_id───► Card
-Card ────card_id───────► Transaction
-Customer ──customer_id──► Card
-Transaction ─transaction_id──► FraudMetadata
-```
-
-</div>
+The entity schema follows the canonical [entity model](../theory_of_operation.md#2-the-deterministic-lifecycle) (Customer → Account → Card → Transaction → FraudMetadata). The orchestrator outputs five primary relational tables:
 <details>
 <summary>Output tables</summary>
 
@@ -30,11 +19,12 @@ Transaction ─transaction_id──► FraudMetadata
 
 </details>
 
-The generator uses a **chunked execution strategy** to handle datasets that exceed available system memory. By processing cards in batches of 5,000, the generator maintains a stable memory profile regardless of the total population size. For spatial lookups, the system implements a multi-tier H3 index (resolutions 4 and 6) and a state-level index. This allows for rapid, localized merchant selection during transaction generation without exhaustive searching of the merchant reference dataset.
+The generator uses a **chunked execution strategy** to handle datasets that exceed available system memory. Measured RSS: 3.6 GB at 3,400 customers (1.54M txn), 6.5 GB at 10,000 customers (4.47M txn). The 5,000-card chunks keep per-chunk allocation bounded, but the final Parquet merge materializes the full dataset — memory grows with total volume. [[See benchmarks](performance.md)] For spatial lookups, the system implements a multi-tier H3 index (resolutions 4 and 6) and a state-level index. This allows for rapid, localized merchant selection during transaction generation without exhaustive searching of the merchant reference dataset.
 
 The choice of **Apache Parquet** as the output format ensures that multi-million row datasets remain compressed and performant for the downstream Python-based ML pipeline and Polars-based ETL.
 
 `generate.rs` sits at the start of the RiskFabric lifecycle. It consumes reference Parquet files for merchants and residential locations and produces the four core tables: `customers.parquet`, `accounts.parquet`, `cards.parquet`, and `transactions.parquet` (including its accompanying `fraud_metadata.parquet`).
 
-## Known Issues
-The final merge phase is implemented by writing temporary Parquet chunks to disk and then re-scanning them with the Polars lazy API. While this prevents memory exhaustion during the final join, it introduces disk I/O overhead that affects the "cleanup" phase of generation. Additionally, the 5,000-card chunk size is currently hardcoded; moving this to `customer_config.yaml` would allow performance tuning based on available RAM capacity.
+## Current Limitations
+
+The final merge writes temporary Parquet chunks to disk and re-scans them. While this prevents OOM, it adds disk I/O overhead. The 5,000-card chunk size is hardcoded; moving it to config would allow RAM-based tuning.

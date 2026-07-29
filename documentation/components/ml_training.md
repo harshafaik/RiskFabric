@@ -42,16 +42,24 @@ The following columns are **explicitly excluded** from training despite being pr
 
 **Dynamic Class Weighting** is applied at training time via `scale_pos_weight`, computed as the ratio of legitimate to fraudulent samples in the training split. This is recalculated on every run, meaning the weight adjusts automatically as the fraud injection rate in the synthetic population changes between generation runs. No fixed weight is hardcoded.
 
-**Stratified 80/20 Split** is used for train/test partitioning with `random_state=42`. The `stratify` argument ensures that the fraud prevalence rate is preserved in both splits. The test set is used only for computing the final ROC AUC score and top-10 feature importances printed to stdout; no model selection or threshold tuning is performed on it.
+**Chronological 80/20 Split** replaces the previous random stratified split. The Gold DataFrame is sorted by `timestamp` ascending, and the first 80% of rows (chronologically) form the training set while the last 20% form the test set. This ensures the model never sees future fraud patterns during training and produces metrics representative of deployment performance. The `split_by_timestamp()` utility in `ml_utils.py` is used consistently across `train_xgboost.py`, `calibrate_model.py`, `drift_simulation.py`, `test_model.py`, and `evaluate_model_depth.py`.
 
 **Model Inspection via `dump_model.py`** is the post-training verification step. After `train_xgboost.py` saves a date-stamped model, `dump_model.py` loads the booster and prints `feature_names` and `feature_types` directly from the booster object. It also parses the `learner.gradient_booster.model.cats` block in the JSON to extract the categorical level encodings the model observed during training. This provides a verifiable source of truth for the feature schema that `scorer.py` uses to reorder and type-cast its inference DataFrames.
 
+**Validated Performance** (2026-07-20, snapshot `20260716_145639`, 1,079,098 train / 154,157 cal / 308,314 test, chronological 70/10/20 split, 10 behavioral features):
+
+| Metric | Uncalibrated | Platt | Isotonic |
+|---|---|---|---|
+| ROC-AUC | 0.7622 | 0.7622 | 0.7622 |
+| PR-AUC | 0.3293 | 0.3293 | 0.3293 |
+| Brier Loss | 0.1385 | — | — |
+| ECE (on held-out test) | 0.3516 | 0.0036 | 0.0003 |
+| ECE (on cal set) | 0.3435 | 0.0034 | 0.0000 |
+
+ECE of 0.0003 was validated on the completely held-out last 20% chronological — isotonic calibrator fit on middle 10%, evaluated on entirely unseen data. The near-zero ECE is genuine, not overfitting.
+
+**Precision-first operating point:** The old 97.5%-precision figure was inflated by random-split leakage. Under honest chronological evaluation, the model cannot sustain that precision. The closest precision-first posture is **~80% precision at threshold 0.885**, catching ~1.5% of fraud with ~25.9 alerts per 100K transactions per day — 4 of 5 flagged transactions are genuine fraud.
+
+These numbers reflect true generalization on unseen future data — no random split, no target encoding, no join-ordering artifacts. Earlier reported values (0.925 → 0.798 → 0.786) were each inflated by successively removed data leakage sources. See `documentation/feature_leakage_issues.md` §7 for the split leakage analysis.
+
 `train_xgboost.py` is the terminal consumer of the **Data Warehouse layer** and the entry point to the **Machine Learning layer**. It reads from `fact_transactions_gold` (produced by `etl.rs`) and writes a date-stamped model JSON. Downstream scripts auto-discover the latest model via `model_utils.load_model()` — no manual renaming or path hardcoding is required.
-
-## Known Issues
-
-All XGBoost hyperparameters — `n_estimators=100`, `max_depth=6`, `learning_rate=0.1` — are hardcoded directly in the training function with no configuration file. This prevents hyperparameter search without modifying source code. Moving these to `ml_tuning.yaml` and wiring in a sweep library (e.g., `optuna`) is required before the model can be systematically optimized.
-
-A random 80/20 stratified split is used rather than a time-based split. Because the synthetic dataset spans 365 days and fraud campaigns evolve over that period, a random split allows the model to see future fraud patterns during training. This produces optimistically biased performance metrics. A walk-forward or expanding-window validation strategy aligned to the transaction timestamp is required to produce metrics that are representative of deployment performance.
-
-`dump_model.py` extracts categorical levels from the XGBoost JSON using `re.findall` on the raw JSON string of the `cats` block. This is an unreliable parser that depends on the specific serialization format of the installed XGBoost version and will break silently if the internal JSON schema changes across library versions. The utility also only prints to stdout — it produces no machine-readable output. Replacing the regex approach with a proper JSON path traversal and exporting a structured `schema.yaml` would allow `scorer.py` to load the feature schema automatically rather than relying on the booster's `feature_names` attribute at runtime.

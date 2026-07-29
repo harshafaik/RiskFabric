@@ -1,117 +1,108 @@
-# Machine Learning Metrics & Model Progression
+# Machine Learning Metrics
 
-This document tracks the performance and evolution of the fraud detection models trained on RiskFabric synthetic data, progressing from initial leakage-prone baselines to a robust, behavioral production configuration.
+Operational metrics for the current production model (v4.1, seed=42, chronological split). For the full leakage narrative and how these numbers were arrived at, see the [Feature Leakage Case Study](feature_leakage_issues.md). For reproducible benchmarks (hardware, N=5, percentiles), see [Performance Benchmarks](performance.md).
 
+## Current Production Model (v4.1)
 
-## Section 1: Early Iterations
+| Parameter | Value |
+|---|---|
+| Snapshot | `20260716_145639` |
+| Train rows | 1,079,098 (first 70% chronological) |
+| Calibration rows | 154,157 (middle 10% chronological) |
+| Test rows | 308,314 (last 20% chronological — held out) |
+| Features | 10 behavioral |
+| Fraud rate | 1.41% |
 
-The development process began with basic feature sets to establish a baseline for fraud detection performance.
+### Discrimination (Held-Out Chronological Test Set)
 
-### v1 Iteration (Baseline)
-The initial model established core feature sets including amount deviations and spatial velocity on a sample population.
+| Metric | Uncalibrated | Platt | Isotonic |
+|---|---|---|---|
+| ROC-AUC | 0.7622 | 0.7622 | 0.7622 |
+| PR-AUC | 0.3293 | 0.3293 | 0.3292 |
+| ECE | 0.3516 | 0.0036 | 0.0003 |
 
-*   **Accuracy**: 0.95
-*   **ROC AUC Score**: 0.9782
-*   **Recall (Fraud)**: 0.30 (Identified significant "Recall Gap")
-
-### v2 High-Fidelity (Leakage Detected)
-Scaling to larger datasets revealed massive performance inflation due to generator artifacts in metadata fields.
-
-*   **ROC AUC Score**: 0.9993
-*   **Leakage Identified**: Synthetic metadata fields (`fraud_target`, `burst_seq`) were providing a "static bypass" for the model.
-
-### v2 Iteration (Leakage Prevention)
-The feature vector was sanitized to exclude metadata, shifting the focus to behavioral signals.
-
-*   **ROC AUC Score**: 0.9746
-*   **Recall (Noisy Labels)**: 0.72
-*   **Sanitization**: Transitioned from `fraud_target` to the noisy `is_fraud` label.
-
-**Note**: In addition to the leakage issues documented below, v1 and v2 iterations were trained on an incomplete feature set. Behavioral features computed in the Rust ETL layer — including `amount_deviation_z_score`, `spatial_velocity`, and granular anomaly flags — were silently dropped before reaching XGBoost due to a narrow Gold table join. The inflated AUC figures in these iterations reflect both metadata leakage and the absence of the features that would have provided genuine behavioral signal.
-
-## Section 2: v3 — Production Configuration (Final)
-
-The final model configuration focuses on pure behavioral signals, specifically tuned to handle the extreme class imbalance (1.4% fraud rate) found in realistic production environments.
-
-### Training Setup
-*   **Dataset:** 1.5M transactions (Seed 42).
-*   **Fraud Rate:** 1.41% (`target_share`: 0.01, `fp_rate`: 0.005).
-*   **Model:** XGBoost binary classifier.
-*   **Scale Pos Weight:** 69.57 (Computed dynamically from training imbalance).
-*   **Eval Metric:** `aucpr` (Area Under Precision-Recall Curve).
-*   **Label Noise:** 0.5% False Positives and 1% False Negatives deliberately injected.
-*   **Theoretical Recall Ceiling:** 66.7% (Derived from the intentional label noise ratio).
+The isotonic ECE of 0.0003 was measured on the completely held-out test set (disjoint from both training and calibration sets).
 
 ### Feature Importance
-The model prioritizes physical and financial anomalies over static identifiers.
 
-| Feature | Importance | Description |
-|:--- | :--- | :--- |
-| `spatial_velocity` | 25.38% | Impossible travel speed between transactions |
-| `amount_deviation_z_score` | 20.80% | Spending magnitude relative to customer norm |
-| `time_since_last_transaction` | 12.72% | Temporal burst and frequency detection |
-| `transaction_channel` | 11.60% | Risk associated with specific payment methods |
-| `merchant_category` | 11.08% | Contextual risk of the merchant type |
-| `hour_deviation_from_norm` | 7.40% | Circadian rhythm anomalies |
-| `merchant_category_switch_flag` | 2.89% | Unexpected shifts in merchant category |
-| `card_present` | 2.45% | Physical vs. digital transaction risk |
-| `transaction_sequence_number` | 1.95% | Position within the account lifecycle |
-| `rapid_fire_transaction_flag` | 1.88% | High-velocity sequence identification |
+| Feature | Gain |
+|---|---|
+| `spatial_velocity` | 34.3% |
+| `transaction_channel` | 18.0% |
+| `amount_deviation_z_score` | 17.3% |
+| `time_since_last_transaction` | 12.0% |
+| `merchant_category_switch_flag` | 4.5% |
+| `card_present` | 4.0% |
+| `hour_deviation_from_norm` | 3.2% |
+| `rapid_fire_transaction_flag` | 2.5% |
+| `transaction_sequence_number` | 2.4% |
+| `escalating_amounts_flag` | 1.8% |
 
-For a detailed narrative of the discovery and resolution of these artifacts, see the [Feature Leakage Case Study](feature_leakage_issues.md).
+`spatial_velocity` is the dominant behavioral signal. `transaction_channel` and `amount_deviation_z_score` follow as strong secondary features. The distribution is stable across random vs chronological splits — the leakage affects the metrics, not which features the model learns from.
 
-### Generalization Results
-Validated against three independent populations to ensure robust performance across different random seeds.
+### AUC Decline Traced Through Leakage Fixes
 
-| Test Population | Seed | Transactions | AUC |
-|:--- | :--- | :--- | :--- |
-| Holdout | 42 (Same) | 1.5M | 84.72% |
-| Independent | 8888 (Different) | 1.5M | 79.94% |
-| Independent | 5555 (Different) | 3.0M | 79.81% |
+| Fix | AUC | Cause of inflation |
+|---|---|---|
+| Target encoding leakage removed | 0.798 | `merchant_category` label-injection removed |
+| Join ordering restored | 0.798 → 0.786 | `spatial_velocity` now computed on correct prior |
+| Chronological split (current) | 0.786 → 0.7622 | No future data in training |
 
-Note: The higher AUC on the holdout set is due to distributional overlap with the training population, while the ~80% AUC on independent seeds represents the model's true behavioral generalization.
+The 2.3-point gap (0.7622 vs 0.7855 random-split) is the optimistic bias from future data leakage. For a reproducible ablation study quantifying each leak class individually at seed=42, see [Performance Benchmarks](performance.md).
 
+## Threshold Operating Points (Isotonic Calibrated, Chronological Test Set)
 
-## Section 3: Threshold Operating Points
+Thresholds are written to `data/config/runtime_thresholds.json` by `compute_thresholds.py` and loaded at startup by `scorer.py`.
 
-In a production environment, the model's probability output is mapped to specific operational actions.
+| Operating Mode | Threshold | Precision | Recall | Alerts/100K/day | Fraud caught |
+|---|---|---|---|---|---|
+| Auto-blocking | 0.917 | 88.9% | 0.4% | 5.8 | 16 / 4,385 |
+| Manual investigation | 0.885 | 80.0% | 1.5% | 25.9 | 64 / 4,385 |
+| High-recall detection | 0.128 | 49.5% | 38.2% | 1,096 | 1,674 / 4,385 |
 
-| Operating Mode | Threshold | Precision | Recall | F1 | Use Case |
-|:--- | :--- | :--- | :--- | :--- | :--- |
-| **Detection Layer** | 0.495 | 10% | 60% | 0.172 | Review queue — broad capture |
-| **Triage** | 0.645 | 18% | 55% | 0.268 | Early analyst filtering |
-| **Investigation** | 0.736 | 31% | 50% | 0.385 | Analyst workbench |
-| **High Confidence** | 0.842 | 57% | 45% | 0.502 | Escalation decisions |
-| **Blocking** | 0.945 | 73% | 40% | 0.517 | Automatic card block |
+At the precision-first threshold of 0.885, 4 of 5 flagged transactions are genuine fraud. The alternative 0.128 threshold catches 38× more fraud at 42× the analyst volume — a legitimate operational tradeoff.
 
-The Detection Layer feeds a review queue for manual inspection, while the Blocking Layer is reserved for automated enforcement. The tradeoff between these layers is an operational business decision, not a model failure.
+> Earlier threshold tables in project history reported 97.5% precision and 40−60% recall. Those were derived from a random-split model with uncalibrated probabilities and are not representative of deployed performance.
 
+## Merchant Category Audit
 
-## Section 4: Merchant Category Audit
-
-Leakage verification at the "Blocking" threshold (0.945) confirms that overrepresentation reflects genuine category risk levels rather than static bypasses.
+Leakage verification at the blocking threshold (0.945) confirms that overrepresentation reflects genuine category risk rather than static bypasses. All verified fraud rates fall below 20%, ruling out any single category as a near-deterministic fraud rule. The model uses category as a Bayesian prior requiring behavioral confirmation.
 
 | Category | Global Share | Flag Share | Index | Verified Fraud Rate |
-|:--- | :--- | :--- | :--- | :--- |
-| **GAMBLING** | 0.07% | 1.09% | 17x | 17.68% |
-| **ENTERTAINMENT** | 1.10% | 14.35% | 13x | 11.20% |
-| **LUXURY** | 1.62% | 8.63% | 5x | 4.91% |
-| **ELECTRONICS** | 3.39% | 10.22% | 3x | 2.40% |
-| **TRAVEL** | 6.14% | 16.29% | 2.6x | 2.53% |
-| **SERVICES** | 5.15% | 11.92% | 2.3x | 2.53% |
+|---|---|---|---|---|
+| GAMBLING | 0.07% | 1.09% | 17× | 17.68% |
+| ENTERTAINMENT | 1.10% | 14.35% | 13× | 11.20% |
+| LUXURY | 1.62% | 8.63% | 5× | 4.91% |
+| ELECTRONICS | 3.39% | 10.22% | 3× | 2.40% |
+| TRAVEL | 6.14% | 16.29% | 2.6× | 2.53% |
+| SERVICES | 5.15% | 11.92% | 2.3× | 2.53% |
 
-All verified fraud rates fall below the 20% threshold, confirming that no single category acts as a near-deterministic fraud rule. The model uses category as a Bayesian prior requiring behavioral confirmation rather than a static classifier.
+The GAMBLING index was previously at 103× (see [Feature Leakage Case Study](feature_leakage_issues.md)); its reduction to 17× after generator retuning confirms it is now a legitimate signal.
 
-The `GAMBLING` index was previously at 103x (documented in the leakage case study); its reduction to 17x after generator retuning and the verified fraud rate confirms it is now a legitimate signal.
+## Hyperparameters
 
+Loaded from `data/config/ml_tuning.yaml` at training time.
 
-## Section 5: Known Limitations
+```yaml
+n_estimators: 100
+max_depth: 6
+learning_rate: 0.1
+objective: "binary:logistic"
+tree_method: "hist"
+enable_categorical: true
+eval_metric: "aucpr"
+```
 
-### Recall Ceiling (66.7%)
-Theoretical maximum recall is imposed by deliberate label noise design. The 0.5% false positive rate in `fp_rate` creates labels that are behaviorally unlearnable. Recall approaching this ceiling represents optimal behavior.
+## Current Limitations
 
-### Silver ETL Eager Execution
-Sequence features using `.over()` window functions trigger eager in-memory execution despite Polars lazy API usage. Datasets significantly exceeding available RAM will hit memory pressure. Roadmap: transition to a stateful streaming pre-aggregation pass.
+**Recall ceiling.** Theoretical maximum recall is imposed by deliberate label noise design — a 0.5% false positive rate in `fp_rate` creates labels that are behaviorally unlearnable. Recall approaching this ceiling represents optimal behavior.
 
-### Campaign Detection
-Coordinated attack signatures require graph-based reasoning over entity relationships. Individual transactions in a campaign are often behaviorally indistinguishable from legitimate ones when viewed in isolation—this is a structural limitation of single-transaction classifiers.
+**Silver ETL eager execution.** Sequence features using `.over()` window functions trigger eager in-memory execution despite Polars lazy API usage. Datasets significantly exceeding available RAM will hit memory pressure.
+
+**Campaign detection.** Coordinated attack signatures require graph-based reasoning over entity relationships. Individual transactions in a campaign are often behaviorally indistinguishable from legitimate ones when viewed in isolation — a structural limitation of single-transaction classifiers.
+
+**Generalization across seeds.** The model's AUC drops to ~80% on independent seed populations (the 0.7622 on the holdout set benefits from distributional overlap with the training seed). Cross-seed generalization is tracked in [Performance Benchmarks](performance.md).
+
+## Historical Note
+
+Versions v1−v3 of this page reported AUCs in the 0.91−0.99 range, feature importance including `merchant_category` at 11−13%, and a threshold table reaching 73% precision at 0.945. All three were products of random-split leakage and an incomplete feature set. Those numbers are documented — with corrections — in the [Feature Leakage Case Study](feature_leakage_issues.md) and are not repeated here to prevent accidental citation.

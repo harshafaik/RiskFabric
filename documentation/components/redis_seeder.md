@@ -2,51 +2,49 @@
 
 ## Overview
 
-The Redis seeder (`seed_redis.py`) is an operational utility that initializes the real-time feature store with pre-computed historical state derived from the Gold Parquet snapshot (`fact_transactions_gold`). It reads the most recent snapshot from `data/gold/*/fact_transactions_gold.parquet` (via DuckDB) and writes the results into the Redis key schema expected by `scorer.py`. It must be run after the Gold table has been materialized by `etl.rs` (which produces the Parquet snapshot) and before `stream.rs` and `scorer.py` are started.
+`seed_redis.py` initializes Redis with pre-computed historical state from the Gold Parquet snapshot. Reads the latest `data/gold/*/fact_transactions_gold.parquet` via DuckDB and writes the Redis key schema expected by `scorer.py`. Run after `etl.rs` produces Gold, before `stream.rs` and `scorer.py` start.
 
 ## Schema
 
-The seeder reads the Gold Parquet snapshot through DuckDB and writes the terminal state into the Redis key schema consumed by `scorer.py`:
-
 ```mermaid
 flowchart LR
-    Gold[(fact_transactions_gold\nParquet snapshot)] -->|DuckDB query| Seeder["seed_redis.py"]
-    Seeder -->|cust keys| Redis[(Redis)]
+    classDef store fill:#1b2a3a,stroke:#304e70,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    classDef script fill:#22252a,stroke:#4d535b,stroke-width:1px,rx:5px,ry:5px,color:#cfd2d9;
+    Gold[(fact_transactions_gold\nParquet snapshot)]:::store -->|DuckDB query| Seeder["seed_redis.py"]:::script
+    Seeder -->|cust keys| Redis[(Redis)]:::store
     Seeder -->|merch keys| Redis
     Seeder -->|card keys| Redis
-    Redis <-.->|feature state| Scorer["scorer.py"]
+    Redis <-.->|feature state| Scorer["scorer.py"]:::script
 ```
 
-<details>
-<summary>Seeded Redis Keys</summary>
+**<a id="fig-11"></a>Figure 11:** Redis Feature Seeder Flow
 
-| Key Pattern | Redis Type | Fields Written | Source Query |
+| Key Pattern | Redis Type | Fields | Source Query |
 | :--- | :--- | :--- | :--- |
-| `cust:{customer_id}:stats` | Hash | `count`, `mean`, `M2` | Per-customer `count()`, `avg(amount)`, `sum((amount - mean)²)` from `fact_transactions_gold`. |
-| `cust:{customer_id}:agg` | Hash | `fraud_rate`, `night_ratio`, `mean_hour` | Per-customer `cf_fraud_rate`, `cf_night_tx_ratio`, and `avg(hour(timestamp))` from `fact_transactions_gold`. |
-| `merch:{merchant_id}:agg` | Hash | `fraud_rate` | Per-merchant `avg(is_fraud)` from `fact_transactions_gold`. |
-| `card:{card_id}:history` | List | JSON objects: `transaction_id`, `merchant_category`, `amount`, `timestamp`, `location_lat`, `location_long` | Last 10 transactions per card ordered by `timestamp DESC`, via window function `row_number()`. |
-| `card:{card_id}:last_ts` | String | Unix timestamp of most recent transaction | Written only for `rn = 1` (the latest transaction per card). |
-| `card:{card_id}:loc` | Hash | `lat`, `lon` | Written only for `rn = 1` (the latest transaction per card). |
-| `card:{card_id}:seq` | String | Approximate sequence counter, initialized to `1` | Written only for `rn = 1`; reflects `row_number` value, not true cumulative count. |
+| `cust:{id}:stats` | Hash | `count`, `mean`, `M2` | Per-customer Welford accumulators from Gold |
+| `cust:{id}:agg` | Hash | `fraud_rate`, `mean_hour` | `cf_fraud_rate`, `avg(hour(timestamp))` |
+| `merch:{id}:agg` | Hash | `fraud_rate` | `avg(is_fraud)` per merchant |
+| `card:{id}:history` | List (JSON, max 10) | Last 10 txns | `row_number() OVER (PARTITION BY card_id ORDER BY timestamp DESC) ≤ 10` |
+| `card:{id}:last_ts` | String | Unix ts of latest txn | `rn = 1` only |
+| `card:{id}:loc` | Hash | `lat`, `lon` | `rn = 1` only |
+| `card:{id}:seq` | String | Initialized to `1` | `rn = 1` only |
 
-</details>
+## Architecture
 
-**Warm-Start Inference** is the core purpose of the seeder. Without pre-seeded state, the first transaction for every card and customer in the streaming pipeline would produce degenerate feature values: `time_since_last_transaction = 0`, `amount_deviation_z_score = 0` (no prior mean), `spatial_velocity = 0` (no prior location), and an empty card history. The seeder eliminates this cold-start period by loading the terminal state of the batch simulation into Redis before the streaming phase begins, allowing `scorer.py` to produce meaningful behavioral features from the first event.
+### Warm-Start Inference
+Without pre-seeded state, the first streaming transaction per card/customer produces degenerate features (zero velocity, no prior mean, empty history). The seeder loads batch simulation terminal state so `scorer.py` produces meaningful features from event one.
 
-**Welford State Seeding** initializes the per-customer running statistics from a single aggregation query rather than replaying every historical transaction. The query computes `count()`, `avg(amount)`, and `sum((amount - mean) * (amount - mean))` — the three Welford accumulator fields (`count`, `mean`, `M2`) — in one DuckDB pass over the Gold Parquet snapshot. This gives `scorer.py`'s `WelfordState` class an accurate starting point for computing `amount_deviation_z_score` incrementally on new streaming events, matching the statistical baseline established during batch training.
+### Welford State Seeding
+Computes `count`, `mean`, and `M2` (sum of squared deviations) in a single DuckDB pass over Gold Parquet. Gives `scorer.py`'s `WelfordState` an accurate starting point for incremental `amount_deviation_z_score`.
 
-**Windowed Card History via Row Number** selects the last 10 transactions per card using a `row_number() OVER (PARTITION BY card_id ORDER BY timestamp DESC)` window function and filters to `rn <= 10`. The results are written as JSON strings to a Redis List at `card:{card_id}:history` via `RPUSH`. Location and timestamp state (`card:{card_id}:last_ts`, `card:{card_id}:loc`) are written only for the row where `rn = 1`, ensuring that the scorer's initial velocity and time-since calculations are anchored to the most recent known transaction per card.
+### Windowed Card History
+`row_number() OVER (PARTITION BY card_id ORDER BY timestamp DESC)` selects the last 10 transactions per card. Results written as JSON strings to `card:{id}:history` via `RPUSH`. Location/ts state written only for `rn = 1`.
 
-**Fault-Tolerant Query Execution** wraps each of the six seeding queries in a `try/except` block that prints a warning and continues rather than aborting. This means the seeder will complete successfully even if `fact_transactions_gold` is partially populated or missing certain columns, leaving the corresponding Redis keys unseeded. The `scorer.py` handles missing Redis keys by defaulting to zero values for the affected features.
+### Fault-Tolerant Execution
+All six queries wrapped in `try/except` — prints warning and continues on failure. `scorer.py` handles missing keys by defaulting to zero.
 
-`seed_redis.py` is a one-shot synchronization utility that bridges the **Data layer** (Gold Parquet snapshot via DuckDB) and the **Scoring layer** (Redis). It has no upstream or downstream runtime dependency beyond requiring the Gold Parquet snapshot to exist and Redis to be available. It does not need to be re-run unless the Gold snapshot is rebuilt or Redis is flushed.
+## Current Limitations
 
-## Known Issues
+All five query result sets are loaded entirely into Python memory before writing to Redis. For comparison, the generator peak RSS is 3.6 GB at 3,400 customers and 6.5 GB at 10,000 customers — the seeder loads all card history into memory in a single pass, so the OOM boundary scales similarly. For 1M customers with 365 days of history, the card history query will OOM. [[See benchmarks](performance.md)] Streaming in chunks from DuckDB is required.
 
-The seeder loads all five query result sets entirely into local Python memory before writing to Redis. For a synthetic population of 1 million customers with 365 days of transactions, `fact_transactions_gold` may contain hundreds of millions of rows. The card history query in particular selects up to 10 rows per card and then iterates row-by-row to write to Redis — this pattern will cause memory-exhaustion failure at scale. Refactoring to stream results in chunks using `clickhouse_connect`'s cursor API and processing each chunk before fetching the next is required before the seeder can handle large populations.
-
-The `card:{card_id}:seq` key is initialized to the `row_number()` value (`1`) for the most recent transaction, not the actual cumulative transaction count for the card. This means `scorer.py`'s `r.incr(f"card:{card_id}:seq")` will produce a sequence number of `2` for the first streaming transaction rather than the true historical count. The `transaction_sequence_number` feature fed to the model is therefore incorrect for all cards that have prior history. The fix requires the seeder to query the true total transaction count per card and use that as the initial sequence value.
-
-The ClickHouse password (`123`) is hardcoded as a string literal in the `clickhouse_connect.get_client` call. This is the same credential duplicated across `ingest.rs`, `etl.rs`, `train_xgboost.py`, and `scorer.py`. Moving the credential to the `CLICKHOUSE_PASSWORD` environment variable — already defined in `docker-compose.yml` for the scorer container — and reading it via `os.getenv` would make this consistent with how the other services in the stack handle credentials.
-an be safely committed to a shared or public repository.
+`card:{id}:seq` is initialized to `1` (the `row_number()`) rather than true cumulative count. `scorer.py`'s `r.incr()` produces sequence number 2 for the first streaming transaction instead of historical count + 1.

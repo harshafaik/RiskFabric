@@ -4,12 +4,16 @@ These invariants are cheap enough to run before every model deployment
 and after every feature or pipeline change.
 """
 
+import os
+import pickle
 import time
 import pytest
 from unittest.mock import MagicMock
 
+import numpy as np
+import pandas as pd
 import redis
-from model_utils import get_model_features
+from model_utils import get_model_features, load_model
 from scorer import compute_features
 
 
@@ -135,4 +139,100 @@ def test_hour_deviation_not_silently_zero(mock_redis):
         f"hour_deviation_from_norm should differ for hours 12 and 2 "
         f"(mean=14.5), got {feat_noon['hour_deviation_from_norm']} vs "
         f"{feat_night['hour_deviation_from_norm']}"
+    )
+
+
+def test_calibration_pipeline():
+    """The scorer's prediction pipeline must produce calibrated probabilities.
+
+    If the isotonic calibrator is missing, corrupted, or incompatible with
+    the current model (feature mismatch), the scorer silently falls back to
+    raw XGBoost probabilities. This test loads the actual calibrator file and
+    verifies it produces well-calibrated output on a realistic feature vector.
+
+    Catches:
+    - Missing calibrator .pkl (test fails, not silent fallback).
+    - Feature-order mismatch between calibrator's base model and scorer.
+    - Corrupted pickle that loads but produces garbage output.
+    """
+    cal_path = os.path.join(
+        os.path.dirname(__file__), "..", "..", "models",
+        "calibrated_fraud_model_isotonic.pkl"
+    )
+    assert os.path.exists(cal_path), (
+        f"Calibrator not found at {cal_path}. "
+        f"Run calibrate_model.py before deploying."
+    )
+
+    with open(cal_path, "rb") as f:
+        cal_model = pickle.load(f)
+
+    model = load_model(enable_categorical=True)
+    feature_names = list(model.get_booster().feature_names)
+
+    df = pd.DataFrame({f: [0.0] if f not in ("transaction_channel", "merchant_category") else ["upi"]
+                       for f in feature_names})
+    feature_types = model.get_booster().feature_types
+    for i, f_name in enumerate(feature_names):
+        f_type = feature_types[i]
+        if f_type == "c":
+            df[f_name] = df[f_name].astype("category")
+
+    try:
+        cal_probs = cal_model.predict_proba(df)[:, 1]
+    except Exception as e:
+        pytest.fail(f"Calibrator predict_proba failed: {e}")
+
+    raw_probs = model.predict_proba(df)[:, 1]
+
+    assert cal_probs.shape == raw_probs.shape, (
+        f"Calibrator output shape {cal_probs.shape} != raw output shape {raw_probs.shape}"
+    )
+
+    assert 0.0 <= cal_probs[0] <= 1.0, (
+        f"Calibrator produced out-of-range probability: {cal_probs[0]}"
+    )
+
+    assert cal_probs[0] != raw_probs[0], (
+        f"Calibrator produced identical output to raw XGBoost ({cal_probs[0]:.6f}). "
+        f"The calibrator appears to be a pass-through — check that calibrate_model.py "
+        f"was run with a non-trivial calibration split."
+    )
+
+
+def test_load_model_for_scoring_fallback_works():
+    """The unified scorer model loader must return a working .predict() interface.
+
+    With no MLFLOW_MODEL_URI set, this exercises the local-calibrated-fallback
+    path through load_model_for_scoring(). Must produce in-range, calibrated
+    (non-raw) probabilities.
+    """
+    from model_utils import load_model_for_scoring
+
+    wrapper = load_model_for_scoring()
+
+    feature_names = wrapper.feature_names
+    df = pd.DataFrame({
+        f: [0.0] if f not in ("transaction_channel", "merchant_category") else ["upi"]
+        for f in feature_names
+    })
+
+    try:
+        probs = wrapper.predict(df)
+    except Exception as e:
+        pytest.fail(f"load_model_for_scoring().predict() failed: {e}")
+
+    assert len(probs) == 1, f"Expected 1 prediction, got {len(probs)}"
+    assert 0.0 <= probs[0] <= 1.0, f"Probability out of range: {probs[0]}"
+
+    # Must be calibrated (different from raw XGBoost)
+    raw_model = load_model(enable_categorical=True)
+    raw_df = df.copy()
+    for name, ftype in zip(wrapper.feature_names, wrapper.feature_types):
+        if ftype == "c":
+            raw_df[name] = raw_df[name].astype("category")
+    raw_prob = raw_model.predict_proba(raw_df)[:, 1][0]
+    assert probs[0] != raw_prob, (
+        f"load_model_for_scoring returned raw XGBoost probability ({probs[0]:.6f}) "
+        f"instead of calibrated. Check that calibrator pickle exists."
     )

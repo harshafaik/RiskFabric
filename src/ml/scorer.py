@@ -3,12 +3,10 @@ import os
 import time
 import math
 import pandas as pd
-import xgboost as xgb
 import redis
 from confluent_kafka import Consumer, KafkaError
 import clickhouse_connect
 from datetime import datetime, timezone
-from model_utils import load_model
 
 # --- Constants & Config ---
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
@@ -155,12 +153,10 @@ def compute_features(tx, redis_client):
 def main():
     print("🚀 Initializing Real-time Scorer...")
     
-    # Load Model
-    model = load_model(enable_categorical=True)
-    model_features = model.get_booster().feature_names
-    model_types = model.get_booster().feature_types
+    # Load Model (MLflow → calibrated pickle → raw XGBoost fallback chain)
+    from model_utils import load_model_for_scoring
+    model = load_model_for_scoring()
     print(f"   -> Model loaded")
-    print(f"   -> Expected features: {model_features}")
 
     # ClickHouse Client
     ch = clickhouse_connect.get_client(
@@ -221,34 +217,12 @@ def main():
 
             if len(records) >= batch_size:
                 start_pred = time.time()
-                # Prepare batch for prediction
                 df = pd.DataFrame([r['features'] for r in records])
-                
-                # Reorder columns to match model's expected features
-                model_features = model.get_booster().feature_names
-                model_types = model.get_booster().feature_types
-                
-                for f in model_features:
-                    if f not in df.columns:
-                        df[f] = 0.0
-                df = df[model_features]
-
-                # Cast features according to model types detected from booster
-                for i, f_name in enumerate(model_features):
-                    f_type = model_types[i]
-                    if f_type == "c":
-                        df[f_name] = df[f_name].astype('category')
-                    elif f_type == "float":
-                        df[f_name] = df[f_name].astype('float32')
-                    elif f_type == "int":
-                        df[f_name] = df[f_name].astype('int32')
 
                 try:
-                    probs = model.predict_proba(df)[:, 1]
+                    probs = model.predict(df)
                 except Exception as e:
                     print(f"   -> Prediction failed: {e}")
-                    # Fallback: fill categorical with unknown/NaN and retry?
-                    # Or just return 0.0 for this batch
                     probs = [0.0] * len(df)
                 
                 pred_latency = (time.time() - start_pred) * 1000 # ms

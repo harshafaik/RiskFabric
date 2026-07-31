@@ -5,25 +5,12 @@ import numpy as np
 import yaml
 from sklearn.metrics import roc_auc_score
 import os
-import glob
 from datetime import datetime
 from argparse import ArgumentParser
-from ml_utils import split_by_timestamp
+from ml_utils import split_by_timestamp, find_gold_snapshot
+from mlflow_logging import setup_mlflow
 
 DEFAULT_TUNING_PATH = "data/config/ml_tuning.yaml"
-
-
-def find_gold_snapshot(snapshot: str | None = None) -> str:
-    if snapshot:
-        path = f"data/gold/{snapshot}/fact_transactions_gold.parquet"
-        if os.path.exists(path):
-            return path
-        raise FileNotFoundError(f"Snapshot not found: {path}")
-
-    snapshots = sorted(glob.glob("data/gold/*/fact_transactions_gold.parquet"), reverse=True)
-    if not snapshots:
-        raise FileNotFoundError("No Gold snapshots found in data/gold/*/. Run `cargo run --bin etl -- gold-master` first.")
-    return snapshots[0]
 
 
 def train_model():
@@ -132,6 +119,41 @@ def train_model():
         suffix += 1
     model.save_model(name)
     print(f"\n💾 Saved: {name}")
+
+    # MLflow logging
+    try:
+        import mlflow
+        setup_mlflow()
+        snapshot_tag = os.path.basename(os.path.dirname(gold_path))
+        with mlflow.start_run(run_name=f"train_{snapshot_tag}"):
+            mlflow.log_params({
+                "n_estimators": tuning.get("n_estimators", 100),
+                "max_depth": tuning.get("max_depth", 6),
+                "learning_rate": tuning.get("learning_rate", 0.1),
+                "objective": tuning.get("objective", "binary:logistic"),
+                "tree_method": tuning.get("tree_method", "hist"),
+                "scale_pos_weight": float(scale_pos_weight),
+                "random_state": tuning.get("random_state", 42),
+                "eval_metric": tuning.get("eval_metric", "aucpr"),
+                "feature_count": len(feature_cols),
+            })
+            mlflow.log_metrics({
+                "roc_auc": float(auc),
+                "train_size": len(y_train),
+                "test_size": len(y_test),
+            })
+            for feat, imp in feat_imp:
+                mlflow.log_metric(f"feature_importance.{feat}", float(imp))
+            mlflow.set_tags({
+                "script": "train_xgboost",
+                "snapshot": snapshot_tag,
+                "feature_count": str(len(feature_cols)),
+            })
+            mlflow.log_artifact(name, artifact_path="model")
+            mlflow.log_artifact(DEFAULT_TUNING_PATH, artifact_path="config")
+            print(f"   📊 MLflow run: {mlflow.active_run().info.run_id}")
+    except Exception as e:
+        print(f"   ⚠️ MLflow logging failed (non-fatal): {e}")
 
 
 if __name__ == "__main__":

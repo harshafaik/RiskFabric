@@ -4,7 +4,6 @@ import duckdb
 import numpy as np
 import os
 import pickle
-import glob
 from model_utils import load_model, get_model_features
 from sklearn.calibration import CalibratedClassifierCV, calibration_curve
 from sklearn.frozen import FrozenEstimator
@@ -14,7 +13,9 @@ from sklearn.metrics import (
     brier_score_loss
 )
 from argparse import ArgumentParser
-from ml_utils import split_by_timestamp
+from ml_utils import split_by_timestamp, find_gold_snapshot
+from mlflow_logging import setup_mlflow, log_metadata_artifacts
+from mlflow_wrapper import CalibratedFraudModel
 
 
 def calculate_ece(y_true, y_prob, n_bins=10):
@@ -36,19 +37,6 @@ def calculate_ece(y_true, y_prob, n_bins=10):
             ece += bin_weight * bin_error
 
     return ece
-
-
-def find_gold_snapshot(snapshot=None):
-    if snapshot:
-        path = f"data/gold/{snapshot}/fact_transactions_gold.parquet"
-        if os.path.exists(path):
-            return path
-        raise FileNotFoundError(f"Snapshot not found: {path}")
-
-    snapshots = sorted(glob.glob("data/gold/*/fact_transactions_gold.parquet"), reverse=True)
-    if not snapshots:
-        raise FileNotFoundError("No Gold snapshots found.")
-    return snapshots[0]
 
 
 def calibrate_and_evaluate():
@@ -139,6 +127,58 @@ def calibrate_and_evaluate():
         pickle.dump(cal_isotonic, f)
 
     print("\n💾 Calibrated models saved to models/")
+
+    # MLflow logging
+    try:
+        import mlflow
+        setup_mlflow()
+        snapshot_tag = os.path.basename(os.path.dirname(gold_path))
+
+        booster = base_model.get_booster()
+        feature_names = list(booster.feature_names)
+        feature_types = list(booster.feature_types)
+
+        metadata_dir = log_metadata_artifacts(feature_names, feature_types, "isotonic")
+
+        with mlflow.start_run(run_name=f"calibrate_{snapshot_tag}"):
+            mlflow.log_params({
+                "calibration_method": "isotonic",
+                "calibration_split": 0.5,
+                "snapshot": snapshot_tag,
+                "n_cal_samples": len(y_cal),
+                "n_eval_samples": len(y_eval),
+            })
+
+            metrics = {}
+            for name, res in results.items():
+                safe_name = name.lower().replace(" ", "_").replace("(", "").replace(")", "")
+                mlflow.log_metric(f"{safe_name}.roc_auc", float(res['ROC-AUC']))
+                mlflow.log_metric(f"{safe_name}.pr_auc", float(res['PR-AUC']))
+                mlflow.log_metric(f"{safe_name}.brier_loss", float(res['Brier Loss']))
+                mlflow.log_metric(f"{safe_name}.ece", float(res['ECE']))
+
+            mlflow.set_tags({
+                "script": "calibrate_model",
+                "calibration_method": "isotonic",
+                "snapshot": snapshot_tag,
+            })
+
+            model_artifacts = {
+                "calibrator.pkl": "models/calibrated_fraud_model_isotonic.pkl",
+                "feature_names.json": os.path.join(metadata_dir, "feature_names.json"),
+                "feature_types.json": os.path.join(metadata_dir, "feature_types.json"),
+                "calibration_method.txt": os.path.join(metadata_dir, "calibration_method.txt"),
+            }
+
+            mlflow.pyfunc.log_model(
+                artifact_path="fraud_scorer",
+                python_model=CalibratedFraudModel(),
+                artifacts=model_artifacts,
+                registered_model_name="RiskFabric-Fraud",
+            )
+            print(f"   📊 MLflow run: {mlflow.active_run().info.run_id}")
+    except Exception as e:
+        print(f"   ⚠️ MLflow logging failed (non-fatal): {e}")
 
 
 if __name__ == "__main__":

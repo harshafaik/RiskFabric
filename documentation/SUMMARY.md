@@ -48,3 +48,4 @@
     - [Storage Architecture Split](decisions/storage_architecture_split.md)
     - [Deployment Architecture](decisions/deployment_architecture.md)
     - [Fraud Operations Cost Model](decisions/fraud_operations_cost_model.md)
+    - [Calibration Gap](decisions/calibration_gap.md)

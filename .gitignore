@@ -32,6 +32,9 @@ data/gold/
 # python virtual environment
 .venv/
 
+# python bytecode
+__pycache__/
+
 # environment files
 .env
 

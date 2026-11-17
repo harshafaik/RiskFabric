@@ -1,5 +1,10 @@
 # RiskFabric
 
+> **Archived — legacy end-to-end monolith.** This repository is the original integrated
+> version. The maintained split is `scrip` → [`riskfabric-pipelines`](https://github.com/harshafaik/riskfabric-pipelines)
+> → [`riskfabric-ml`](https://github.com/harshafaik/riskfabric-ml). Kept for reference;
+> no further changes.
+
 [![Rust](https://img.shields.io/badge/language-Rust-orange.svg)](https://www.rust-lang.org/)
 [![Python](https://img.shields.io/badge/language-Python-blue.svg)](https://www.python.org/)
 [![Polars](https://img.shields.io/badge/engine-Polars%200.51.0-blue.svg)](https://pola.rs/)
